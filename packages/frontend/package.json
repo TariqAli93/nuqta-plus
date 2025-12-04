@@ -1,6 +1,6 @@
 {
   "name": "@nuqtaplus/frontend",
-  "version": "1.0.7",
+  "version": "1.0.2",
   "description": "نقطة بلس - نظام إدارة نقاط البيع والمخازن",
   "main": "./dist-electron/main/main.js",
   "type": "module",
@@ -79,6 +79,10 @@
       {
         "from": "./electron/scripts",
         "to": "dist-electron/scripts"
+      },
+      {
+        "from": "./splash.html",
+        "to": "dist-electron/dist/splash.html"
       }
     ],
     "directories": {

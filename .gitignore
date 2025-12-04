@@ -57,3 +57,4 @@ temp/
 
 
 packages/backend/bin/
+pump-version.js
