@@ -517,6 +517,8 @@ export class SaleService {
           saleId: saleItems.saleId,
           quantity: saleItems.quantity,
           unitPrice: saleItems.unitPrice,
+          discount: saleItems.discount,
+          subtotal: saleItems.subtotal,
           productId: saleItems.productId,
           productCost: products.costPrice,
           currency: sales.currency,
@@ -537,6 +539,9 @@ export class SaleService {
         totalPaid: 0,
         totalRemaining: 0,
         totalProfit: 0,
+        totalRevenue: 0,
+        totalDiscount: 0,
+        totalInterest: 0,
         count: 0,
         cashSales: 0,
         installmentSales: 0,
@@ -545,22 +550,36 @@ export class SaleService {
         pendingSales: 0,
       };
       const o = byCur[c];
+
       o.totalSales += s.total ?? 0;
       o.totalPaid += s.paidAmount ?? 0;
       o.totalRemaining += s.remainingAmount ?? 0;
+      o.totalDiscount += s.discount ?? 0;
+      o.totalInterest += s.interestAmount ?? 0;
+      o.totalRevenue += (s.total ?? 0) - (s.interestAmount ?? 0);
+
       o.count += 1;
       if (s.paymentType) o[`${s.paymentType}Sales`] += 1;
       o[`${s.status}Sales`] += 1;
     }
 
-    // 4️⃣ نحسب الربح من العناصر (itemProfit = (unitPrice - costPrice) * quantity)
+    // 4️⃣ نحسب الربح من العناصر بشكل محاسبي دقيق
     for (const item of items) {
       const c = item.currency || 'USD';
-      const profit = (item.unitPrice - (item.productCost ?? 0)) * item.quantity;
+      const itemDiscount = item.discount ?? 0;
+      const netUnitPrice = item.unitPrice - itemDiscount / item.quantity;
+      const costPrice = item.productCost ?? 0;
+      const profit = (netUnitPrice - costPrice) * item.quantity;
       byCur[c].totalProfit += profit;
     }
 
-    // 5️⃣ نحسب المتوسطات والتقرير النهائي
+    // 5️⃣ نطرح الخصم الإضافي ونضيف الفائدة
+    for (const c in byCur) {
+      const o = byCur[c];
+      o.totalProfit = o.totalProfit - o.totalDiscount + o.totalInterest;
+    }
+
+    // 6️⃣ نحسب المتوسطات والتقرير النهائي
     const usd = byCur['USD'] ?? {};
     const iqd = byCur['IQD'] ?? {};
     const allCount = Object.values(byCur).reduce((a, d) => a + (d.count || 0), 0);
@@ -568,13 +587,27 @@ export class SaleService {
     return {
       salesUSD: usd.totalSales || 0,
       paidUSD: usd.totalPaid || 0,
-      profitUSD: usd.totalProfit || 0,
-      avgSaleUSD: usd.count ? (usd.totalSales / usd.count).toFixed(2) : 0,
+      profitUSD: parseFloat((usd.totalProfit || 0).toFixed(2)),
+      revenueUSD: parseFloat((usd.totalRevenue || 0).toFixed(2)),
+      discountUSD: parseFloat((usd.totalDiscount || 0).toFixed(2)),
+      interestUSD: parseFloat((usd.totalInterest || 0).toFixed(2)),
+      avgSaleUSD: usd.count ? parseFloat((usd.totalSales / usd.count).toFixed(2)) : 0,
+      avgProfitUSD: usd.count ? parseFloat((usd.totalProfit / usd.count).toFixed(2)) : 0,
+      profitMarginUSD: usd.totalRevenue
+        ? parseFloat(((usd.totalProfit / usd.totalRevenue) * 100).toFixed(2))
+        : 0,
 
       salesIQD: iqd.totalSales || 0,
       paidIQD: iqd.totalPaid || 0,
-      profitIQD: iqd.totalProfit || 0,
-      avgSaleIQD: iqd.count ? (iqd.totalSales / iqd.count).toFixed(2) : 0,
+      profitIQD: parseFloat((iqd.totalProfit || 0).toFixed(2)),
+      revenueIQD: parseFloat((iqd.totalRevenue || 0).toFixed(2)),
+      discountIQD: parseFloat((iqd.totalDiscount || 0).toFixed(2)),
+      interestIQD: parseFloat((iqd.totalInterest || 0).toFixed(2)),
+      avgSaleIQD: iqd.count ? parseFloat((iqd.totalSales / iqd.count).toFixed(2)) : 0,
+      avgProfitIQD: iqd.count ? parseFloat((iqd.totalProfit / iqd.count).toFixed(2)) : 0,
+      profitMarginIQD: iqd.totalRevenue
+        ? parseFloat(((iqd.totalProfit / iqd.totalRevenue) * 100).toFixed(2))
+        : 0,
 
       count: allCount,
       completedSales: (usd.completedSales || 0) + (iqd.completedSales || 0),

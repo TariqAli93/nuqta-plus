@@ -177,26 +177,40 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async createFirstUser(userData) {
-      const notificationStore = useNotificationStore();
+    /**
+     * Fetch initial setup information
+     */
+    async fetchInitialSetupInfo() {
       try {
-        const response = await api.post('/auth/create-first-user', userData);
-        notificationStore.success('تم إنشاء المستخدم الأول بنجاح');
-        return response;
+        console.log('Calling /auth/initial-setup API...');
+        const response = await api.get('/auth/initial-setup');
+        console.log('API response:', response);
+        console.log('Response data:', response.data);
+
+        // البيانات موجودة مباشرة في response.data
+        if (response.data) {
+          this.isFirstRun = response.data.isFirstRun;
+          console.log('isFirstRun set to:', this.isFirstRun);
+          console.log('Returning data:', response.data);
+          return response.data;
+        }
+        console.log('No data in response, returning default');
+        return { isFirstRun: false };
       } catch (error) {
-        notificationStore.error(error.response?.data?.message || 'فشل إنشاء المستخدم الأول');
-        throw error;
+        console.error('Failed to fetch initial setup info:', error);
+        console.error('Error details:', error.response);
+        return { isFirstRun: false };
       }
     },
-
-    async fetchInitialSetupInfo() {
-      const notificationStore = useNotificationStore();
+    async createFirstUser(userData) {
       try {
-        const response = await api.get('/auth/initial-setup-info');
-        this.isFirstRun = response.data.isFirstRun;
-        return response.data;
+        const response = await api.post('/auth/first-user', userData);
+        if (response.data) {
+          return response.data;
+        }
+        throw new Error('Invalid response from server');
       } catch (error) {
-        notificationStore.error(error.response?.data?.message || 'فشل جلب معلومات الإعداد الأولي');
+        console.error('Failed to create first user:', error);
         throw error;
       }
     },

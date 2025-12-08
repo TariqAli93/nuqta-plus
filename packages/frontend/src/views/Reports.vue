@@ -1,13 +1,13 @@
 <template>
   <div class="pa-4">
     <!-- Header -->
-    <div class="d-flex justify-space-between align-center mb-8">
+    <div class="mb-8 d-flex justify-space-between align-center">
       <div>
-        <h1 class="text-h4 font-weight-bold mb-1">📊 التقارير والتحليلات</h1>
+        <h1 class="mb-1 text-h4 font-weight-bold">📊 التقارير والتحليلات</h1>
         <p class="text-body-2 text-grey-darken-1">نظرة شاملة على أداء المبيعات للفترة المحددة</p>
       </div>
 
-      <div class="d-flex gap-2">
+      <div class="gap-2 d-flex">
         <v-btn
           color="error"
           variant="flat"
@@ -21,7 +21,7 @@
     </div>
 
     <!-- Filters -->
-    <v-card class="pa-4 mb-8">
+    <v-card class="mb-8 pa-4">
       <v-row density="comfortable">
         <v-col cols="12" md="4">
           <v-menu
@@ -142,122 +142,119 @@
         </v-card>
       </v-col>
 
-      <!-- إجمالي المبيعات USD -->
+      <!-- مؤشرات حسب العملة المختارة -->
       <v-col cols="12" md="3">
         <v-card class="pa-4">
           <div class="d-flex justify-space-between align-center">
             <div>
               <div class="text-h6 font-weight-bold text-success">
-                {{ formatUSD(report.salesUSD || 0) }}
+                {{ reportByCurrency.format(reportByCurrency.sales || 0) }}
               </div>
-              <div class="text-body-2 text-grey">إجمالي المبيعات (USD)</div>
+              <div class="text-body-2 text-grey">
+                إجمالي المبيعات ({{ reportByCurrency.currencyLabel }})
+              </div>
             </div>
             <v-icon size="42" color="success">mdi-cash</v-icon>
           </div>
         </v-card>
       </v-col>
 
-      <!-- المدفوع USD -->
       <v-col cols="12" md="3">
         <v-card class="pa-4">
           <div class="d-flex justify-space-between align-center">
             <div>
               <div class="text-h6 font-weight-bold text-info">
-                {{ formatUSD(report.paidUSD || 0) }}
+                {{ reportByCurrency.format(reportByCurrency.paid || 0) }}
               </div>
-              <div class="text-body-2 text-grey">المدفوع (USD)</div>
+              <div class="text-body-2 text-grey">
+                المدفوع ({{ reportByCurrency.currencyLabel }})
+              </div>
             </div>
             <v-icon size="42" color="info">mdi-cash-check</v-icon>
           </div>
         </v-card>
       </v-col>
 
-      <!-- إجمالي المبيعات IQD -->
       <v-col cols="12" md="3">
         <v-card class="pa-4">
           <div class="d-flex justify-space-between align-center">
             <div>
-              <div class="text-h6 font-weight-bold text-teal-darken-2">
-                {{ formatIQD(report.salesIQD || 0) }}
+              <div class="text-h6 font-weight-bold text-red-darken-2">
+                {{ reportByCurrency.format(reportByCurrency.discount || 0) }}
               </div>
-              <div class="text-body-2 text-grey">إجمالي المبيعات (IQD)</div>
+              <div class="text-body-2 text-grey">إجمالي الخصومات</div>
             </div>
-            <v-icon size="42" color="teal-darken-2">mdi-cash-multiple</v-icon>
+            <v-icon size="42" color="red-darken-2">mdi-tag-off</v-icon>
           </div>
         </v-card>
       </v-col>
 
-      <!-- المدفوع IQD -->
       <v-col cols="12" md="3">
         <v-card class="pa-4">
           <div class="d-flex justify-space-between align-center">
             <div>
-              <div class="text-h6 font-weight-bold text-blue-grey-darken-1">
-                {{ formatIQD(report.paidIQD || 0) }}
+              <div class="text-h6 font-weight-bold" style="color: #ff9800">
+                {{ reportByCurrency.format(reportByCurrency.interest || 0) }}
               </div>
-              <div class="text-body-2 text-grey">المدفوع (IQD)</div>
+              <div class="text-body-2 text-grey">إجمالي الفائدة</div>
             </div>
-            <v-icon size="42" color="blue-grey-darken-1">mdi-cash-check</v-icon>
+            <v-icon size="42" color="amber-darken-2">mdi-percent</v-icon>
           </div>
         </v-card>
       </v-col>
 
-      <!-- متوسط البيع USD -->
       <v-col cols="12" md="3">
         <v-card class="pa-4">
           <div class="d-flex justify-space-between align-center">
             <div>
               <div class="text-h6 font-weight-bold text-purple">
-                {{ formatUSD(report.avgSaleUSD || 0) }}
+                {{ reportByCurrency.format(reportByCurrency.avgSale || 0) }}
               </div>
-              <div class="text-body-2 text-grey">متوسط البيع (USD)</div>
+              <div class="text-body-2 text-grey">متوسط البيع</div>
             </div>
             <v-icon size="42" color="purple">mdi-finance</v-icon>
           </div>
         </v-card>
       </v-col>
 
-      <!-- الربح USD -->
       <v-col cols="12" md="3">
         <v-card class="pa-4">
           <div class="d-flex justify-space-between align-center">
             <div>
               <div class="text-h6 font-weight-bold text-pink-darken-2">
-                {{ formatUSD(report.profitUSD || 0) }}
+                {{ reportByCurrency.format(reportByCurrency.profit || 0) }}
               </div>
-              <div class="text-body-2 text-grey">الربح (USD)</div>
+              <div class="text-body-2 text-grey">الربح</div>
             </div>
             <v-icon size="42" color="pink-darken-2">mdi-cash-plus</v-icon>
           </div>
         </v-card>
       </v-col>
 
-      <!-- متوسط البيع IQD -->
       <v-col cols="12" md="3">
         <v-card class="pa-4">
           <div class="d-flex justify-space-between align-center">
             <div>
-              <div class="text-h6 font-weight-bold text-deep-purple-darken-2">
-                {{ formatIQD(report.avgSaleIQD || 0) }}
+              <div class="text-h6 font-weight-bold text-indigo">
+                {{ reportByCurrency.format(reportByCurrency.avgProfit || 0) }}
               </div>
-              <div class="text-body-2 text-grey">متوسط البيع (IQD)</div>
+              <div class="text-body-2 text-grey">متوسط الربح</div>
             </div>
-            <v-icon size="42" color="deep-purple-darken-2">mdi-finance</v-icon>
+            <v-icon size="42" color="indigo">mdi-poll</v-icon>
           </div>
         </v-card>
       </v-col>
 
-      <!-- الربح IQD -->
       <v-col cols="12" md="3">
         <v-card class="pa-4">
           <div class="d-flex justify-space-between align-center">
             <div>
-              <div class="text-h6 font-weight-bold text-pink-darken-4">
-                {{ formatIQD(report.profitIQD || 0) }}
+              <div class="text-h6 font-weight-bold text-cyan-darken-2">
+                {{ reportByCurrency.profitMargin || 0 }}%
               </div>
-              <div class="text-body-2 text-grey">الربح (IQD)</div>
+              <div class="text-body-2 text-grey">هامش الربح</div>
             </div>
-            <v-icon size="42" color="pink-darken-4">mdi-cash-plus</v-icon>
+            <v-icon size="42" color="cyan-darken-2">mdi-percent</v-icon>
           </div>
         </v-card>
       </v-col>
@@ -269,9 +266,11 @@
 import { ref, onMounted, computed } from 'vue';
 import { useSaleStore } from '@/stores/sale';
 import { useNotificationStore } from '@/stores/notification';
+import { useSettingsStore } from '@/stores/settings';
 
 const saleStore = useSaleStore();
 const notificationStore = useNotificationStore();
+const settingsStore = useSettingsStore();
 const loading = ref(false);
 const report = ref(null);
 const menus = ref({
@@ -285,10 +284,12 @@ const filters = ref({
 });
 
 const currencyOptions = [
-  { title: 'جميع العملات', value: null },
   { title: 'دولار (USD)', value: 'USD' },
   { title: 'دينار عراقي (IQD)', value: 'IQD' },
 ];
+
+const defaultCurrency = computed(() => settingsStore.settings?.defaultCurrency || 'USD');
+const selectedCurrency = computed(() => filters.value.currency || defaultCurrency.value);
 
 const toYmd = (date) => {
   if (!date) return '';
@@ -304,6 +305,27 @@ const formatUSD = (amount) =>
   `$${parseFloat(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 const formatIQD = (amount) =>
   `${parseFloat(amount || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} IQD`;
+
+// بيانات التقرير حسب العملة المختارة
+const reportByCurrency = computed(() => {
+  const cur = selectedCurrency.value;
+  const r = report.value || {};
+  const isUSD = cur === 'USD';
+
+  return {
+    currency: cur,
+    sales: isUSD ? r.salesUSD : r.salesIQD,
+    paid: isUSD ? r.paidUSD : r.paidIQD,
+    discount: isUSD ? r.discountUSD : r.discountIQD,
+    interest: isUSD ? r.interestUSD : r.interestIQD,
+    profit: isUSD ? r.profitUSD : r.profitIQD,
+    avgSale: isUSD ? r.avgSaleUSD : r.avgSaleIQD,
+    avgProfit: isUSD ? r.avgProfitUSD : r.avgProfitIQD,
+    profitMargin: isUSD ? r.profitMarginUSD : r.profitMarginIQD,
+    format: isUSD ? formatUSD : formatIQD,
+    currencyLabel: isUSD ? 'USD' : 'IQD',
+  };
+});
 
 const formattedStartDate = computed({
   get: () => toYmd(filters.value.startDate),
@@ -323,7 +345,7 @@ const fetchReport = async () => {
     report.value = await saleStore.getSalesReport({
       startDate: toYmd(filters.value.startDate),
       endDate: toYmd(filters.value.endDate),
-      currency: filters.value.currency,
+      currency: filters.value.currency || defaultCurrency.value,
     });
   } catch {
     notificationStore.error('حدث خطأ أثناء تحميل التقرير');
@@ -434,37 +456,52 @@ const exportToPDF = () => {
         <table>
           <tr>
             <th>المقياس</th>
-            <th><span class="currency-label">USD</span></th>
-            <th><span class="currency-label">IQD</span></th>
+            <th><span class="currency-label">${reportByCurrency.value.currencyLabel}</span></th>
           </tr>
 
           <tr>
             <td>إجمالي المبيعات</td>
-            <td>${formatUSD(report.value.salesUSD || 0)}</td>
-            <td>${formatIQD(report.value.salesIQD || 0)}</td>
+            <td>${reportByCurrency.value.format(reportByCurrency.value.sales || 0)}</td>
           </tr>
 
           <tr>
             <td>المدفوع</td>
-            <td>${formatUSD(report.value.paidUSD || 0)}</td>
-            <td>${formatIQD(report.value.paidIQD || 0)}</td>
+            <td>${reportByCurrency.value.format(reportByCurrency.value.paid || 0)}</td>
+          </tr>
+
+          <tr>
+            <td>إجمالي الخصومات</td>
+            <td>${reportByCurrency.value.format(reportByCurrency.value.discount || 0)}</td>
+          </tr>
+
+          <tr>
+            <td>إجمالي الفائدة</td>
+            <td>${reportByCurrency.value.format(reportByCurrency.value.interest || 0)}</td>
           </tr>
 
           <tr>
             <td>متوسط البيع</td>
-            <td>${formatUSD(report.value.avgSaleUSD || 0)}</td>
-            <td>${formatIQD(report.value.avgSaleIQD || 0)}</td>
+            <td>${reportByCurrency.value.format(reportByCurrency.value.avgSale || 0)}</td>
           </tr>
 
           <tr>
             <td>إجمالي الربح</td>
-            <td>${formatUSD(report.value.profitUSD || 0)}</td>
-            <td>${formatIQD(report.value.profitIQD || 0)}</td>
+            <td>${reportByCurrency.value.format(reportByCurrency.value.profit || 0)}</td>
           </tr>
 
           <tr>
-            <td>عدد المبيعات</td>
-            <td colspan="2">${report.value.salesCount || 0}</td>
+            <td>متوسط الربح</td>
+            <td>${reportByCurrency.value.format(reportByCurrency.value.avgProfit || 0)}</td>
+          </tr>
+
+          <tr>
+            <td>هامش الربح %</td>
+            <td>${reportByCurrency.value.profitMargin || 0}%</td>
+          </tr>
+
+          <tr>
+            <td>عدد الفواتير</td>
+            <td colspan="2">${report.value.count || 0}</td>
           </tr>
 
           <tr>
@@ -504,11 +541,22 @@ const exportToPDF = () => {
 };
 
 onMounted(() => {
-  const end = new Date();
-  const start = new Date();
-  start.setDate(start.getDate() - 30);
-  filters.value.startDate = start.toISOString().split('T')[0];
-  filters.value.endDate = end.toISOString().split('T')[0];
-  fetchReport();
+  const load = async () => {
+    try {
+      await settingsStore.fetchCurrencySettings();
+    } catch (e) {
+      console.error('Failed to load currency settings', e);
+    }
+
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 30);
+    filters.value.startDate = start.toISOString().split('T')[0];
+    filters.value.endDate = end.toISOString().split('T')[0];
+    filters.value.currency = defaultCurrency.value;
+    fetchReport();
+  };
+
+  load();
 });
 </script>

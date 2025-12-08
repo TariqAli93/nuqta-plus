@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue';
 import vuetify from 'vite-plugin-vuetify';
 import { fileURLToPath, URL } from 'node:url';
 import electron from 'vite-plugin-electron/simple';
+import VueDevTools from 'vite-plugin-vue-devtools';
 
 export default defineConfig({
   plugins: [
@@ -10,6 +11,7 @@ export default defineConfig({
     vuetify({
       autoImport: true,
     }),
+    VueDevTools(),
     electron({
       main: {
         // Shortcut of `build.lib.entry`
@@ -53,6 +55,7 @@ export default defineConfig({
       input: {
         main: 'index.html',
         activation: 'activation.html',
+        splash: 'splash.html',
       },
     },
   },

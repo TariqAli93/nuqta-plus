@@ -1,8 +1,8 @@
 <template>
   <div>
     <v-card class="mb-4">
-      <div class="flex justify-space-between items-center pa-3">
-        <div class="text-h6 font-semibold text-primary">إدارة المنتجات</div>
+      <div class="flex items-center justify-space-between pa-3">
+        <div class="font-semibold text-h6 text-primary">إدارة المنتجات</div>
         <v-btn
           v-can.hide="['create:products']"
           color="primary"
@@ -46,46 +46,43 @@
     </v-card>
 
     <v-card class="mt-4">
-      <v-card-text>
-        <v-data-table
-          :headers="headers"
-          :items="productStore.products"
-          :loading="productStore.loading"
-          class="mt-4"
-        >
-          <template v-slot:[`item.stock`]="{ item }">
-            <v-chip :color="item.stock <= item.minStock ? 'error' : 'success'" size="small">
-              {{ item.stock }}
-            </v-chip>
-          </template>
-          <template v-slot:[`item.status`]="{ item }">
-            <v-chip :color="getStatusColor(item.status)" size="small">
-              {{ getStatusText(item.status) }}
-            </v-chip>
-          </template>
-          <template v-slot:[`item.actions`]="{ item }">
-            <v-btn
-              icon="mdi-pencil"
-              size="small"
-              variant="text"
-              :to="`/products/${item.id}/edit`"
-            ></v-btn>
-            <v-btn
-              icon="mdi-delete"
-              size="small"
-              variant="text"
-              color="error"
-              v-can="['delete:products']"
-              @click="confirmDelete(item)"
-            ></v-btn>
-          </template>
-        </v-data-table>
-      </v-card-text>
+      <v-data-table
+        :headers="headers"
+        :items="productStore.products"
+        :loading="productStore.loading"
+      >
+        <template v-slot:[`item.stock`]="{ item }">
+          <v-chip :color="item.stock <= item.minStock ? 'error' : 'success'" size="small">
+            {{ item.stock }}
+          </v-chip>
+        </template>
+        <template v-slot:[`item.status`]="{ item }">
+          <v-chip :color="getStatusColor(item.status)" size="small">
+            {{ getStatusText(item.status) }}
+          </v-chip>
+        </template>
+        <template v-slot:[`item.actions`]="{ item }">
+          <v-btn
+            icon="mdi-pencil"
+            size="small"
+            variant="text"
+            :to="`/products/${item.id}/edit`"
+          ></v-btn>
+          <v-btn
+            icon="mdi-delete"
+            size="small"
+            variant="text"
+            color="error"
+            v-can="['delete:products']"
+            @click="confirmDelete(item)"
+          ></v-btn>
+        </template>
+      </v-data-table>
     </v-card>
 
     <v-dialog v-model="deleteDialog" max-width="400">
       <v-card>
-        <v-card-title class="bg-secondary text-white">تأكيد الحذف</v-card-title>
+        <v-card-title class="text-white bg-secondary">تأكيد الحذف</v-card-title>
         <v-card-text> هل أنت متأكد من حذف المنتج {{ selectedProduct?.name }}؟ </v-card-text>
 
         <v-divider></v-divider>
@@ -141,6 +138,8 @@ const getStatusText = (status) => {
     out_of_stock: 'نفذ',
     discontinued: 'متوقف',
   };
+
+  console.log('Status:', status, 'Text:', texts[status]);
   return texts[status] || status;
 };
 
@@ -175,7 +174,7 @@ onMounted(async () => {
     }
 
     // if item quantity is less than or equal to minStock, update stock to out_of_stock
-    if (product.stock <= 1 && product.status !== 'out_of_stock') {
+    if (product.stock < 1 && product.status !== 'out_of_stock') {
       await productStore.updateProduct(product.id, { status: 'out_of_stock' });
     }
   }

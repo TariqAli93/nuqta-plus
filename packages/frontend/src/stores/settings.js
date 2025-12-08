@@ -251,9 +251,19 @@ export const useSettingsStore = defineStore('settings', () => {
     try {
       const response = await api.get('/settings/currency');
 
-      if (response.success) {
-        return response.data;
+      if (response?.success) {
+        const currencyData = response.data || {};
+        settings.value = {
+          ...settings.value,
+          defaultCurrency: currencyData.defaultCurrency,
+          usdRate: currencyData.usdRate,
+          iqdRate: currencyData.iqdRate,
+        };
+
+        return currencyData;
       }
+
+      throw new Error(response?.message || 'Failed to fetch currency settings');
     } catch (err) {
       error.value = err.response?.data?.message || err.message;
       throw err;

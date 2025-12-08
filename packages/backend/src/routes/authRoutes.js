@@ -4,6 +4,16 @@ const authController = new AuthController();
 
 export default async function authRoutes(fastify) {
   // Public routes
+
+  // Check initial setup status
+  fastify.get('/initial-setup', {
+    handler: authController.checkInitialSetup,
+    schema: {
+      description: 'Check if initial setup is required',
+      tags: ['auth'],
+    },
+  });
+
   fastify.post('/register', {
     handler: authController.register,
     onRequest: [fastify.authenticate],
@@ -36,6 +46,26 @@ export default async function authRoutes(fastify) {
           username: { type: 'string' },
           password: { type: 'string' },
           totpCode: { type: 'string', minLength: 6, maxLength: 6 },
+        },
+      },
+    },
+  });
+
+  // Create first user (only when database is empty)
+  fastify.post('/first-user', {
+    handler: authController.createFirstUser,
+    schema: {
+      description: 'Create first admin user',
+      tags: ['auth'],
+      body: {
+        type: 'object',
+        required: ['username', 'password', 'fullName'],
+        properties: {
+          username: { type: 'string' },
+          password: { type: 'string' },
+          fullName: { type: 'string' },
+          phone: { type: 'string' },
+          roleId: { type: 'number' },
         },
       },
     },
@@ -77,34 +107,6 @@ export default async function authRoutes(fastify) {
           newPassword: { type: 'string', minLength: 6 },
         },
       },
-    },
-  });
-
-  fastify.post('/create-first-user', {
-    handler: authController.createFirstUser,
-    schema: {
-      description: 'Create the first user',
-      tags: ['auth'],
-      body: {
-        type: 'object',
-        required: ['username', 'password', 'fullName', 'roleId', 'phone'],
-        properties: {
-          username: { type: 'string' },
-          password: { type: 'string' },
-          fullName: { type: 'string' },
-          phone: { type: 'string' },
-          roleId: { type: 'number' },
-        },
-      },
-    },
-  });
-
-  fastify.get('/initial-setup-info', {
-    handler: authController.getInitialSetupInfo,
-    schema: {
-      description: 'Get initial setup information',
-      tags: ['auth'],
-      security: [{ bearerAuth: [] }],
     },
   });
 }

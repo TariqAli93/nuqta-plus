@@ -2,8 +2,8 @@
   <div class="company-info-form">
     <!-- 🔹 شريط الأدوات العلوي -->
     <v-card class="mb-4">
-      <div class="flex justify-space-between items-center pa-3">
-        <div class="text-h6 font-semibold text-primary">
+      <div class="flex items-center justify-space-between pa-3">
+        <div class="font-semibold text-h6 text-primary">
           <v-icon class="me-2" color="primary">mdi-domain</v-icon>
           معلومات الشركة
         </div>
@@ -53,7 +53,7 @@
           <!-- Address Section -->
           <v-col cols="12">
             <v-divider class="my-4" />
-            <h4 class="text-h6 mb-3 d-flex align-center">
+            <h4 class="mb-3 text-h6 d-flex align-center">
               <v-icon class="me-2" color="info">mdi-map-marker</v-icon>
               العنوان
             </h4>
@@ -98,7 +98,7 @@
           <!-- Contact Information -->
           <v-col cols="12">
             <v-divider class="my-4" />
-            <h4 class="text-h6 mb-3 d-flex align-center">
+            <h4 class="mb-3 text-h6 d-flex align-center">
               <v-icon class="me-2" color="info">mdi-phone</v-icon>
               معلومات الاتصال
             </h4>
@@ -148,8 +148,11 @@ const settings = ref(settingsStore.settings || {});
 
 // Invoice types
 const invoiceTypes = [
-  { text: 'إيصال صغير', value: 'roll' },
   { text: 'فاتورة A4', value: 'a4' },
+  { text: 'فاتورة A5', value: 'a5' },
+  { text: 'رول حراري 58mm', value: 'roll-58' },
+  { text: 'رول حراري 80mm', value: 'roll-80' },
+  { text: 'رول حراري عريض', value: 'roll-wide' },
 ];
 
 // Reactive data
@@ -207,7 +210,7 @@ onMounted(async () => {
     street: settings.value.company?.street || '',
     phone: settings.value.company?.phone || '',
     phone2: settings.value.company?.phone2 || '',
-    invoiceType: settings.value.company?.invoiceType || invoiceTypes[0],
+    invoiceType: settings.value.company?.invoiceType || invoiceTypes[0].value,
   };
 });
 </script>

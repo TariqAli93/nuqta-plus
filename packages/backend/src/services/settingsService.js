@@ -312,7 +312,7 @@ export class SettingsService {
     const { name, city, area, street, phone, phone2, logoUrl, invoiceType } = companyData;
 
     // Validate invoice type
-    const validInvoiceTypes = ['roll', 'a4'];
+    const validInvoiceTypes = ['a4', 'a5', 'roll-58', 'roll-80', 'roll-wide'];
     if (invoiceType && !validInvoiceTypes.includes(invoiceType)) {
       throw new Error(`Invalid invoice type: ${invoiceType}`);
     }

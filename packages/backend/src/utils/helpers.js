@@ -67,12 +67,14 @@ export function calculateSaleTotals(items, discount = 0, tax = 0) {
     throw new Error('Tax percentage cannot exceed 100%');
   }
 
-  // Calculate subtotal from all items
+  // Calculate subtotal from all items (after item-level discounts)
   const subtotal = items.reduce((sum, item) => {
     if (!item.quantity || !item.unitPrice) {
       throw new Error('Each item must have quantity and unitPrice');
     }
-    return sum + item.quantity * item.unitPrice;
+    const itemTotal = item.quantity * item.unitPrice;
+    const itemDiscount = parseFloat(item.discount) || 0;
+    return sum + (itemTotal - itemDiscount);
   }, 0);
 
   // Apply discount

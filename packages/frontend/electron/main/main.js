@@ -7,6 +7,7 @@ import BackendManager from '../scripts/backendManager.js';
 import { getMachineId, saveLicenseString, verifyLicense } from '../scripts/licenseManager.js';
 import { setupAutoUpdater, checkForUpdates, startDownload } from '../scripts/autoUpdater.js';
 import { autoUpdater } from 'electron-updater';
+import { createLockFile } from '../scripts/firstRun.js';
 
 // --- المتغيرات العامة ---
 const __filename = fileURLToPath(import.meta.url);
@@ -17,6 +18,7 @@ let mainWindow = null;
 let activationWindow = null;
 let splashWindow = null; // splash screen window
 let isQuitting = false;
+let backendReady = false;
 
 const backendManager = new BackendManager();
 
@@ -93,6 +95,7 @@ function createActivationWindow() {
     resizable: false,
     fullscreen: false,
     fullscreenable: false,
+    skipTaskbar: true,
     icon: path.join(__dirname, '../build/icon.png'),
     webPreferences: {
       devTools: false, // ← أهم شيء
@@ -134,11 +137,12 @@ function createSplashWindow() {
   splashWindow = new BrowserWindow({
     width: 1200,
     height: 650,
-    resizable: true,
+    resizable: false,
     frame: false,
     center: true,
     transparent: true,
     show: false,
+    skipTaskbar: true,
     icon: isDev ? join(__dirname, '../../build/icon.png') : join(__dirname, '../build/icon.png'),
     webPreferences: {
       devTools: false, // ← أهم شيء
@@ -148,31 +152,25 @@ function createSplashWindow() {
     },
   });
 
-  const splashPath = isDev
-    ? path.join(__dirname, '../../splash.html')
-    : path.join(__dirname, '../dist/splash.html');
-
-  splashWindow.loadFile(splashPath);
+  splashWindow.loadFile(
+    isDev ? path.join(__dirname, '../../splash.html') : path.join(__dirname, '../dist/splash.html')
+  );
 
   splashWindow.once('ready-to-show', () => {
     splashWindow.show();
+    // Track when splash is actually shown for minimum display time
+    splashWindow.__shownAt = Date.now();
   });
 
   splashWindow.on('closed', () => (splashWindow = null));
 }
-
-let backendReady = false;
-let showScheduled = false;
 
 function tryToShowMainWindowAfterSplash() {
   if (!mainWindow) return;
   if (!mainWindow.__readyToShow) return;
   if (!backendReady) return;
 
-  // Show mainWindow and hide the splash after 10 seconds
-  if (showScheduled) return;
-  showScheduled = true;
-  setTimeout(() => {
+  const showMainWindow = () => {
     if (splashWindow) {
       try {
         splashWindow.destroy();
@@ -181,9 +179,29 @@ function tryToShowMainWindowAfterSplash() {
       }
       splashWindow = null;
     }
+    if (mainWindow) {
+      mainWindow.show();
+    }
+  };
 
-    if (mainWindow && !mainWindow.isVisible()) mainWindow.show();
-  }, 10000);
+  if (splashWindow && splashWindow.__shownAt) {
+    // Ensure splash is shown for at least 7 seconds
+    const minSplashTime = 7000;
+    const timeSinceShown = Date.now() - splashWindow.__shownAt;
+    const timeLeft = minSplashTime - timeSinceShown;
+
+    if (timeLeft > 0) {
+      logger.info(`Splash shown. Waiting ${timeLeft}ms before showing main window`);
+      setTimeout(showMainWindow, timeLeft);
+    } else {
+      logger.info('Splash minimum time already reached, showing main window');
+      showMainWindow();
+    }
+  } else {
+    // Fallback: show main window immediately if splash timing not available
+    logger.warn('Splash timing not available, showing main window immediately');
+    showMainWindow();
+  }
 }
 
 app.whenReady().then(async () => {
@@ -201,12 +219,14 @@ app.whenReady().then(async () => {
     tryToShowMainWindowAfterSplash();
   } else {
     createActivationWindow();
-    // For activation window, do not show until we hide the splash to avoid two visible windows
-    if (activationWindow) {
-      // make sure activation window is hidden on creation; then show after splash + 10s
-      activationWindow.hide();
-      activationWindow.once('ready-to-show', () => {
-        setTimeout(() => {
+    // For activation window, hide splash and show activation after minimum splash time
+    if (activationWindow && splashWindow && splashWindow.__shownAt) {
+      const minSplashTime = 7000;
+      const timeSinceShown = Date.now() - splashWindow.__shownAt;
+      const timeLeft = minSplashTime - timeSinceShown;
+
+      setTimeout(
+        () => {
           if (splashWindow) {
             try {
               splashWindow.destroy();
@@ -215,9 +235,27 @@ app.whenReady().then(async () => {
             }
             splashWindow = null;
           }
-          if (activationWindow && !activationWindow.isVisible()) activationWindow.show();
-        }, 10000);
-      });
+          if (activationWindow && !activationWindow.isDestroyed()) {
+            activationWindow.show();
+          }
+        },
+        timeLeft > 0 ? timeLeft : 0
+      );
+    } else if (activationWindow) {
+      // Fallback: show activation window immediately
+      setTimeout(() => {
+        if (splashWindow) {
+          try {
+            splashWindow.destroy();
+          } catch (err) {
+            logger.warn('Error destroying splash window', err);
+          }
+          splashWindow = null;
+        }
+        if (activationWindow && !activationWindow.isDestroyed()) {
+          activationWindow.show();
+        }
+      }, 2000); // Small delay to let splash show
     }
   }
 
@@ -363,4 +401,16 @@ ipcMain.handle('update:check', () => {
 
 ipcMain.handle('update:download', () => {
   startDownload();
+});
+
+// ---- First Run Setup ----
+ipcMain.handle('firstRun:createLock', () => {
+  try {
+    createLockFile();
+    logger.info('Lock file created successfully');
+    return { success: true };
+  } catch (error) {
+    logger.error('Failed to create lock file:', error);
+    return { success: false, error: error.message };
+  }
 });

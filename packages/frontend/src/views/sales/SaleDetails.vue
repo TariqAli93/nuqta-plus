@@ -1,9 +1,9 @@
 <template>
   <div>
     <v-card class="mb-4">
-      <div class="flex justify-center items-center">
+      <div class="flex items-center justify-center">
         <div class="flex items-center pa-3">
-          <div class="text-h6 font-semibold text-primary">تفاصيل الفاتورة</div>
+          <div class="font-semibold text-h6 text-primary">تفاصيل الفاتورة</div>
         </div>
 
         <v-spacer />
@@ -35,7 +35,7 @@
               <v-icon color="primary" class="ml-2">mdi-account</v-icon>
               <strong>معلومات العميل</strong>
             </div>
-            <div class="text-body-2 mr-8">
+            <div class="mr-8 text-body-2">
               <p class="mb-1"><strong>الاسم: </strong> {{ sale.customerName || 'زبون نقدي' }}</p>
               <p v-if="sale.customer && sale.customer.phone" class="mb-1">
                 <strong>الهاتف: </strong> {{ sale.customer.phone }}
@@ -48,7 +48,7 @@
               <v-icon color="primary" class="ml-2">mdi-cash-multiple</v-icon>
               <strong>معلومات الدفع</strong>
             </div>
-            <div class="text-body-2 mr-8">
+            <div class="mr-8 text-body-2">
               <p class="mb-1">
                 <strong>نوع الدفع: </strong> {{ getPaymentTypeText(sale.paymentType) }}
               </p>
@@ -73,7 +73,7 @@
               <v-icon color="primary" class="ml-2">mdi-chart-box</v-icon>
               <strong>الملخص المالي</strong>
             </div>
-            <div class="text-body-2 mr-8">
+            <div class="mr-8 text-body-2">
               <!-- عرض المجموع الأساسي -->
               <p v-if="sale.paymentType === 'installment' && sale.interestAmount > 0" class="mb-1">
                 <strong>إجمالي المنتجات: </strong>
@@ -133,7 +133,7 @@
               </div>
             </div>
           </v-col>
-          <v-col cols="12" md="1" class="d-flex align-center justify-center">
+          <v-col cols="12" md="1" class="justify-center d-flex align-center">
             <v-icon color="warning">mdi-plus</v-icon>
           </v-col>
           <v-col cols="12" md="3">
@@ -144,7 +144,7 @@
               </div>
             </div>
           </v-col>
-          <v-col cols="12" md="1" class="d-flex align-center justify-center">
+          <v-col cols="12" md="1" class="justify-center d-flex align-center">
             <v-icon color="success">mdi-equal</v-icon>
           </v-col>
           <v-col cols="12" md="4">
@@ -153,7 +153,7 @@
               <div class="text-h5 text-success font-weight-bold">
                 {{ formatCurrency(sale.total, sale.currency) }}
               </div>
-              <div class="text-caption text-grey mt-1">
+              <div class="mt-1 text-caption text-grey">
                 {{ sale.installments.length }} أقساط ×
                 {{ formatCurrency(sale.total / sale.installments.length, sale.currency) }}
               </div>
@@ -174,57 +174,62 @@
         <v-table>
           <thead>
             <tr>
-              <th class="text-right">#</th>
-              <th class="text-right">المنتج</th>
+              <th class="text-center">#</th>
+              <th class="text-center">المنتج</th>
               <th class="text-center">الكمية</th>
               <th class="text-center">سعر الوحدة</th>
+              <th class="text-center">خصم على الوحدة</th>
+              <th class="text-center">الملاحظات</th>
               <th class="text-center">المجموع</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(item, index) in sale.items" :key="item.id">
-              <td>{{ index + 1 }}</td>
-              <td>{{ item.productName }}</td>
+              <td class="text-center font-weight-bold">{{ index + 1 }}</td>
+              <td class="text-center">{{ item.productName }}</td>
               <td class="text-center">{{ item.quantity }}</td>
-              <td class="text-center">{{ formatCurrency(item.unitPrice, sale.currency) }}</td>
+              <td class="text-center">
+                {{ formatCurrency(item.unitPrice, sale.currency) }}
+              </td>
+              <td class="text-center">
+                {{ item.discount ? formatCurrency(item.discount, sale.currency) : '-' }}
+              </td>
+              <td class="text-center">{{ item.notes || '-' }}</td>
               <td class="text-center font-weight-bold">
                 {{ formatCurrency(item.subtotal, sale.currency) }}
               </td>
             </tr>
           </tbody>
+
+          <!-- المجموع مع الخصم و الفائدة -->
           <tfoot>
-            <!-- عرض المجموع الفرعي للمنتجات -->
+            <tr v-if="sale.discount && sale.discount > 0">
+              <td colspan="6" class="text-right font-weight-bold">الخصم على الفاتورة:</td>
+              <td class="text-center font-weight-bold text-error">
+                {{ formatCurrency(sale.discount, sale.currency) }}
+              </td>
+            </tr>
+
+            <tr>
+              <td colspan="6" class="text-right font-weight-bold">المجموع الفرعي:</td>
+              <td class="text-center font-weight-bold">
+                {{ formatCurrency(sale.total - sale.interestAmount, sale.currency) }}
+              </td>
+            </tr>
+
             <tr v-if="sale.paymentType === 'installment' && sale.interestAmount > 0">
-              <td colspan="4" class="text-left"><strong>المجموع الفرعي:</strong></td>
-              <td class="text-center">
-                <strong class="text-primary">{{
-                  formatCurrency(sale.total - (sale.interestAmount || 0), sale.currency)
-                }}</strong>
+              <td colspan="6" class="text-right font-weight-bold">الفائدة:</td>
+              <td class="text-center font-weight-bold text-warning">
+                + {{ formatCurrency(sale.interestAmount, sale.currency) }}
               </td>
             </tr>
-            <!-- عرض الفائدة إذا كانت موجودة -->
-            <tr
-              v-if="sale.paymentType === 'installment' && sale.interestAmount > 0"
-              class="bg-warning-lighten-4"
-            >
-              <td colspan="4" class="text-left">
-                <strong>الفائدة ({{ sale.interestRate }}%):</strong>
+
+            <tr v-if="sale.discount > 0 || sale.interestAmount > 0">
+              <td colspan="6" class="text-right font-weight-bold text-primary">
+                الإجمالي النهائي:
               </td>
-              <td class="text-center">
-                <strong class="text-warning">{{
-                  formatCurrency(sale.interestAmount, sale.currency)
-                }}</strong>
-              </td>
-            </tr>
-            <!-- المجموع النهائي -->
-            <tr class="bg-primary-lighten-5">
-              <td colspan="4" class="text-left">
-                <strong class="text-h6">الإجمالي النهائي:</strong>
-              </td>
-              <td class="text-center">
-                <strong class="text-h6 text-primary">{{
-                  formatCurrency(sale.total, sale.currency)
-                }}</strong>
+              <td class="text-center font-weight-bold text-primary text-h6">
+                {{ formatCurrency(sale.total, sale.currency) }}
               </td>
             </tr>
           </tfoot>

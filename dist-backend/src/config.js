@@ -1,4 +1,7 @@
 import 'dotenv/config';
+import { dbFilePath } from '../src/utils/database.js';
+
+process.env.DATABASE_PATH = dbFilePath;
 
 const config = {
   server: {
@@ -14,7 +17,7 @@ const config = {
     expiresIn: '7d',
   },
   database: {
-    path: process.env.DATABASE_PATH || './packages/backend/data/nuqtaplus.db',
+    path: process.env.DATABASE_PATH || dbFilePath,
   },
   rateLimit: {
     max: parseInt(process.env.RATE_LIMIT_MAX || '1000000', 10),

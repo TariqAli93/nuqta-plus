@@ -59,6 +59,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ---- Manual trigger from Vue ----
   checkUpdatesManually: () => ipcRenderer.invoke('update:check'),
 
+  // ---- First run setup ----
+  createLockFile: () => ipcRenderer.invoke('firstRun:createLock'),
+
   // ---- fallback invoke ----
   invoke: (channel, data) => ipcRenderer.invoke(channel, data),
 });

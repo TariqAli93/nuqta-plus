@@ -23,7 +23,7 @@ const companyInfoSchema = z.object({
   phone: z.string().max(20).optional(),
   phone2: z.string().max(20).optional(),
   logoUrl: z.string().optional(),
-  invoiceType: z.enum(['roll', 'a4']).optional(),
+  invoiceType: z.enum(['a4', 'a5', 'roll-58', 'roll-80', 'roll-wide']).optional(),
 });
 
 export class SettingsController {

@@ -1,10 +1,173 @@
 import db, { saveDatabase } from '../db.js';
-import { users, roles, activityLogs, rolePermissions, permissions } from '../models/index.js';
+import {
+  users,
+  roles,
+  activityLogs,
+  rolePermissions,
+  permissions,
+  settings,
+} from '../models/index.js';
 import { hashPassword, comparePassword } from '../utils/helpers.js';
 import { AuthenticationError, NotFoundError, ConflictError } from '../utils/errors.js';
 import { eq } from 'drizzle-orm';
 
 export class AuthService {
+  /**
+   * Check if initial setup is required
+   * @returns {Promise<Object>} Initial setup status
+   */
+  async checkInitialSetup() {
+    // Check if any users exist
+    const allUsers = await db.select().from(users).limit(1);
+    const hasUsers = allUsers.length > 0;
+
+    // Check if company info exists in settings
+    const companySettings = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.key, 'company_name'))
+      .limit(1);
+    const hasCompanyInfo = companySettings.length > 0;
+
+    const isFirstRun = !hasUsers && !hasCompanyInfo;
+
+    return {
+      isFirstRun,
+      hasUsers,
+      hasCompanyInfo,
+      username: 'admin',
+      password: 'Admin@123',
+    };
+  }
+
+  /**
+   * Create first admin user (only when database is empty)
+   * @param {Object} userData - User registration data
+   * @param {Object} fastify - Fastify instance for JWT signing
+   * @returns {Promise<Object>} Created user and JWT token
+   */
+  async createFirstUser(userData, fastify) {
+    // Verify database is empty
+    const allUsers = await db.select().from(users).limit(1);
+    if (allUsers.length > 0) {
+      throw new ConflictError('Users already exist. First user setup is not available.');
+    }
+
+    // Ensure an admin role exists
+    let adminRoleId = userData.roleId;
+
+    if (adminRoleId) {
+      const [existingRole] = await db
+        .select()
+        .from(roles)
+        .where(eq(roles.id, adminRoleId))
+        .limit(1);
+      if (!existingRole) {
+        adminRoleId = null; // fallback to create/find default admin
+      }
+    }
+
+    if (!adminRoleId) {
+      const [existingAdmin] = await db.select().from(roles).where(eq(roles.name, 'admin')).limit(1);
+
+      if (existingAdmin) {
+        adminRoleId = existingAdmin.id;
+      } else {
+        const [newAdminRole] = await db
+          .insert(roles)
+          .values({ name: 'admin', description: 'Administrator' })
+          .returning();
+        adminRoleId = newAdminRole.id;
+      }
+    }
+
+    // Ensure admin role has all permissions
+    const existingRolePerms = await db
+      .select({ permissionId: rolePermissions.permissionId })
+      .from(rolePermissions)
+      .where(eq(rolePermissions.roleId, adminRoleId));
+
+    const existingPermissionIds = new Set(existingRolePerms.map((rp) => rp.permissionId));
+    let allPerms = await db.select().from(permissions);
+
+    // If no permissions exist, create complete permissions list
+    if (allPerms.length === 0) {
+      const permissionsList = {
+        users: ['view', 'create', 'read', 'update', 'delete'],
+        permissions: ['view', 'create', 'read', 'update', 'delete'],
+        roles: ['view', 'create', 'read', 'update', 'delete'],
+        customers: ['view', 'create', 'read', 'update', 'delete'],
+        products: ['view', 'create', 'read', 'update', 'delete'],
+        sales: ['view', 'create', 'read', 'update', 'delete'],
+        categories: ['view', 'create', 'read', 'update', 'delete'],
+        reports: ['view', 'read'],
+        dashboard: ['view', 'read'],
+        settings: ['view', 'read', 'update', 'create', 'delete'],
+      };
+
+      const basicPermissions = [];
+      for (const [resource, actions] of Object.entries(permissionsList)) {
+        for (const action of actions) {
+          basicPermissions.push({
+            name: `${action}:${resource}`,
+            resource,
+            action,
+          });
+        }
+      }
+
+      await db.insert(permissions).values(basicPermissions);
+      allPerms = await db.select().from(permissions);
+    }
+
+    const missingPermissions = allPerms.filter((perm) => !existingPermissionIds.has(perm.id));
+
+    if (missingPermissions.length > 0) {
+      await db.insert(rolePermissions).values(
+        missingPermissions.map((perm) => ({
+          roleId: adminRoleId,
+          permissionId: perm.id,
+        }))
+      );
+    }
+
+    // Set roleId to the resolved admin role
+    const userDataWithRole = {
+      ...userData,
+      roleId: adminRoleId,
+    };
+
+    // Hash password
+    const hashedPassword = await hashPassword(userDataWithRole.password);
+
+    // Create first user
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        ...userDataWithRole,
+        password: hashedPassword,
+      })
+      .returning();
+
+    // Generate token
+    const token = fastify.jwt.sign({
+      id: newUser.id,
+      username: newUser.username,
+      roleId: newUser.roleId,
+    });
+
+    // Remove password from response
+    const userWithoutPassword = { ...newUser };
+    delete userWithoutPassword.password;
+
+    saveDatabase();
+
+    return {
+      user: userWithoutPassword,
+      token,
+    };
+  }
+
   /**
    * Register new user
    * @param {Object} userData - User registration data
@@ -218,71 +381,5 @@ export class AuthService {
     await db.update(users).set({ password: hashedPassword }).where(eq(users.id, userId));
 
     saveDatabase();
-  }
-
-  /**
-   * Create first user (admin) during initial setup
-   * @param {Object} userData - User data
-   * @param {Object} fastify - Fastify instance
-   * @returns {Promise<Object>} Created user and token
-   */
-  async createFirstUser(userData, fastify) {
-    // Check if any users exist
-    const existingUserCount = await db.select().from(users).limit(1);
-    if (existingUserCount.length > 0) {
-      throw new ConflictError('Users already exist');
-    }
-
-    await import('../seed.js');
-
-    // Get admin role
-    const [adminRole] = await db.select().from(roles).where(eq(roles.name, 'admin')).limit(1);
-    if (!adminRole) {
-      throw new Error('Admin role not found. Seed data might be missing.');
-    }
-
-    // Hash password
-    const hashedPassword = await hashPassword(userData.password);
-
-    // Create admin user
-    const [newUser] = await db
-      .insert(users)
-      .values({
-        ...userData,
-        password: hashedPassword,
-        roleId: adminRole.id,
-        isActive: true,
-      })
-      .returning();
-
-    // Generate token
-    const token = fastify.jwt.sign({
-      id: newUser.id,
-      username: newUser.username,
-      roleId: newUser.roleId,
-    });
-
-    // Remove password from response
-    const userWithoutPassword = { ...newUser };
-    delete userWithoutPassword.password;
-
-    saveDatabase();
-
-    return {
-      user: userWithoutPassword,
-      token,
-    };
-  }
-
-  async getInitialSetupInfo() {
-    // check if any users exist or any user isActive true
-    const existingUserCount = await db
-      .select()
-      .from(users)
-      .where(eq(users.isActive, true))
-      .limit(1);
-    return {
-      isFirstRun: existingUserCount.length === 0,
-    };
   }
 }

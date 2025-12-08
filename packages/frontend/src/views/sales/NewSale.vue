@@ -1,8 +1,8 @@
 <template>
   <div>
     <v-card class="mb-4">
-      <div class="flex justify-space-between items-center pa-3">
-        <div class="text-h6 font-semibold text-primary">بطاقة بيع جديدة</div>
+      <div class="flex items-center justify-space-between pa-3">
+        <div class="font-semibold text-h6 text-primary">بطاقة بيع جديدة</div>
         <v-btn color="primary" @click="router.back()">
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
@@ -30,7 +30,7 @@
           <v-divider class="my-4"></v-divider>
 
           <!-- 🧾 المنتجات -->
-          <h3 class="text-h6 mb-4">المنتجات</h3>
+          <h3 class="mb-4 text-h6">المنتجات</h3>
           <v-text-field
             v-model="barcode"
             label="قراءة الباركود"
@@ -41,8 +41,8 @@
             class="mb-4"
           />
 
-          <v-row v-for="(item, index) in sale.items" :key="index" class="align-center mb-3">
-            <v-col cols="12" md="5">
+          <v-row v-for="(item, index) in sale.items" :key="index" class="mb-3 align-center">
+            <v-col cols="12" md="3">
               <v-select
                 v-model="item.productId"
                 :items="products"
@@ -53,7 +53,7 @@
                 @update:model-value="updateProductDetails(item)"
               />
             </v-col>
-            <v-col cols="12" md="2">
+            <v-col cols="12" md="3">
               <v-text-field
                 v-model.number="item.quantity"
                 label="الكمية"
@@ -62,20 +62,33 @@
                 :rules="[rules.required]"
               />
             </v-col>
-            <v-col cols="12" md="2">
+            <v-col cols="12" md="3">
               <v-text-field
                 :model-value="formatCurrency(item.unitPrice)"
                 :suffix="sale.currency"
-                label="السعر"
+                label="سعر الوحدة"
                 readonly
               />
             </v-col>
-            <v-col cols="12" md="2">
+            <v-col cols="12" md="3">
               <v-text-field
-                :model-value="formatCurrency(item.quantity * item.unitPrice)"
+                v-model.number="item.discount"
                 :suffix="sale.currency"
-                label="المجموع"
+                label="الخصم على الوحدة"
+                type="number"
+                min="0"
+                hint="اختياري"
+                persistent-hint
+              />
+            </v-col>
+            <v-col cols="12" md="12">
+              <v-text-field
+                :model-value="formatCurrency(item.quantity * item.unitPrice - (item.discount || 0))"
+                :suffix="sale.currency"
+                label="صافي السعر"
                 readonly
+                hint="بعد الخصم"
+                persistent-hint
               />
             </v-col>
             <v-col cols="12" md="1" class="d-flex align-center">
@@ -118,7 +131,7 @@
           <v-expand-transition>
             <div v-if="sale.paymentType === 'installment'">
               <v-divider class="my-4"></v-divider>
-              <h3 class="text-h6 mb-3">تفاصيل التقسيط</h3>
+              <h3 class="mb-3 text-h6">تفاصيل التقسيط</h3>
               <v-row>
                 <v-col cols="12" md="4">
                   <v-text-field
@@ -148,20 +161,20 @@
                 </v-col>
               </v-row>
 
-              <v-card variant="tonal" color="info" class="pa-3 mt-3">
-                <div class="d-flex justify-space-between border-b py-2">
+              <v-card variant="tonal" color="info" class="mt-3 pa-3">
+                <div class="py-2 border-b d-flex justify-space-between">
                   <span>المبلغ بعد الفائدة:</span>
                   <span class="font-weight-bold">
                     {{ formatCurrency(totalWithInterest) }}
                   </span>
                 </div>
-                <div class="d-flex justify-space-between border-b py-2">
+                <div class="py-2 border-b d-flex justify-space-between">
                   <span>قيمة القسط الواحد:</span>
                   <span class="font-weight-bold">
                     {{ formatCurrency(installmentAmount) }}
                   </span>
                 </div>
-                <div class="d-flex justify-space-between mt-2">
+                <div class="mt-2 d-flex justify-space-between">
                   <span>المبلغ المتبقي:</span>
                   <span class="font-weight-bold text-error">
                     {{ formatCurrency(remainingAmount) }}
@@ -174,19 +187,22 @@
           <v-divider class="my-4"></v-divider>
 
           <!-- 💰 الملخص -->
-          <v-card variant="outlined" class="pa-4 mb-4">
+          <v-card variant="outlined" class="mb-4 pa-4">
             <div
               v-for="summary in saleSummary"
               :key="summary.label"
-              class="d-flex justify-space-between mb-1 border-b py-3"
+              class="py-3 mb-1 border-b d-flex justify-space-between"
             >
               <span>{{ summary.label }}:</span>
               <span class="font-weight-bold">{{ summary.value }}</span>
             </div>
           </v-card>
 
+          <!-- 📝 ملاحظات -->
+          <v-textarea v-model="sale.notes" label="ملاحظات" rows="3" auto-grow class="mb-4" />
+
           <!-- أزرار -->
-          <div class="d-flex gap-2">
+          <div class="gap-2 d-flex">
             <v-btn color="primary" :loading="loading" @click="submitSale"> حفظ البيع </v-btn>
             <v-btn variant="outlined" @click="$router.back()">إلغاء</v-btn>
           </div>
@@ -225,6 +241,7 @@ const sale = ref({
   paidAmount: 0,
   installmentCount: 3,
   interestRate: 25,
+  notes: '',
 });
 
 const products = ref([]);
@@ -263,7 +280,13 @@ const paymentTypes = [
 ];
 
 /* 🧮 حسابات البيع */
-const subtotal = computed(() => sale.value.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0));
+const subtotal = computed(() =>
+  sale.value.items.reduce((s, i) => {
+    const itemTotal = i.quantity * i.unitPrice;
+    const itemDiscount = i.discount || 0;
+    return s + (itemTotal - itemDiscount);
+  }, 0)
+);
 const total = computed(() => subtotal.value - (sale.value.discount || 0));
 
 // ✅ الفائدة عند التقسيط
@@ -304,6 +327,24 @@ watch(
   }
 );
 
+// مراقبة تغيير الكمية للتحقق من توفرها في المخزون
+watch(
+  () => sale.value.items.map((item) => ({ id: item.productId, qty: item.quantity })),
+  (newItems) => {
+    newItems.forEach((item, index) => {
+      if (!item.id) return;
+      const product = products.value.find((p) => p.id === item.id);
+      if (product && item.qty > product.stock) {
+        notify.error(
+          `❌ الكمية المطلوبة من "${product.name}" (${item.qty}) أكبر من المتوفر في المخزون (${product.stock})`
+        );
+        sale.value.items[index].quantity = product.stock;
+      }
+    });
+  },
+  { deep: true }
+);
+
 // ✅ تحديث المبلغ المدفوع عند تغيير الإجمالي
 watch(
   () => [total.value, totalWithInterest.value, installmentAmount.value],
@@ -317,9 +358,16 @@ watch(
 );
 
 /* 🧾 الملخص */
+const itemsTotal = computed(() =>
+  sale.value.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0)
+);
+const itemsDiscount = computed(() => sale.value.items.reduce((s, i) => s + (i.discount || 0), 0));
+
 const saleSummary = computed(() => [
+  { label: 'إجمالي المنتجات', value: formatCurrency(itemsTotal.value) },
+  { label: 'خصم المنتجات', value: formatCurrency(itemsDiscount.value) },
   { label: 'المجموع الفرعي', value: formatCurrency(subtotal.value) },
-  { label: 'الخصم', value: formatCurrency(sale.value.discount) },
+  { label: 'خصم إضافي', value: formatCurrency(sale.value.discount) },
   { label: 'الإجمالي بعد الخصم', value: formatCurrency(total.value) },
   ...(sale.value.paymentType === 'installment'
     ? [
@@ -333,21 +381,29 @@ const saleSummary = computed(() => [
 ]);
 
 /* 📦 إدارة المنتجات */
-const addItem = () => sale.value.items.push({ productId: null, quantity: 1, unitPrice: 0 });
+const addItem = () =>
+  sale.value.items.push({ productId: null, quantity: 1, unitPrice: 0, discount: 0 });
 const removeItem = (index) => sale.value.items.splice(index, 1);
 const updateProductDetails = (item) => {
   const p = products.value.find((prod) => prod.id === item.productId);
+  if (!p) return;
+
   if (p.stock <= 0) {
     notify.error('❌ المنتج غير متوفر في المخزون');
-    // إعادة تعيين المنتج المحدد
     item.productId = null;
     return;
   }
-  if (p) {
-    item.unitPriceOriginal = p.sellingPrice;
-    item.originalCurrency = p.currency || 'USD';
-    item.unitPrice = convertPrice(p.sellingPrice, item.originalCurrency, sale.value.currency);
+
+  if (item.quantity > p.stock) {
+    notify.error(`❌ الكمية المطلوبة (${item.quantity}) أكبر من المتوفر في المخزون (${p.stock})`);
+    item.quantity = p.stock;
   }
+
+  item.unitPriceOriginal = p.sellingPrice;
+  item.originalCurrency = p.currency || 'USD';
+  item.unitPrice = convertPrice(p.sellingPrice, item.originalCurrency, sale.value.currency);
+  item.discount = item.discount || 0;
+  item.availableStock = p.stock;
 };
 
 /* 🔍 قراءة الباركود */
@@ -357,20 +413,28 @@ const handleBarcodeScan = () => {
   const product = products.value.find((p) => p.barcode === code);
   if (!product) return notify.error('❌ المنتج غير موجود');
   if (product.stock <= 0) return notify.error('❌ المنتج غير متوفر في المخزون');
+
   const existing = sale.value.items.find((i) => i.productId === product.id);
-  existing
-    ? existing.quantity++
-    : sale.value.items.push({
-        productId: product.id,
-        quantity: 1,
-        unitPriceOriginal: product.sellingPrice,
-        originalCurrency: product.currency || 'USD',
-        unitPrice: convertPrice(
-          product.sellingPrice,
-          product.currency || 'USD',
-          sale.value.currency
-        ),
-      });
+
+  if (existing) {
+    const newQuantity = existing.quantity + 1;
+    if (newQuantity > product.stock) {
+      return notify.error(
+        `❌ الكمية المطلوبة (${newQuantity}) أكبر من المتوفر في المخزون (${product.stock})`
+      );
+    }
+    existing.quantity = newQuantity;
+  } else {
+    sale.value.items.push({
+      productId: product.id,
+      quantity: 1,
+      unitPriceOriginal: product.sellingPrice,
+      originalCurrency: product.currency || 'USD',
+      unitPrice: convertPrice(product.sellingPrice, product.currency || 'USD', sale.value.currency),
+      discount: 0,
+      availableStock: product.stock,
+    });
+  }
 
   barcode.value = '';
 };
@@ -381,6 +445,21 @@ const submitSale = async () => {
   if (!valid) return notify.error('يرجى تعبئة جميع الحقول');
 
   if (!sale.value.items.length) return notify.error('يجب إضافة منتج واحد على الأقل');
+
+  // التحقق من توفر الكميات في المخزون
+  for (const item of sale.value.items) {
+    const product = products.value.find((p) => p.id === item.productId);
+    if (!product) {
+      notify.error(`❌ المنتج غير موجود`);
+      return;
+    }
+    if (product.stock < item.quantity) {
+      notify.error(
+        `❌ الكمية المطلوبة من "${product.name}" (${item.quantity}) أكبر من المتوفر في المخزون (${product.stock})`
+      );
+      return;
+    }
+  }
 
   loading.value = true;
   try {

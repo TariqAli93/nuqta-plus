@@ -1,8 +1,8 @@
 <template>
   <div>
     <v-card class="mb-4">
-      <div class="flex justify-space-between items-center pa-3">
-        <div class="text-h6 font-semibold text-primary">إدارة التصنيفات</div>
+      <div class="flex items-center justify-space-between pa-3">
+        <div class="font-semibold text-h6 text-primary">إدارة التصنيفات</div>
         <v-btn color="primary" variant="flat" prepend-icon="mdi-plus" @click="openDialog()"
           >تصنيف جديد
         </v-btn>
@@ -10,29 +10,27 @@
     </v-card>
 
     <v-card>
-      <v-card-text>
-        <v-data-table
-          :headers="headers"
-          :items="categoryStore.categories"
-          :loading="categoryStore.loading"
-        >
-          <template v-slot:[`item.actions`]="{ item }">
-            <v-btn icon="mdi-pencil" size="small" variant="text" @click="openDialog(item)"></v-btn>
-            <v-btn
-              icon="mdi-delete"
-              size="small"
-              variant="text"
-              color="error"
-              @click="confirmDelete(item)"
-            ></v-btn>
-          </template>
-        </v-data-table>
-      </v-card-text>
+      <v-data-table
+        :headers="headers"
+        :items="categoryStore.categories"
+        :loading="categoryStore.loading"
+      >
+        <template v-slot:[`item.actions`]="{ item }">
+          <v-btn icon="mdi-pencil" size="small" variant="text" @click="openDialog(item)"></v-btn>
+          <v-btn
+            icon="mdi-delete"
+            size="small"
+            variant="text"
+            color="error"
+            @click="confirmDelete(item)"
+          ></v-btn>
+        </template>
+      </v-data-table>
     </v-card>
 
     <v-dialog v-model="dialog" max-width="500">
       <v-card>
-        <v-card-title class="bg-secondary text-white">{{
+        <v-card-title class="text-white bg-secondary">{{
           isEdit ? 'تعديل تصنيف' : 'تصنيف جديد'
         }}</v-card-title>
         <v-card-text>
@@ -60,7 +58,7 @@
 
     <v-dialog v-model="deleteDialog" max-width="400">
       <v-card>
-        <v-card-title class="bg-secondary text-white">تأكيد الحذف</v-card-title>
+        <v-card-title class="text-white bg-secondary">تأكيد الحذف</v-card-title>
         <v-card-text> هل أنت متأكد من حذف التصنيف {{ selectedCategory?.name }}؟ </v-card-text>
 
         <v-divider></v-divider>

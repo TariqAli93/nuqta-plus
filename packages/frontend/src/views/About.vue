@@ -185,10 +185,10 @@
                   <div class="mb-2 text-subtitle-2 text-medium-emphasis">الموقع الإلكتروني</div>
                   <div class="text-body-1 font-weight-bold">
                     <a
-                      href="https://www.codel.com/"
+                      href="http://codelapps.com/"
                       target="_blank"
                       class="text-decoration-none"
-                      @click.prevent="openExternal('https://www.codel.com/')"
+                      @click.prevent="openExternal('http://codelapps.com/')"
                     >
                       Codel
                     </a>
