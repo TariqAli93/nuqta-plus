@@ -545,7 +545,7 @@ onMounted(() => {
     try {
       await settingsStore.fetchCurrencySettings();
     } catch (e) {
-      console.error('Failed to load currency settings', e);
+      // Error handled silently
     }
 
     const end = new Date();

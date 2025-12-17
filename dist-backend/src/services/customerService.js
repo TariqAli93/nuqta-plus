@@ -1,7 +1,7 @@
 import db, { saveDatabase } from '../db.js';
 import { customers, sales, saleItems } from '../models/index.js';
 import { NotFoundError, ConflictError } from '../utils/errors.js';
-import { eq, like, or, desc, count } from 'drizzle-orm';
+import { eq, like, or, desc } from 'drizzle-orm';
 
 export class CustomerService {
   async create(customerData, userId) {
@@ -31,7 +31,6 @@ export class CustomerService {
 
   async getAll(filters = {}) {
     const { page = 1, limit = 10, search } = filters;
-    const offset = (page - 1) * limit;
 
     let query = db.select().from(customers);
 
@@ -41,13 +40,13 @@ export class CustomerService {
       );
     }
 
-    const results = await query.orderBy(desc(customers.createdAt)).limit(limit).offset(offset);
+    // Get all results and do manual pagination (sql.js doesn't support offset)
+    const allResults = await query.orderBy(desc(customers.createdAt));
 
-    const [{ total }] = await db.select({ total: count() }).from(customers);
-
-    // join sales table
-    query = query.leftJoin(sales, eq(customers.id, sales.customerId));
-    query = query.leftJoin(saleItems, eq(sales.id, saleItems.saleId));
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const results = allResults.slice(startIndex, endIndex);
+    const total = allResults.length;
 
     return {
       data: results,

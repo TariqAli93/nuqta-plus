@@ -241,7 +241,7 @@ const onSearchInput = async (query) => {
       const response = await customerStore.fetchCustomers({ limit: 50 });
       searchResults.value = response.data || [];
     } catch (error) {
-      console.error('خطأ في تحميل قائمة العملاء:', error);
+      // Error handled by notification
     }
     return;
   }
@@ -254,7 +254,6 @@ const onSearchInput = async (query) => {
     });
     searchResults.value = response.data || [];
   } catch (error) {
-    console.error('خطأ في البحث:', error);
     searchResults.value = [];
   } finally {
     searchLoading.value = false;
@@ -293,7 +292,6 @@ const setSelectedCustomer = (customer) => {
 const createNewCustomer = async () => {
   // Check if form ref exists
   if (!newCustomerForm.value) {
-    console.error('Form reference is not available');
     showErrorNotification('حدث خطأ في النموذج');
     return;
   }
@@ -301,13 +299,11 @@ const createNewCustomer = async () => {
   // Validate form
   const { valid } = await newCustomerForm.value.validate();
   if (!valid) {
-    console.warn('Form validation failed');
     return;
   }
 
   // Check if name is provided
   if (!newCustomerData.value.name || newCustomerData.value.name.trim() === '') {
-    console.error('Customer name is required');
     showErrorNotification('اسم العميل مطلوب');
     return;
   }
@@ -345,13 +341,6 @@ const createNewCustomer = async () => {
 
     showSuccessNotification(`تم إضافة العميل: ${newCustomer.name}`);
   } catch (error) {
-    console.error('خطأ في إضافة العميل:', error);
-    console.error('Error details:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-    });
-
     // Handle specific error messages
     let errorMessage = 'فشل في إضافة العميل الجديد';
 
@@ -425,7 +414,7 @@ const loadCustomerById = async (customerId) => {
     selectedCustomer.value = customer;
     showSelector.value = false;
   } catch (error) {
-    console.error('خطأ في تحميل بيانات العميل:', error);
+    // Error handled by notification
   }
 };
 
@@ -440,7 +429,7 @@ onMounted(async () => {
     const response = await customerStore.fetchCustomers({ limit: 50 });
     searchResults.value = response.data || [];
   } catch (error) {
-    console.error('خطأ في تحميل قائمة العملاء:', error);
+    // Error handled by notification
   }
 });
 

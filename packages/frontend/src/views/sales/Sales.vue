@@ -233,6 +233,5 @@ onMounted(async () => {
   await saleStore.fetchSales();
   await customerStore.fetchCustomers();
   customers.value = customerStore.customers;
-  console.log(userRoles.value);
 });
 </script>

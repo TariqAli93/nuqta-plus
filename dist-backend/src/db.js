@@ -56,15 +56,58 @@ async function initDB() {
   // Create Drizzle instance
   const db = drizzle(sqlite, { schema });
 
-  // Run pending migrations (ensure tables exist)
+  // Check if migrations table exists
+  const checkMigrationsTable = () => {
+    try {
+      const result = sqlite.exec(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name='__drizzle_migrations'
+      `);
+      return result.length > 0 && result[0].values.length > 0;
+    } catch {
+      return false;
+    }
+  };
+
+  // Run pending migrations only if migrations table doesn't exist or is empty
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = pathDirname(__filename);
   const migrationsFolder = join(__dirname, '../drizzle');
-  await migrate(db, { migrationsFolder });
+
+  try {
+    const hasMigrationsTable = checkMigrationsTable();
+
+    if (!hasMigrationsTable) {
+      // First time - run migrations
+      await migrate(db, { migrationsFolder });
+      console.log('✅ Database migrations applied successfully');
+    } else {
+      // Check if all tables exist
+      const result = sqlite.exec(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name='users'
+      `);
+      const tablesExist = result.length > 0 && result[0].values.length > 0;
+
+      if (!tablesExist) {
+        // Tables missing - run migrations
+        await migrate(db, { migrationsFolder });
+        console.log('✅ Database migrations applied successfully');
+      } else {
+        console.log('ℹ️  Database already migrated - skipping');
+      }
+    }
+  } catch (error) {
+    // If migration fails because tables exist, it's okay
+    if (error.message?.includes('already exists')) {
+      console.log('⚠️  Migrations skipped - tables already exist');
+    } else {
+      throw error;
+    }
+  }
 
   // Persist DB to disk after migrations
   saveDatabase();
-
   return db;
 }
 

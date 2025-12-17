@@ -17,11 +17,11 @@
 </template>
 <script setup>
 import { onMounted } from 'vue';
-import { useAuthStore } from './stores/auth';
-import AppSnackbar from './components/AppSnackbar.vue';
-import AppErrorDialog from './components/AppErrorDialog.vue';
-import LoadingSpinner from './components/LoadingSpinner.vue';
-import LoadingProgressBar from './components/LoadingProgressBar.vue';
+import { useAuthStore } from '@/stores/auth';
+import AppSnackbar from '@/components/AppSnackbar.vue';
+import AppErrorDialog from '@/components/AppErrorDialog.vue';
+import LoadingSpinner from '@/components/LoadingSpinner.vue';
+import LoadingProgressBar from '@/components/LoadingProgressBar.vue';
 import UpdateNotification from '@/components/UpdateNotification.vue';
 import CreateFirstUser from '@/components/CreateFirstUser.vue';
 

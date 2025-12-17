@@ -313,7 +313,7 @@ const handleSubmit = async () => {
     }
     router.push({ name: 'Products' });
   } catch (error) {
-    console.error('Error saving product:', error);
+    // Error handled by notification
   } finally {
     loading.value = false;
   }
@@ -389,7 +389,7 @@ onMounted(async () => {
       await productStore.fetchProduct(route.params.id);
       formData.value = { ...productStore.currentProduct };
     } catch (error) {
-      console.error('Error fetching product:', error);
+      // Error handled by notification
     } finally {
       loading.value = false;
     }

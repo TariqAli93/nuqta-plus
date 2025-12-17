@@ -4,6 +4,7 @@ import config from './config.js';
 import securityPlugin from './plugins/security.js';
 import authPlugin from './plugins/auth.js';
 import errorHandlerPlugin from './plugins/errorHandler.js';
+import debuggerPlugin from './plugins/debugger.js';
 
 // Routes
 import authRoutes from './routes/authRoutes.js';
@@ -17,11 +18,12 @@ import roleRoutes from './routes/roleRoutes.js';
 import permissionRoutes from './routes/permissionRoutes.js';
 import currencyRoutes from './routes/currencyRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
+import debugRoutes from './routes/debugRoutes.js';
 
 // Initialize Fastify
 const fastify = Fastify({
   logger: {
-    level: config.logging.level,
+    level: config.logging.level || 'info',
     transport: config.logging.pretty
       ? {
           target: 'pino-pretty',
@@ -48,6 +50,7 @@ console.log('─'.repeat(50));
 const start = async () => {
   try {
     // Register plugins
+    await fastify.register(debuggerPlugin); // Register debugger first to track everything
     await fastify.register(securityPlugin);
     await fastify.register(authPlugin);
     await fastify.register(errorHandlerPlugin);
@@ -82,6 +85,7 @@ const start = async () => {
     await fastify.register(permissionRoutes, { prefix: '/api/permissions' });
     await fastify.register(currencyRoutes, { prefix: '/api/currencies' });
     await fastify.register(settingsRoutes, { prefix: '/api/settings' });
+    await fastify.register(debugRoutes, { prefix: '/debug' }); // Debug routes
 
     // Start listening
     await fastify.listen({

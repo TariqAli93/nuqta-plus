@@ -86,7 +86,7 @@ const handleSubmit = async () => {
     }
     router.push({ name: 'Customers' });
   } catch (error) {
-    console.error('Error saving customer:', error);
+    // Error handled by notification
   } finally {
     loading.value = false;
   }
@@ -98,7 +98,6 @@ onMounted(async () => {
     try {
       const customersList = await customerStore.fetchCustomers();
       const currentCustomer = customersList.data.find((c) => {
-        console.log('Comparing', c.id, route.params.id);
         return c.id === parseInt(route.params.id);
       });
       formData.value = {
@@ -109,7 +108,7 @@ onMounted(async () => {
         notes: currentCustomer?.notes,
       };
     } catch (error) {
-      console.error('Error fetching customer:', error);
+      // Error handled by notification
     } finally {
       loading.value = false;
     }

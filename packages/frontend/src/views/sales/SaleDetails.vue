@@ -8,10 +8,22 @@
 
         <v-spacer />
 
-        <v-btn color="primary" prepend-icon="mdi-printer" @click="handlePrint"
-          >طباعة الفاتورة</v-btn
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-printer"
+          @click="handlePrint"
+          :loading="isPrinting"
         >
-        <v-btn variant="text" @click="$router.back()">
+          طباعة
+        </v-btn>
+
+        <v-btn class="mr-3" color="secondary" prepend-icon="mdi-eye" @click="previewPrint">
+          معاينة الطباعة
+        </v-btn>
+
+        <select-printer class="mr-3" />
+
+        <v-btn variant="text" @click="$router.back()" class="mr-2">
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
       </div>
@@ -20,10 +32,17 @@
     <v-card v-if="sale" class="mb-4">
       <v-card-title class="d-flex justify-space-between align-center">
         <div>
-          <div class="text-h5">فاتورة رقم: {{ sale.invoiceNumber }}</div>
+          <div class="text-h5">
+            رقم الفاتورة:
+            <v-chip>{{ sale.invoiceNumber }}</v-chip>
+          </div>
           <div class="text-caption text-grey">{{ toYmdWithTime(sale.createdAt) }}</div>
         </div>
-        <v-chip :color="getStatusColor(sale.status)" size="large">
+        <v-chip
+          v-if="sale.paymentType === 'installment'"
+          :color="getStatusColor(sale.status)"
+          size="large"
+        >
           {{ getStatusText(sale.status) }}
         </v-chip>
       </v-card-title>
@@ -211,7 +230,10 @@
             </tr>
 
             <tr>
-              <td colspan="6" class="text-right font-weight-bold">المجموع الفرعي:</td>
+              <td colspan="6" class="text-right font-weight-bold">
+                <span v-if="sale.paymentType === 'installment'"> المجموع الفرعي: </span>
+                <span v-else>الإجمالي:</span>
+              </td>
               <td class="text-center font-weight-bold">
                 {{ formatCurrency(sale.total - sale.interestAmount, sale.currency) }}
               </td>
@@ -382,8 +404,8 @@
       </v-card-text>
     </v-card>
 
-    <div id="invoiceComponent" ref="invoiceComponent">
-      <sale-details-invoice v-if="sale" :sale="saleForPrint" />
+    <div ref="invoiceWrapperRef">
+      <a4 v-if="sale" :sale="sale" />
     </div>
   </div>
 </template>
@@ -392,18 +414,37 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useSaleStore } from '@/stores/sale';
+import { useSettingsStore } from '@/stores/settings';
 import { useNotificationStore } from '@/stores/notification';
-import SaleDetailsInvoice from '@/components/SaleDetailsInvoice.vue';
-import { useVueToPrint } from 'vue-to-print';
+import SelectPrinter from '@/components/SelectPrinter.vue';
+import { a4, printCss } from '../../components/print/a4';
+import {
+  toYmd,
+  toYmdWithTime,
+  formatCurrency,
+  getStatusColor,
+  getStatusText,
+  getPaymentTypeText,
+  getPaymentMethodText,
+  buildHtmlInvoice,
+} from '@/utils/helpers';
 
-const route = useRoute();
+const { params } = useRoute();
 const saleStore = useSaleStore();
+const settingsStore = useSettingsStore();
 const notificationStore = useNotificationStore();
+
+const isPrinting = ref(false);
+const invoiceWrapperRef = ref(null);
+const settings = reactve({});
+
+const previewPrint = () => {
+  console.log('Preview print clicked');
+};
 
 // state
 const sale = ref(null);
 const loadingPayment = ref(false);
-const invoiceComponent = ref(null);
 
 const paymentData = ref({
   amount: null,
@@ -411,26 +452,6 @@ const paymentData = ref({
   currency: 'USD',
   notes: '',
 });
-
-// utils
-const toYmd = (date) => {
-  const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-// toYmd with time
-const toYmdWithTime = (date) => {
-  const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
-};
 
 const paymentMethods = [
   { title: 'نقدي', value: 'cash' },
@@ -441,50 +462,6 @@ const paymentMethods = [
 const hasInstallments = computed(
   () => sale.value?.installments && sale.value.installments.length > 0
 );
-
-const formatCurrency = (amount, currency) =>
-  new Intl.NumberFormat('ar', {
-    style: 'currency',
-    currency: currency || 'IQD',
-    maximumFractionDigits: (currency || 'IQD') === 'USD' ? 2 : 0,
-  }).format(amount || 0);
-
-// status / labels for sale
-const getStatusColor = (status) => {
-  const colors = {
-    completed: 'success',
-    pending: 'warning',
-    cancelled: 'error',
-  };
-  return colors[status] || 'grey';
-};
-
-const getStatusText = (status) => {
-  const texts = {
-    completed: 'مكتمل',
-    pending: 'قيد الانتظار',
-    cancelled: 'ملغي',
-  };
-  return texts[status] || status;
-};
-
-const getPaymentTypeText = (type) => {
-  const types = {
-    cash: 'نقدي',
-    installment: 'تقسيط',
-    mixed: 'مختلط',
-  };
-  return types[type] || type;
-};
-
-const getPaymentMethodText = (method) => {
-  const methods = {
-    cash: 'نقدي',
-    card: 'بطاقة',
-    bank_transfer: 'تحويل بنكي',
-  };
-  return methods[method] || method;
-};
 
 // helpers for installments (to avoid duplicated code)
 const isInstallmentOverdue = (installment) => {
@@ -554,7 +531,7 @@ const addPayment = async () => {
     await saleStore.addPayment(paymentData.value);
     notificationStore.success('تم إضافة الدفعة بنجاح');
 
-    const response = await saleStore.fetchSale(route.params.id);
+    const response = await saleStore.fetchSale(params.id);
     sale.value = response.data;
 
     paymentData.value = {
@@ -564,81 +541,55 @@ const addPayment = async () => {
       notes: '',
     };
   } catch (error) {
+    console.error('Failed to add payment:', error);
     notificationStore.error('فشل في إضافة الدفعة');
-    console.error('Error adding payment:', error);
   } finally {
     loadingPayment.value = false;
   }
 };
 
-// for printing purposes
-const saleForPrint = computed(() => {
-  if (!sale.value) return null;
-
-  const saleCopy = { ...sale.value };
-
-  // If paymentType is installment, adjust items to include interest
-  if (saleCopy.paymentType === 'installment' && saleCopy.interestRate > 0) {
-    saleCopy.items = saleCopy.items.map((item) => {
-      const interestAmount = item.subtotal * (saleCopy.interestRate / 100);
-      return {
-        ...item,
-        subtotal: item.subtotal + interestAmount,
-        unitPrice: item.unitPrice + interestAmount / item.quantity,
-      };
-    });
-  }
-
-  return saleCopy;
-});
-
-const { handlePrint } = useVueToPrint({
-  content: invoiceComponent,
-  documentTitle: () => {
-    if (sale.value) {
-      return `فاتورة-${sale.value.invoiceNumber}`;
-    }
-    return 'فاتورة';
-  },
-});
+const handlePrint = async () => {
+  const html = buildHtmlInvoice(invoiceWrapperRef.value.innerHTML, printCss);
+  console.log('Print HTML:', html);
+};
 
 // lifecycle
 onMounted(async () => {
   try {
-    const response = await saleStore.fetchSale(route.params.id);
+    // جلب تفاصيل الفاتورة
+    const response = await saleStore.fetchSale(params.id);
     sale.value = response.data;
 
-    console.log('Fetched sale details:', sale.value);
+    // جلب معلومات الشركة من الإعدادات
+    await settingsStore.fetchCompanyInfo();
 
+    console.log(await settingsStore.companyInfo.invoiceType);
+
+    // تعيين العملة للدفعات
     if (sale.value) {
       paymentData.value.currency = sale.value.currency;
     }
-  } catch {
-    notificationStore.showNotification('فشل في تحميل تفاصيل المبيع', 'error');
+  } catch (error) {
+    console.error('Failed to load sale details:', error);
+    notificationStore.error('فشل في تحميل تفاصيل المبيع');
   }
 });
 </script>
 
 <style scoped>
-#invoiceComponent {
-  display: none !important;
-}
-
 @media print {
-  .v-btn {
+  .v-btn,
+  .v-select,
+  select-printer {
     display: none !important;
+  }
+
+  #invoiceWrapper {
+    display: block !important;
   }
 
   #invoiceComponent {
     display: block !important;
-  }
-}
-</style>
-
-<style scoped>
-@media print {
-  .v-btn {
-    display: none !important;
   }
 }
 </style>

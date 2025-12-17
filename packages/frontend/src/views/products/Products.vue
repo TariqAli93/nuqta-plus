@@ -139,7 +139,6 @@ const getStatusText = (status) => {
     discontinued: 'متوقف',
   };
 
-  console.log('Status:', status, 'Text:', texts[status]);
   return texts[status] || status;
 };
 
@@ -147,6 +146,29 @@ const handleSearch = () => {
   productStore.fetchProducts({
     search: search.value,
     categoryId: selectedCategory.value,
+    page: productStore.pagination.page,
+    limit: productStore.pagination.limit,
+  });
+};
+
+const changePage = (page) => {
+  productStore.pagination.page = page;
+  productStore.fetchProducts({
+    search: search.value,
+    categoryId: selectedCategory.value,
+    page,
+    limit: productStore.pagination.limit,
+  });
+};
+
+const changeItemsPerPage = (limit) => {
+  productStore.pagination.limit = limit;
+  productStore.pagination.page = 1;
+  productStore.fetchProducts({
+    search: search.value,
+    categoryId: selectedCategory.value,
+    page: 1,
+    limit,
   });
 };
 
@@ -160,12 +182,15 @@ const handleDelete = async () => {
     await productStore.deleteProduct(selectedProduct.value.id);
     deleteDialog.value = false;
   } catch (error) {
-    console.error('Error deleting product:', error);
+    // Error handled by notification
   }
 };
 
 onMounted(async () => {
-  const { data: products } = await productStore.fetchProducts();
+  const { data: products } = await productStore.fetchProducts({
+    page: 1,
+    limit: 100, // Load more products initially
+  });
 
   for (const product of products) {
     if (product.categoryId && !categories.value.find((c) => c.id === product.categoryId)) {

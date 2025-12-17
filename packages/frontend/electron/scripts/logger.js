@@ -57,7 +57,7 @@ class Logger {
         this.stream = fs.createWriteStream(this.logFile, { flags: 'a' });
       }
     } catch (err) {
-      if (this.enableConsole) console.error('Log rotation error:', err);
+      // Silently handle rotation error
     }
   }
 
@@ -83,7 +83,7 @@ class Logger {
           }[level] || '';
       }
     } catch (err) {
-      console.error('Logger write error:', err);
+      // Silently handle write error
     }
   }
 

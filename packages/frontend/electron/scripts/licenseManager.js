@@ -37,14 +37,14 @@ export function getMachineId() {
       return fs.readFileSync(machineIdPath, 'utf8').trim();
     }
   } catch (e) {
-    console.error('Error reading machine.id:', e);
+    // Silently handle read error
   }
 
   const id = machineIdSync(true);
   try {
     fs.writeFileSync(machineIdPath, id, 'utf8');
   } catch (e) {
-    console.error('Error writing machine.id:', e);
+    // Silently handle write error
   }
   return id.trim();
 }
@@ -57,7 +57,6 @@ export function saveLicenseString(str) {
     fs.writeFileSync(licensePath, str.trim(), 'utf8');
     return true;
   } catch (e) {
-    console.error('Error writing license.dat:', e);
     return false;
   }
 }
@@ -67,7 +66,6 @@ function loadLicenseString() {
     if (!fs.existsSync(licensePath)) return null;
     return fs.readFileSync(licensePath, 'utf8').trim();
   } catch (e) {
-    console.error('Error reading license.dat:', e);
     return null;
   }
 }
@@ -88,7 +86,6 @@ async function verifySignature(data, signatureBase64) {
       'verify',
     ]);
   } catch (e) {
-    console.error('Error importing public key:', e);
     return false;
   }
 
@@ -101,7 +98,6 @@ async function verifySignature(data, signatureBase64) {
     );
     return ok;
   } catch (e) {
-    console.error('Error verifying signature:', e);
     return false;
   }
 }
@@ -121,7 +117,6 @@ export async function verifyLicense() {
     const json = Buffer.from(licenseString, 'base64').toString('utf8');
     licenseObj = JSON.parse(json);
   } catch (e) {
-    console.error('Error parsing license string:', e);
     return { ok: false, reason: 'invalid_license_format' };
   }
 

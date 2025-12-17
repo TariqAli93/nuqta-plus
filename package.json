@@ -1,6 +1,6 @@
 {
   "name": "nuqtaplus",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "نقطة بلس - نظام إدارة نقاط البيع والمخازن",
   "private": true,
   "type": "module",
@@ -10,6 +10,8 @@
     "build": "pnpm --filter backend build && pnpm --filter frontend build:win",
     "lint": "pnpm -r lint",
     "format": "pnpm -r format",
+    "db:migrate": "pnpm --filter backend db:migrate",
+    "db:generate": "pnpm --filter backend db:generate",
     "seed": "node ./packages/backend/src/seed.js"
   },
   "keywords": [

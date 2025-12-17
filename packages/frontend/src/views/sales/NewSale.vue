@@ -110,7 +110,7 @@
                 :items="paymentTypes"
                 item-title="label"
                 item-value="value"
-                label="نوع الدفع"
+                label="نوع الفاتورة"
               />
             </v-col>
             <v-col cols="12" md="4">
@@ -468,7 +468,6 @@ const submitSale = async () => {
 
     router.push({ name: 'SaleDetails', params: { id: saleResponse.data.id } });
   } catch (error) {
-    console.error('خطأ أثناء حفظ البيع:', error);
     notify.error('حدث خطأ أثناء حفظ البيع. يرجى المحاولة مرة أخرى.');
   } finally {
     loading.value = false;
@@ -489,7 +488,6 @@ onMounted(async () => {
       sale.value.currency = settings.defaultCurrency || 'IQD';
     }
   } catch (error) {
-    console.error('فشل تحميل إعدادات العملة:', error);
     // استخدام القيم الافتراضية
   }
 });

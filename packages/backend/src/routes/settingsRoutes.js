@@ -286,7 +286,7 @@ export default async function settingsRoutes(fastify) {
                 logoUrl: { type: 'string' },
                 invoiceType: {
                   type: 'string',
-                  enum: ['a4', 'a5', 'roll-58', 'roll-80', 'roll-wide'],
+                  enum: ['a4', 'a5', 'roll-58', 'roll-80', 'roll-88'],
                 },
               },
             },
@@ -343,7 +343,7 @@ export default async function settingsRoutes(fastify) {
           },
           invoiceType: {
             type: 'string',
-            enum: ['a4', 'a5', 'roll-58', 'roll-80', 'roll-wide'],
+            enum: ['a4', 'a5', 'roll-58', 'roll-80', 'roll-88'],
             description: 'Invoice format type',
           },
         },

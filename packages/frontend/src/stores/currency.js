@@ -60,6 +60,21 @@ export const useCurrencyStore = defineStore('currency', {
       }
     },
 
+    async getCurrencyByCode(currencyCode) {
+      this.loading = true;
+      const notificationStore = useNotificationStore();
+      try {
+        const response = await api.get(`/currencies/${currencyCode}`);
+        notificationStore.success('تم جلب بيانات العملة بنجاح');
+        return response.data;
+      } catch (error) {
+        notificationStore.error(error.response?.data?.message || 'فشل جلب بيانات العملة');
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
     async updateExchangeRate(currencyCode, exchangeRate) {
       this.loading = true;
       const notificationStore = useNotificationStore();

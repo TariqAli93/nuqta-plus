@@ -1,7 +1,7 @@
 import db, { saveDatabase } from '../db.js';
 import { products, categories } from '../models/index.js';
 import { NotFoundError, ConflictError } from '../utils/errors.js';
-import { eq, like, or, desc, count, lte } from 'drizzle-orm';
+import { eq, like, or, and, desc, lte } from 'drizzle-orm';
 
 export class ProductService {
   async create(productData, userId) {
@@ -33,9 +33,9 @@ export class ProductService {
 
   async getAll(filters = {}) {
     const { page = 1, limit = 10, search, categoryId } = filters;
-    const offset = (page - 1) * limit;
 
-    let query = db
+    // Build base query
+    let baseQuery = db
       .select({
         id: products.id,
         name: products.name,
@@ -57,8 +57,11 @@ export class ProductService {
       .from(products)
       .leftJoin(categories, eq(products.categoryId, categories.id));
 
+    // Build WHERE conditions
+    const whereConditions = [];
+
     if (search) {
-      query = query.where(
+      whereConditions.push(
         or(
           like(products.name, `%${search}%`),
           like(products.sku, `%${search}%`),
@@ -68,12 +71,26 @@ export class ProductService {
     }
 
     if (categoryId) {
-      query = query.where(eq(products.categoryId, categoryId));
+      whereConditions.push(eq(products.categoryId, categoryId));
     }
 
-    const results = await query.orderBy(desc(products.createdAt)).limit(limit).offset(offset);
+    // Apply WHERE clause
+    if (whereConditions.length > 0) {
+      if (whereConditions.length === 1) {
+        baseQuery = baseQuery.where(whereConditions[0]);
+      } else {
+        baseQuery = baseQuery.where(and(...whereConditions));
+      }
+    }
 
-    const [{ total }] = await db.select({ total: count() }).from(products);
+    // Get all results and do manual pagination (sql.js doesn't support offset properly)
+    const allResults = await baseQuery.orderBy(desc(products.createdAt));
+
+    // Manual pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const results = allResults.slice(startIndex, endIndex);
+    const total = allResults.length;
 
     return {
       data: results,

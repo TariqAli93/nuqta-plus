@@ -29,7 +29,7 @@ export default defineConfig({
       },
       preload: {
         // Shortcut of `build.rollupOptions.input`
-        input: 'electron/preload/preload.js',
+        input: 'electron/preload/preload.mjs',
         vite: {
           build: {
             outDir: 'dist-electron/preload',

@@ -108,7 +108,6 @@ const handleClick = async (event) => {
         });
       } catch (error) {
         // الخطأ تم التعامل معه في withLoading
-        console.error('خطأ في تنفيذ العمل:', error);
       } finally {
         localLoading.value = false;
         emit('loading-end');

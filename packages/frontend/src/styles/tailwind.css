@@ -36,10 +36,9 @@
 
 /* ============================================
    Custom Components - مكونات مخصصة
-   ============================================ */
 
-@layer components {
-  /* Button Variants */
+
+   @layer components {
   .btn-primary {
     @apply bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded transition-colors duration-200;
   }
@@ -52,7 +51,7 @@
     @apply border-2 border-primary text-primary hover:bg-primary hover:text-white font-medium py-2 px-4 rounded transition-all duration-200;
   }
 
-  /* Card Component */
+
   .card {
     @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-all duration-200;
   }
@@ -61,12 +60,12 @@
     @apply hover:shadow-lg hover:-translate-y-1;
   }
 
-  /* Input Styles */
+
   .input-field {
     @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200;
   }
 
-  /* Badge Styles */
+
   .badge {
     @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
   }
@@ -87,12 +86,12 @@
     @apply bg-info-light text-info-dark;
   }
 
-  /* Container Responsive */
+
   .container-custom {
     @apply container mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  /* Flex Utilities */
+
   .flex-center {
     @apply flex items-center justify-center;
   }
@@ -101,7 +100,7 @@
     @apply flex items-center justify-between;
   }
 
-  /* Grid Layouts */
+
   .grid-auto-fit {
     @apply grid gap-4;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -112,6 +111,7 @@
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
 }
+   ============================================ */
 
 /* ============================================
    Custom Utilities - أدوات مخصصة

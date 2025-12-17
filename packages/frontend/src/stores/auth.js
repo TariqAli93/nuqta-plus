@@ -182,23 +182,15 @@ export const useAuthStore = defineStore('auth', {
      */
     async fetchInitialSetupInfo() {
       try {
-        console.log('Calling /auth/initial-setup API...');
         const response = await api.get('/auth/initial-setup');
-        console.log('API response:', response);
-        console.log('Response data:', response.data);
 
         // البيانات موجودة مباشرة في response.data
         if (response.data) {
           this.isFirstRun = response.data.isFirstRun;
-          console.log('isFirstRun set to:', this.isFirstRun);
-          console.log('Returning data:', response.data);
           return response.data;
         }
-        console.log('No data in response, returning default');
         return { isFirstRun: false };
       } catch (error) {
-        console.error('Failed to fetch initial setup info:', error);
-        console.error('Error details:', error.response);
         return { isFirstRun: false };
       }
     },
@@ -210,7 +202,6 @@ export const useAuthStore = defineStore('auth', {
         }
         throw new Error('Invalid response from server');
       } catch (error) {
-        console.error('Failed to create first user:', error);
         throw error;
       }
     },

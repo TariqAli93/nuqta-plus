@@ -152,7 +152,7 @@ const invoiceTypes = [
   { text: 'فاتورة A5', value: 'a5' },
   { text: 'رول حراري 58mm', value: 'roll-58' },
   { text: 'رول حراري 80mm', value: 'roll-80' },
-  { text: 'رول حراري عريض', value: 'roll-wide' },
+  { text: 'رول حراري 88mm', value: 'roll-88' },
 ];
 
 // Reactive data
@@ -186,7 +186,7 @@ const saveCompanyInfo = async () => {
   try {
     await settingsStore.saveCompanyInfo(companyData.value);
   } catch (error) {
-    console.error('Failed to save company info:', error);
+    // Error handled by notification
   }
 };
 

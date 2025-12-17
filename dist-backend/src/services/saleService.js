@@ -10,7 +10,7 @@ import {
 } from '../models/index.js';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
 import { generateInvoiceNumber, calculateSaleTotals } from '../utils/helpers.js';
-import { eq, desc, and, or, gte, lte, count, sql, inArray } from 'drizzle-orm';
+import { eq, desc, and, or, gte, lte, sql, inArray } from 'drizzle-orm';
 import settingsService from './settingsService.js';
 
 export class SaleService {
@@ -199,7 +199,6 @@ export class SaleService {
 
   async getAll(filters = {}) {
     const { page = 1, limit = 10, status, startDate, endDate } = filters;
-    const offset = (page - 1) * limit;
 
     let query = db
       .select({
@@ -242,12 +241,13 @@ export class SaleService {
       query = query.where(and(...conditions));
     }
 
-    const results = await query.orderBy(desc(sales.createdAt)).limit(limit).offset(offset);
+    // Get all results and do manual pagination (sql.js doesn't support offset)
+    const allResults = await query.orderBy(desc(sales.createdAt));
 
-    const [{ total }] = await db
-      .select({ total: count() })
-      .from(sales)
-      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const results = allResults.slice(startIndex, endIndex);
+    const total = allResults.length;
 
     return {
       data: results,

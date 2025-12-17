@@ -25,7 +25,6 @@ export class CategoryService {
 
   async getAll(filters = {}) {
     const { page = 1, limit = 50, search } = filters;
-    const offset = (page - 1) * limit;
 
     let query = db.select().from(categories);
 
@@ -33,13 +32,21 @@ export class CategoryService {
       query = query.where(like(categories.name, `%${search}%`));
     }
 
-    const results = await query.orderBy(desc(categories.createdAt)).limit(limit).offset(offset);
+    // Get all results and do manual pagination (sql.js doesn't support offset)
+    const allResults = await query.orderBy(desc(categories.createdAt));
+
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const results = allResults.slice(startIndex, endIndex);
+    const total = allResults.length;
 
     return {
       data: results,
       meta: {
         page,
         limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     };
   }

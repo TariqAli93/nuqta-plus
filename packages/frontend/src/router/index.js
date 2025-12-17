@@ -134,7 +134,7 @@ router.beforeEach(async (to, from, next) => {
     try {
       await authStore.getProfile();
     } catch (e) {
-      console.warn('⚠️ Failed to fetch user permissions:', e);
+      // Silently handle profile fetch failure
     }
   }
 

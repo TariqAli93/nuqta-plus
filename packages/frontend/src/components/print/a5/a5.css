@@ -1,0 +1,166 @@
+@import url('../print-theme.css');
+
+.receipt-container.a5 {
+  width: 148mm;
+  padding: 10mm;
+  font-size: 14px;
+}
+
+.receipt-container.a5 .receipt-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.receipt-container.a5 .company-info {
+  text-align: center;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #000;
+  padding: 8px;
+}
+
+.receipt-container.a5 .company-name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px dashed #000;
+  padding: 8px;
+}
+
+.receipt-container.a5 .company-address {
+  font-size: 10px;
+  margin-top: 3px;
+}
+
+.receipt-container.a5 .company-phones {
+  font-size: 10px;
+  margin-top: 3px;
+}
+
+/* ===== META ===== */
+.receipt-container.a5 .invoice-meta,
+.receipt-container.a5 .customer-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  border: 1px solid #000;
+  padding: 6px 8px;
+}
+
+.receipt-container.a5 .customer-meta {
+  border-top: none;
+}
+
+/* ===== TABLE ===== */
+.receipt-container.a5 .invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.receipt-container.a5 .invoice-table th,
+.receipt-container.a5 .invoice-table td {
+  border: 1px solid #000;
+  padding: 6px 4px;
+  font-size: 9px;
+}
+
+.receipt-container.a5 .invoice-table th {
+  background: #f5f5f5;
+}
+
+.receipt-container.a5 .invoice-table tfoot {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.receipt-container.a5 .installment-section {
+  margin-top: 15px;
+}
+
+.receipt-container.a5 .installments-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 9px;
+}
+
+.receipt-container.a5 .installments-table th,
+.receipt-container.a5 .installments-table td {
+  border: 1px solid #000;
+  padding: 6px 4px;
+}
+
+.receipt-container.a5 .installments-table th {
+  background: #f3f3f3;
+  text-align: center;
+}
+
+.receipt-container.a5 .installments-table tfoot {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ===== STATUS ===== */
+.receipt-container.a5 .status {
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: bold;
+}
+
+.receipt-container.a5 .status.paid {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.receipt-container.a5 .status.pending {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.receipt-container.a5 .payment-summary {
+  margin-top: 10px;
+  font-size: 10px;
+  display: flex;
+  justify-content: space-between;
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 6px 10px;
+  border: 1px solid #000;
+}
+
+.receipt-container.a5 .invoice-table,
+.receipt-container.a5 .installments-table {
+  page-break-inside: avoid;
+}
+
+.receipt-container.a5 .invoice-table tr,
+.receipt-container.a5 .installments-table tr {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* ===== PRINT ===== */
+@media print {
+  .receipt-container.a5 {
+    padding: 8mm !important;
+  }
+
+  .receipt-container.a5 .company-name {
+    font-size: 1.3rem;
+  }
+
+  .receipt-container.a5 .receipt-header h3 {
+    font-size: 1.3rem;
+  }
+
+  .receipt-container.a5 .invoice-table,
+  .receipt-container.a5 .installments-table {
+    margin-top: 6px;
+  }
+
+  .receipt-container.a5 .payment-summary {
+    margin-top: 6px;
+  }
+}

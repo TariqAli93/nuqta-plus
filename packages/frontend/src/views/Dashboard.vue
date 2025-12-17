@@ -1,19 +1,19 @@
 <template>
   <div>
-    <h1 class="text-h4 font-weight-bold mb-6">لوحة التحكم</h1>
+    <h1 class="mb-6 text-h4 font-weight-bold">لوحة التحكم</h1>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+    <div class="grid grid-cols-1 gap-6 mb-6 sm:grid-cols-2 lg:grid-cols-4">
       <!-- Total Sales Card -->
       <div
-        class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl shadow-lg p-6 text-white transform transition-all hover:scale-105 hover:shadow-xl"
+        class="p-6 text-white transition-all transform shadow-lg bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl hover:scale-105 hover:shadow-xl"
       >
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium opacity-90 mb-1">إجمالي المبيعات</p>
+            <p class="mb-1 text-sm font-medium opacity-90">إجمالي المبيعات</p>
             <h3 class="text-4xl font-bold">{{ countSales }}</h3>
           </div>
-          <div class="bg-white bg-opacity-20 rounded-full p-4">
+          <div class="p-4 bg-white rounded-full bg-opacity-20">
             <v-icon size="40" color="blue">mdi-cash-multiple</v-icon>
           </div>
         </div>
@@ -21,14 +21,14 @@
 
       <!-- Total Customers Card -->
       <div
-        class="bg-gradient-to-br from-green-600 to-green-800 rounded-xl shadow-lg p-6 text-white transform transition-all hover:scale-105 hover:shadow-xl"
+        class="p-6 text-white transition-all transform shadow-lg bg-gradient-to-br from-green-600 to-green-800 rounded-xl hover:scale-105 hover:shadow-xl"
       >
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium opacity-90 mb-1">العملاء</p>
+            <p class="mb-1 text-sm font-medium opacity-90">العملاء</p>
             <h3 class="text-4xl font-bold">{{ stats.totalCustomers }}</h3>
           </div>
-          <div class="bg-white bg-opacity-20 rounded-full p-4">
+          <div class="p-4 bg-white rounded-full bg-opacity-20">
             <v-icon size="40" color="green">mdi-account-group</v-icon>
           </div>
         </div>
@@ -36,14 +36,14 @@
 
       <!-- Total Products Card -->
       <div
-        class="bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl shadow-lg p-6 text-white transform transition-all hover:scale-105 hover:shadow-xl"
+        class="p-6 text-white transition-all transform shadow-lg bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl hover:scale-105 hover:shadow-xl"
       >
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium opacity-90 mb-1">المنتجات</p>
+            <p class="mb-1 text-sm font-medium opacity-90">المنتجات</p>
             <h3 class="text-4xl font-bold">{{ stats.totalProducts }}</h3>
           </div>
-          <div class="bg-white bg-opacity-20 rounded-full p-4">
+          <div class="p-4 bg-white rounded-full bg-opacity-20">
             <v-icon size="40" color="purple">mdi-package-variant</v-icon>
           </div>
         </div>
@@ -51,14 +51,14 @@
 
       <!-- Low Stock Card -->
       <div
-        class="bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl shadow-lg p-6 text-white transform transition-all hover:scale-105 hover:shadow-xl"
+        class="p-6 text-white transition-all transform shadow-lg bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl hover:scale-105 hover:shadow-xl"
       >
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium opacity-90 mb-1">منتجات قليلة المخزون</p>
+            <p class="mb-1 text-sm font-medium opacity-90">منتجات قليلة المخزون</p>
             <h3 class="text-4xl font-bold">{{ stats.lowStock }}</h3>
           </div>
-          <div class="bg-white bg-opacity-20 rounded-full p-4">
+          <div class="p-4 bg-white rounded-full bg-opacity-20">
             <v-icon size="40" color="orange">mdi-alert-circle</v-icon>
           </div>
         </div>
@@ -66,22 +66,22 @@
     </div>
 
     <!-- Charts and Quick Actions -->
-    <div class="mb-2 flex items-center justify-between">
+    <div class="flex items-center justify-between mb-2">
       <h2 class="text-xl font-bold">إجراءات سريعة</h2>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <v-card
         v-for="(action, idx) in quickActions"
         :key="action.title"
         :to="action.to"
         color="sureface"
         v-can="action.permission"
-        class="group relative block rounded-2xl border border-gray-200 p-5 translate transition-all hover:scale-102 hover:shadow-2xl dark:border-gray-700 overflow-hidden"
+        class="relative block p-5 overflow-hidden transition-all border border-gray-200 group rounded-2xl translate hover:scale-102 hover:shadow-2xl dark:border-gray-700"
       >
         <!-- Animated background gradient -->
         <div
-          class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-10"
+          class="absolute inset-0 transition-opacity duration-500 opacity-0 pointer-events-none group-hover:opacity-10"
         ></div>
 
         <!-- Animated glow effect -->
@@ -108,7 +108,7 @@
           ]"
         ></div>
 
-        <div class="flex items-center gap-4 relative z-10">
+        <div class="relative z-10 flex items-center gap-4">
           <div
             :class="[
               'rounded-xl p-3 text-white shadow-md bg-gradient-to-br transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl',
@@ -181,7 +181,7 @@
 
         <!-- Shimmer effect -->
         <div
-          class="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"
+          class="absolute inset-0 transition-transform duration-1000 ease-in-out -translate-x-full pointer-events-none group-hover:translate-x-full"
           style="
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
           "
@@ -334,8 +334,8 @@ const dashboardData = useAsyncData(async () => {
     recentSales: filteredSales,
     stats: {
       totalSales: salesResponse.length || 0,
-      totalCustomers: customers.data.length || 0,
-      totalProducts: products.data.length || 0,
+      totalCustomers: customers.meta?.total || customers.data.length || 0,
+      totalProducts: products.meta?.total || products.data.length || 0,
       lowStock: lowStockProducts?.length || 0,
     },
   };

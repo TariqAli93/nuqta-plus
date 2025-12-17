@@ -300,8 +300,6 @@ function translatePermission(name) {
 function translateResource(res) {
   if (!res) return '';
 
-  console.log(res);
-
   // توحيد الصيغة
   const normalized = res.toLowerCase().replace(/[-_]/g, ''); // إزالة - و _
 

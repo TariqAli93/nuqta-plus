@@ -165,7 +165,7 @@ const saveCurrencySettings = async () => {
   try {
     await settingsStore.saveCurrencySettings(currencyData.value);
   } catch (error) {
-    console.error('Failed to save currency settings:', error);
+    // Error handled by notification
   }
 };
 
@@ -181,7 +181,7 @@ onMounted(async () => {
       };
     }
   } catch (error) {
-    console.error('Failed to load currency settings:', error);
+    // Error handled by notification
   }
 });
 </script>

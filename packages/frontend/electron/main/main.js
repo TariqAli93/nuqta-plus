@@ -1,6 +1,13 @@
+import { fileURLToPath } from 'node:url';
+import path, { dirname, join } from 'node:path';
+
+// --- Define __dirname globally for ES modules BEFORE importing electron-pos-printer ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+global.__dirname = __dirname;
+global.__filename = __filename;
+
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
-import { fileURLToPath } from 'url';
-import path, { dirname, join } from 'path';
 import { promises as fs } from 'fs-extra';
 import logger from '../scripts/logger.js';
 import BackendManager from '../scripts/backendManager.js';
@@ -8,15 +15,16 @@ import { getMachineId, saveLicenseString, verifyLicense } from '../scripts/licen
 import { setupAutoUpdater, checkForUpdates, startDownload } from '../scripts/autoUpdater.js';
 import { autoUpdater } from 'electron-updater';
 import { createLockFile } from '../scripts/firstRun.js';
+// import { PosPrinter } from '@plick/electron-pos-printer';
+import Printer from '../scripts/print.js';
 
 // --- المتغيرات العامة ---
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 const isDev = !app.isPackaged;
 
 let mainWindow = null;
 let activationWindow = null;
 let splashWindow = null; // splash screen window
+let printWindow = null; // print window
 let isQuitting = false;
 let backendReady = false;
 
@@ -68,6 +76,16 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    // add Shortcut to open DevTools in production for debugging
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+      if (
+        (input.control && input.shift && input.key.toLowerCase() === 'i') || // Ctrl+Shift+I
+        input.key === 'F12' // F12
+      ) {
+        event.preventDefault();
+        mainWindow.webContents.openDevTools();
+      }
+    });
   }
 
   mainWindow.on('closed', async () => {
@@ -79,6 +97,52 @@ function createWindow() {
   // IPC: Install update
   ipcMain.handle('update:install', () => {
     autoUpdater.quitAndInstall();
+  });
+
+  ipcMain.handle('getPrinters', async () => {
+    try {
+      const printers = await mainWindow.webContents.getPrintersAsync();
+      return printers;
+    } catch (error) {
+      console.error('Error getting printers:', error);
+      return [];
+    }
+  });
+
+  ipcMain.handle('print-receipt', async (_event, { html, css, options }) => {
+    // ====== بداية التعديل - إصلاح مشكلة [Object Object] ======
+    console.log('Print data type:', typeof data);
+    console.log('Print options:', options);
+    const printer = new Printer({
+      silent: options.silent || false,
+      printer: options.printerName || null,
+      paperSize: options.paperSize || '80mm',
+      orientation: options.orientation || 'portrait',
+      margin: options.margin || '0mm',
+      copies: options.copies || 1,
+    });
+
+    console.log(printer.print(html, css));
+  });
+
+  ipcMain.handle('cut-paper', async () => {
+    try {
+      console.log('Cutting paper command received');
+      return { success: true };
+    } catch (error) {
+      console.error('Error cutting paper:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('kick-drawer', async () => {
+    try {
+      console.log('Kicking cash drawer command received');
+      return { success: true };
+    } catch (error) {
+      console.error('Error kicking cash drawer:', error);
+      return { success: false, error: error.message };
+    }
   });
 }
 
@@ -412,5 +476,23 @@ ipcMain.handle('firstRun:createLock', () => {
   } catch (error) {
     logger.error('Failed to create lock file:', error);
     return { success: false, error: error.message };
+  }
+});
+
+// Handle print window ready event (global listener)
+ipcMain.on('print:ready', () => {
+  logger.info('Print window is ready');
+  if (printWindow && !printWindow.isDestroyed()) {
+    if (!isDev) {
+      printWindow.show();
+    }
+  }
+});
+
+// Handle print window close event (global listener)
+ipcMain.on('print:close', () => {
+  logger.info('Request to close print window');
+  if (printWindow && !printWindow.isDestroyed()) {
+    printWindow.close();
   }
 });

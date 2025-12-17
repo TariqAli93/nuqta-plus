@@ -211,7 +211,7 @@ const invoiceTypes = [
   { text: 'فاتورة A5', value: 'a5' },
   { text: 'رول حراري 58mm', value: 'roll-58' },
   { text: 'رول حراري 80mm', value: 'roll-80' },
-  { text: 'رول حراري عريض', value: 'roll-wide' },
+  { text: 'رول حراري عريض', value: 'roll-88' },
 ];
 
 const companyData = ref({
@@ -229,35 +229,24 @@ const setupInfo = ref(null);
 
 // Load initial setup
 onMounted(async () => {
-  console.log('CreateFirstUser component mounted');
-
   // For testing: uncomment to reset first run
   // localStorage.removeItem('firstRunCompleted');
 
   const firstRunDone = localStorage.getItem('firstRunCompleted') === 'true';
-  console.log('firstRunCompleted from localStorage:', firstRunDone);
 
   if (!firstRunDone) {
     try {
-      console.log('Fetching initial setup info...');
       const response = await authStore.fetchInitialSetupInfo();
-      console.log('Initial setup response:', response);
 
       if (response?.isFirstRun) {
         setupInfo.value = response;
         isFirstRunDialog.value = true;
-        console.log('Dialog should show now, isFirstRunDialog:', isFirstRunDialog.value);
         if (response.username) username.value = response.username;
         if (response.password) password.value = response.password;
-      } else {
-        console.log('Not first run, response:', response);
       }
     } catch (error) {
-      console.error('خطأ في جلب معلومات الإعداد الأولي:', error);
       isFirstRunDialog.value = false;
     }
-  } else {
-    console.log('First run already completed, skipping dialog');
   }
 }); // Close dialog
 function closeDialog() {
@@ -302,7 +291,6 @@ const handleCreateUser = async () => {
     }
     step.value = 2;
   } catch (error) {
-    console.error('خطأ في إنشاء المستخدم الأول:', error);
     alert('تعذر إنشاء المستخدم. يرجى المحاولة مرة أخرى.');
   } finally {
     loadingUser.value = false;
@@ -321,18 +309,14 @@ const handleSaveCompany = async () => {
       username: username.value,
       password: password.value,
     });
-    console.log('تم تسجيل الدخول بنجاح');
 
     // الآن يمكننا حفظ معلومات الشركة باستخدام التوكن الجديد
     await settingsStore.saveCompanyInfo(companyData.value);
-    console.log('تم حفظ معلومات الشركة بنجاح');
 
     // إغلاق النافذة وتحديث حالة الإعداد الأولي
     closeDialog();
     tempToken.value = null;
   } catch (error) {
-    console.error('Failed to save company info:', error);
-    console.error('Error response:', error.response?.data);
     const errorMessage =
       error.response?.data?.errors?.[0]?.message ||
       error.response?.data?.message ||

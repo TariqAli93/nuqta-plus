@@ -51,7 +51,6 @@ const loadFont = (family, weight, style = 'normal') => {
   const fontString = `${style} ${weight} 1rem ${family}`;
 
   return document.fonts.load(fontString).catch((error) => {
-    console.warn(`فشل تحميل الخط: ${family} ${weight} ${style}`, error);
     return Promise.resolve(); // عدم إيقاف التطبيق في حالة الفشل
   });
 };

@@ -67,30 +67,41 @@ export function calculateSaleTotals(items, discount = 0, tax = 0) {
     throw new Error('Tax percentage cannot exceed 100%');
   }
 
-  // Calculate subtotal from all items (after item-level discounts)
-  const subtotal = items.reduce((sum, item) => {
+  // ====== بداية التعديل - تصليح حساب subtotal ======
+  // Calculate subtotal from all items WITHOUT any discounts (قبل أي خصم)
+  const subtotalBeforeDiscounts = items.reduce((sum, item) => {
     if (!item.quantity || !item.unitPrice) {
       throw new Error('Each item must have quantity and unitPrice');
     }
-    const itemTotal = item.quantity * item.unitPrice;
-    const itemDiscount = parseFloat(item.discount) || 0;
-    return sum + (itemTotal - itemDiscount);
+    return sum + item.quantity * item.unitPrice;
   }, 0);
 
-  // Apply discount
-  const discountAmount = parseFloat(discount) || 0;
-  const subtotalAfterDiscount = Math.max(0, subtotal - discountAmount);
+  // Calculate total item-level discounts (مجموع خصومات المنتجات)
+  const itemDiscounts = items.reduce((sum, item) => {
+    const itemDiscount = parseFloat(item.discount) || 0;
+    return sum + itemDiscount;
+  }, 0);
 
-  // Calculate tax amount
-  const taxAmount = (subtotalAfterDiscount * tax) / 100;
+  // Subtotal after item-level discounts (المجموع بعد خصم المنتجات)
+  // هذا هو المبلغ الذي يُحفظ في قاعدة البيانات كـ subtotal
+  const subtotalAfterItemDiscounts = subtotalBeforeDiscounts - itemDiscounts;
+  // ====== نهاية التعديل ======
 
-  // Calculate final total
-  const total = subtotalAfterDiscount + taxAmount;
+  // Apply sale-level discount (تطبيق خصم الفاتورة)
+  const saleDiscount = parseFloat(discount) || 0;
+  const subtotalAfterAllDiscounts = Math.max(0, subtotalAfterItemDiscounts - saleDiscount);
+
+  // Calculate tax amount (حساب الضريبة على المبلغ النهائي بعد كل الخصومات)
+  const taxAmount = (subtotalAfterAllDiscounts * tax) / 100;
+
+  // Calculate final total (الإجمالي النهائي)
+  const total = subtotalAfterAllDiscounts + taxAmount;
 
   return {
-    subtotal: parseFloat(subtotal.toFixed(2)),
-    discount: parseFloat(discountAmount.toFixed(2)),
+    subtotal: parseFloat(subtotalAfterItemDiscounts.toFixed(2)), // ← المجموع بعد خصم المنتجات (3,100,000)
+    discount: parseFloat(saleDiscount.toFixed(2)), // ← خصم الفاتورة فقط
     tax: parseFloat(taxAmount.toFixed(2)),
     total: parseFloat(total.toFixed(2)),
   };
+  // ====== نهاية كل التعديلات ======
 }

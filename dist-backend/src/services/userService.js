@@ -6,7 +6,6 @@ import { NotFoundError, ConflictError } from '../utils/errors.js';
 
 export class UserService {
   async list({ page = 1, limit = 10, search, roleId, isActive }) {
-    const offset = (page - 1) * limit;
     let where;
     if (search) {
       where = like(users.username, `%${search}%`);
@@ -18,7 +17,8 @@ export class UserService {
       where = where ? and(where, eq(users.isActive, !!isActive)) : eq(users.isActive, !!isActive);
     }
 
-    const data = await db
+    // Get all results and do manual pagination (sql.js doesn't support offset)
+    const allResults = await db
       .select({
         id: users.id,
         username: users.username,
@@ -28,11 +28,14 @@ export class UserService {
         roleId: users.roleId,
       })
       .from(users)
-      .where(where)
-      .limit(limit)
-      .offset(offset);
+      .where(where);
 
-    return { data, page, limit };
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const data = allResults.slice(startIndex, endIndex);
+    const total = allResults.length;
+
+    return { data, page, limit, total, totalPages: Math.ceil(total / limit) };
   }
 
   async getById(id) {

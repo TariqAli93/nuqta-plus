@@ -125,7 +125,7 @@ const handleSubmit = async () => {
     }
     dialog.value = false;
   } catch (error) {
-    console.error('Error saving category:', error);
+    // Error handled by notification
   } finally {
     saving.value = false;
   }
@@ -141,7 +141,7 @@ const handleDelete = async () => {
     await categoryStore.deleteCategory(selectedCategory.value.id);
     deleteDialog.value = false;
   } catch (error) {
-    console.error('Error deleting category:', error);
+    // Error handled by notification
   }
 };
 

@@ -7,12 +7,9 @@ export const useSaleStore = defineStore('sale', {
     sales: [],
     currentSale: null,
     loading: false,
-    pagination: {
-      page: 1,
-      limit: 10,
-      total: 0,
-      totalPages: 0,
-    },
+    printer:
+      typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('selectedPrinter')) : null,
+    pagination: {},
   }),
 
   actions: {
@@ -235,6 +232,15 @@ export const useSaleStore = defineStore('sale', {
       } finally {
         this.loading = false;
       }
+    },
+
+    setPrinter(printer) {
+      this.printer = printer;
+      localStorage.setItem('selectedPrinter', JSON.stringify(printer));
+    },
+
+    getPrinter() {
+      return this.printer;
     },
   },
 });

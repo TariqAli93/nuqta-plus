@@ -197,7 +197,6 @@ onMounted(() => {
   window.electronAPI.on('update-downloading', () => {
     stage.value = 'downloading';
     progress.value = 0;
-    console.log('update-downloading');
   });
 
   // 🔵 5. تقدم التحميل
@@ -206,20 +205,17 @@ onMounted(() => {
     progress.value = p.percent;
     transferred.value = p.transferred;
     total.value = p.total;
-    console.log('update-progress');
   });
 
   // 🔵 6. اكتمل التحميل
   window.electronAPI.on('update-ready', () => {
     stage.value = 'ready';
-    console.log('update-ready');
   });
 
   // 🔵 7. خطأ
   window.electronAPI.on('update-error', (data) => {
     stage.value = 'error';
     errorMessage.value = data.payload.error;
-    console.log('update-error:');
   });
 });
 

@@ -99,7 +99,7 @@ const handleDelete = async () => {
     await customerStore.deleteCustomer(selectedCustomer.value.id);
     deleteDialog.value = false;
   } catch (error) {
-    console.error('Error deleting customer:', error);
+    // Error handled by notification
   } finally {
     deleting.value = false;
   }

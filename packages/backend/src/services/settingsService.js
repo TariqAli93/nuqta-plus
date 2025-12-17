@@ -17,16 +17,21 @@ export class SettingsService {
    * @returns {Promise<Object>} Settings list with pagination
    */
   async list({ page = 1, limit = 50, search } = {}) {
-    const offset = (page - 1) * limit;
     let where;
 
     if (search) {
       where = like(settings.key, `%${search}%`);
     }
 
-    const data = await db.select().from(settings).where(where).limit(limit).offset(offset);
+    // Get all results and do manual pagination (sql.js doesn't support offset)
+    const allResults = await db.select().from(settings).where(where);
 
-    return { data, page, limit };
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const data = allResults.slice(startIndex, endIndex);
+    const total = allResults.length;
+
+    return { data, page, limit, total, totalPages: Math.ceil(total / limit) };
   }
 
   /**
@@ -312,7 +317,7 @@ export class SettingsService {
     const { name, city, area, street, phone, phone2, logoUrl, invoiceType } = companyData;
 
     // Validate invoice type
-    const validInvoiceTypes = ['a4', 'a5', 'roll-58', 'roll-80', 'roll-wide'];
+    const validInvoiceTypes = ['a4', 'a5', 'roll-58', 'roll-80', 'roll-88'];
     if (invoiceType && !validInvoiceTypes.includes(invoiceType)) {
       throw new Error(`Invalid invoice type: ${invoiceType}`);
     }
@@ -325,7 +330,7 @@ export class SettingsService {
       'company.phone': phone || '',
       'company.phone2': phone2 || '',
       'company.logoUrl': logoUrl || '',
-      'company.invoiceType': invoiceType || 'roll',
+      'company.invoiceType': invoiceType || 'a4',
     };
 
     await this.bulkUpdate(settingsData, userId);

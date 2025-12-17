@@ -109,7 +109,6 @@ export const useSettingsStore = defineStore('settings', () => {
       }
     } catch (err) {
       error.value = err.response?.data?.message || err.message;
-      console.error('Save company info error:', err);
       throw err;
     } finally {
       isLoading.value = false;
@@ -121,7 +120,6 @@ export const useSettingsStore = defineStore('settings', () => {
       const response = await api.post('/settings/validate/phone', { phone });
       return response.data.isValid;
     } catch (err) {
-      console.error('Phone validation error:', err);
       return false;
     }
   };
@@ -299,7 +297,7 @@ export const useSettingsStore = defineStore('settings', () => {
     try {
       await Promise.all([fetchAllSettings(), fetchCompanyInfo()]);
     } catch (err) {
-      console.error('Settings store initialization failed:', err);
+      // Silently handle initialization errors
     }
   };
 

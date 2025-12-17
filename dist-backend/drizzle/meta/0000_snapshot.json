@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "02c52adf-80f6-4972-8a97-91a498254242",
+  "id": "bc112f57-fc06-48ee-805b-917bfe4978db",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "activity_logs": {
@@ -62,7 +62,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         }
       },
       "indexes": {},
@@ -123,7 +123,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "updated_at": {
           "name": "updated_at",
@@ -131,7 +131,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "created_by": {
           "name": "created_by",
@@ -229,7 +229,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         }
       },
       "indexes": {
@@ -321,7 +321,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "updated_at": {
           "name": "updated_at",
@@ -329,7 +329,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "created_by": {
           "name": "created_by",
@@ -455,7 +455,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "updated_at": {
           "name": "updated_at",
@@ -463,7 +463,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "created_by": {
           "name": "created_by",
@@ -577,7 +577,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         }
       },
       "indexes": {},
@@ -598,6 +598,89 @@
         "inventory_transactions_created_by_users_id_fk": {
           "name": "inventory_transactions_created_by_users_id_fk",
           "tableFrom": "inventory_transactions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "licenses": {
+      "name": "licenses",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "license_key": {
+          "name": "license_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "issued_to": {
+          "name": "issued_to",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": false
+        },
+        "issued_at": {
+          "name": "issued_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "(datetime('now','localtime'))"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "licenses_license_key_unique": {
+          "name": "licenses_license_key_unique",
+          "columns": [
+            "license_key"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "licenses_created_by_users_id_fk": {
+          "name": "licenses_created_by_users_id_fk",
+          "tableFrom": "licenses",
           "tableTo": "users",
           "columnsFrom": [
             "created_by"
@@ -673,7 +756,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "notes": {
           "name": "notes",
@@ -688,7 +771,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "created_by": {
           "name": "created_by",
@@ -788,7 +871,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "updated_at": {
           "name": "updated_at",
@@ -796,7 +879,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "created_by": {
           "name": "created_by",
@@ -954,7 +1037,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "updated_at": {
           "name": "updated_at",
@@ -962,7 +1045,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "created_by": {
           "name": "created_by",
@@ -1036,7 +1119,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1044,7 +1127,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "created_by": {
           "name": "created_by",
@@ -1130,7 +1213,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1138,7 +1221,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "created_by": {
           "name": "created_by",
@@ -1242,7 +1325,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         }
       },
       "indexes": {},
@@ -1408,7 +1491,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1416,7 +1499,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "created_by": {
           "name": "created_by",
@@ -1504,7 +1587,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1608,7 +1691,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1616,7 +1699,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "(datetime('now','localtime'))"
         }
       },
       "indexes": {

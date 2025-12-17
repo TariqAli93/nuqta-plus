@@ -1,0 +1,99 @@
+@import url('../print-theme.css');
+
+.receipt-container.88mm {
+  width: 88mm;
+  padding: 6mm;
+  font-size: 12px;
+}
+
+.receipt-container.88mm .receipt-header {
+  text-align: center;
+  border-bottom: 1px dashed #000;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.receipt-container.88mm .company-name h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.receipt-container.88mm .company-info {
+  font-size: 11px;
+  margin-top: 6px;
+}
+
+.receipt-container.88mm .company-address,
+.receipt-container.88mm .company-phones {
+  font-size: 10px;
+  margin-top: 3px;
+}
+
+/* ===== META ===== */
+.receipt-container.88mm .invoice-meta,
+.receipt-container.88mm .customer-meta {
+  font-size: 10px;
+  border-bottom: 1px dashed #000;
+  padding: 6px 0;
+  text-align: center;
+}
+
+.receipt-container.88mm .customer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ===== TABLE ===== */
+.receipt-container.88mm .invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 10px;
+}
+
+.receipt-container.88mm .invoice-table th,
+.receipt-container.88mm .invoice-table td {
+  border-bottom: 1px dashed #000;
+  padding: 6px 4px;
+}
+
+.receipt-container.88mm .invoice-table th {
+  background: #f5f5f5;
+  font-weight: bold;
+}
+
+.receipt-container.88mm .invoice-table tfoot td {
+  font-weight: bold;
+  padding: 7px 4px;
+}
+
+/* ===== PAYMENT SUMMARY ===== */
+.receipt-container.88mm .payment-summary {
+  margin-top: 12px;
+  font-size: 10px;
+  border-top: 1px dashed #000;
+  border-bottom: 1px dashed #000;
+  padding: 10px 0;
+  text-align: center;
+}
+
+.receipt-container.88mm .payment-summary div {
+  margin: 4px 0;
+}
+
+/* ===== FOOTER ===== */
+.receipt-container.88mm .receipt-footer {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+/* ===== PRINT ===== */
+@media print {
+  .receipt-container.88mm {
+    padding: 4mm !important;
+  }
+}

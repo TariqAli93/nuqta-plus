@@ -16,13 +16,6 @@ export default class BackendManager {
   }
 
   isRunning() {
-    console.log('Checking if backend is running...');
-    console.log(`Backend process: ${this.backendProcess}`);
-    console.log(
-      `Backend process killed: ${this.backendProcess ? this.backendProcess.killed : 'N/A'}`
-    );
-    console.log(`Backend process PID: ${this.backendProcess ? this.backendProcess.pid : 'N/A'}`);
-
     return (
       this.backendProcess &&
       !this.backendProcess.killed &&
