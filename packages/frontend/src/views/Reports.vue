@@ -329,12 +329,16 @@ const reportByCurrency = computed(() => {
 
 const formattedStartDate = computed({
   get: () => toYmd(filters.value.startDate),
-  set: (val) => (filters.value.startDate = val ? new Date(val) : null) + 1,
+  set: (val) => {
+    filters.value.startDate = val ? new Date(val) : null;
+  },
 });
 
 const formattedEndDate = computed({
   get: () => toYmd(filters.value.endDate),
-  set: (val) => (filters.value.endDate = val ? new Date(val) : null) + 1,
+  set: (val) => {
+    filters.value.endDate = val ? new Date(val) : null;
+  },
 });
 
 // 🔹 Fetch report

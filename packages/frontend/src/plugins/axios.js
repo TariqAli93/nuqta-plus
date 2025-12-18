@@ -75,7 +75,7 @@ api.interceptors.response.use(
     }
 
     // Handle 429 Rate Limit
-    if (error.response?.status === 401) {
+    if (error.response?.status === 429) {
       const retryAfter = error.response.headers['retry-after'] || 40;
       notificationStore.warning(`تم تجاوز حد الطلبات. حاول مرة أخرى بعد ${retryAfter} ثانية`, 6000);
       return Promise.reject(error.response?.data || error.message);

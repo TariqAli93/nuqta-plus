@@ -319,8 +319,9 @@ const dashboardData = useAsyncData(async () => {
   const salesResponse = await saleStore.fetchSales();
 
   const filteredSales =
-    salesResponse.data.filter((sale) => sale.status === 'completed' || sale.status === 'pending') ||
-    [];
+    (salesResponse?.data && Array.isArray(salesResponse.data)
+      ? salesResponse.data.filter((sale) => sale.status === 'completed' || sale.status === 'pending')
+      : []) || [];
 
   // Fetch low stock products
   const lowStockProducts = await productStore.fetchLowStock({ lowStock: true });
@@ -333,9 +334,9 @@ const dashboardData = useAsyncData(async () => {
   return {
     recentSales: filteredSales,
     stats: {
-      totalSales: salesResponse.length || 0,
-      totalCustomers: customers.meta?.total || customers.data.length || 0,
-      totalProducts: products.meta?.total || products.data.length || 0,
+      totalSales: salesResponse?.data?.length || 0,
+      totalCustomers: customers?.meta?.total || customers?.data?.length || 0,
+      totalProducts: products?.meta?.total || products?.data?.length || 0,
       lowStock: lowStockProducts?.length || 0,
     },
   };

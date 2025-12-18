@@ -7,8 +7,17 @@ export const useSaleStore = defineStore('sale', {
     sales: [],
     currentSale: null,
     loading: false,
-    printer:
-      typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('selectedPrinter')) : null,
+    printer: (() => {
+      if (typeof window === 'undefined') return null;
+      try {
+        const stored = localStorage.getItem('selectedPrinter');
+        return stored ? JSON.parse(stored) : null;
+      } catch (error) {
+        // If JSON is invalid, clear it and return null
+        localStorage.removeItem('selectedPrinter');
+        return null;
+      }
+    })(),
     pagination: {},
   }),
 
@@ -190,7 +199,9 @@ export const useSaleStore = defineStore('sale', {
       try {
         await api.delete(`/sales/${this.currentSale.id}/payments/${paymentId}`);
         // Update the current sale by removing the payment
-        this.currentSale.payments = this.currentSale.payments.filter((p) => p.id !== paymentId);
+        if (this.currentSale.payments && Array.isArray(this.currentSale.payments)) {
+          this.currentSale.payments = this.currentSale.payments.filter((p) => p.id !== paymentId);
+        }
         notificationStore.success('تم حذف الدفعة بنجاح');
       } catch (error) {
         notificationStore.error(error.response?.data?.message || 'فشل حذف الدفعة');

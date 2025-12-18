@@ -12,7 +12,7 @@
           color="primary"
           prepend-icon="mdi-printer"
           @click="handlePrint"
-          :loading="isPrinting"
+          :loading="printing"
         >
           طباعة
         </v-btn>
@@ -148,7 +148,7 @@
             <div class="text-center">
               <div class="text-caption text-grey">إجمالي المنتجات</div>
               <div class="text-h6 text-primary">
-                {{ formatCurrency(sale.total - sale.interestAmount, sale.currency) }}
+                {{ formatCurrency(sale.total - (sale.interestAmount || 0), sale.currency) }}
               </div>
             </div>
           </v-col>
@@ -174,7 +174,7 @@
               </div>
               <div class="mt-1 text-caption text-grey">
                 {{ sale.installments.length }} أقساط ×
-                {{ formatCurrency(sale.total / sale.installments.length, sale.currency) }}
+                {{ formatCurrency(sale.installments.length > 0 ? sale.total / sale.installments.length : 0, sale.currency) }}
               </div>
             </div>
           </v-col>
@@ -235,7 +235,7 @@
                 <span v-else>الإجمالي:</span>
               </td>
               <td class="text-center font-weight-bold">
-                {{ formatCurrency(sale.total - sale.interestAmount, sale.currency) }}
+                {{ formatCurrency(sale.total - (sale.interestAmount || 0), sale.currency) }}
               </td>
             </tr>
 
@@ -405,7 +405,7 @@
     </v-card>
 
     <div ref="invoiceWrapperRef">
-      <a4 v-if="sale" :sale="sale" />
+      <!-- TODO: Add invoice component here -->
     </div>
   </div>
 </template>
@@ -417,7 +417,6 @@ import { useSaleStore } from '@/stores/sale';
 import { useSettingsStore } from '@/stores/settings';
 import { useNotificationStore } from '@/stores/notification';
 import SelectPrinter from '@/components/SelectPrinter.vue';
-import { a4, printCss } from '../../components/print/a4';
 import {
   toYmd,
   toYmdWithTime,
@@ -426,7 +425,6 @@ import {
   getStatusText,
   getPaymentTypeText,
   getPaymentMethodText,
-  buildHtmlInvoice,
 } from '@/utils/helpers';
 
 const { params } = useRoute();
@@ -434,12 +432,13 @@ const saleStore = useSaleStore();
 const settingsStore = useSettingsStore();
 const notificationStore = useNotificationStore();
 
+
 const isPrinting = ref(false);
 const invoiceWrapperRef = ref(null);
-const settings = reactve({});
+const settings = ref(null);
 
-const previewPrint = () => {
-  console.log('Preview print clicked');
+const previewPrint = async () => {
+  console.log('previewing...');
 };
 
 // state
@@ -549,8 +548,7 @@ const addPayment = async () => {
 };
 
 const handlePrint = async () => {
-  const html = buildHtmlInvoice(invoiceWrapperRef.value.innerHTML, printCss);
-  console.log('Print HTML:', html);
+  console.log('printing...');
 };
 
 // lifecycle
@@ -561,10 +559,9 @@ onMounted(async () => {
     sale.value = response.data;
 
     // جلب معلومات الشركة من الإعدادات
-    await settingsStore.fetchCompanyInfo();
+    settings.value = await settingsStore.fetchSettings();
 
-    console.log(await settingsStore.companyInfo.invoiceType);
-
+    
     // تعيين العملة للدفعات
     if (sale.value) {
       paymentData.value.currency = sale.value.currency;
