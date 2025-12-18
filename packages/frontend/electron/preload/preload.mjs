@@ -63,7 +63,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   createLockFile: () => ipcRenderer.invoke('firstRun:createLock'),
 
   getPrinters: () => ipcRenderer.invoke('getPrinters'),
-  printReceipt: (data, options = {}) => ipcRenderer.invoke('print-receipt', { data, options }),
+  printReceipt: (receiptData) => ipcRenderer.invoke('print-receipt', receiptData),
   cutPaper: () => ipcRenderer.invoke('cut-paper'),
   kickDrawer: () => ipcRenderer.invoke('kick-drawer'),
 

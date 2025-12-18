@@ -43,7 +43,7 @@
         <v-window v-model="activeTab">
           <!-- Company Information Tab -->
           <v-window-item value="company" class="pa-0">
-            <CompanyInfoForm :data="settingsStore.companyInfo" />
+            <CompanyInfoForm />
           </v-window-item>
 
           <!-- Currency Settings Tab -->
@@ -61,8 +61,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useSettingsStore } from '@/stores/settings';
+import { ref, onMounted } from 'vue';
+import { useSettingsStore } from '../stores/settings';
 import CompanyInfoForm from '@/components/settings/CompanyInfoForm.vue';
 import CurrencySettings from '@/components/settings/CurrencySettings.vue';
 import BackupManager from '@/components/settings/BackupManager.vue';
@@ -72,4 +72,13 @@ const settingsStore = useSettingsStore();
 
 // State
 const activeTab = ref('company');
+
+onMounted(async () => {
+  try {
+    await settingsStore.initialize();
+    await settingsStore.fetchCurrencySettings();
+  } catch {
+    // Errors are surfaced via notification/error state in the store
+  }
+});
 </script>

@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import path, { dirname, join } from 'node:path';
 
-// --- Define __dirname globally for ES modules BEFORE importing electron-pos-printer ---
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 global.__dirname = __dirname;
@@ -15,8 +15,6 @@ import { getMachineId, saveLicenseString, verifyLicense } from '../scripts/licen
 import { setupAutoUpdater, checkForUpdates, startDownload } from '../scripts/autoUpdater.js';
 import { autoUpdater } from 'electron-updater';
 import { createLockFile } from '../scripts/firstRun.js';
-// import { PosPrinter } from '@plick/electron-pos-printer';
-import Printer from '../scripts/print.js';
 
 // --- المتغيرات العامة ---
 const isDev = !app.isPackaged;
@@ -24,7 +22,6 @@ const isDev = !app.isPackaged;
 let mainWindow = null;
 let activationWindow = null;
 let splashWindow = null; // splash screen window
-let printWindow = null; // print window
 let isQuitting = false;
 let backendReady = false;
 
@@ -42,6 +39,8 @@ if (!gotTheLock) {
     }
   });
 }
+
+
 
 // --- نافذة البرنامج الرئيسية ---
 function createWindow() {
@@ -75,7 +74,8 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    // Load from frontend dist folder: electron/main -> ../../dist
+    mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'));
     // add Shortcut to open DevTools in production for debugging
     mainWindow.webContents.on('before-input-event', (event, input) => {
       if (
@@ -101,29 +101,22 @@ function createWindow() {
 
   ipcMain.handle('getPrinters', async () => {
     try {
-      const printers = await mainWindow.webContents.getPrintersAsync();
-      return printers;
+      return [];
     } catch (error) {
-      console.error('Error getting printers:', error);
+      logger.error('Error getting printers:', error);
       return [];
     }
   });
 
-  ipcMain.handle('print-receipt', async (_event, { html, css, options }) => {
-    // ====== بداية التعديل - إصلاح مشكلة [Object Object] ======
-    console.log('Print data type:', typeof data);
-    console.log('Print options:', options);
-    const printer = new Printer({
-      silent: options.silent || false,
-      printer: options.printerName || null,
-      paperSize: options.paperSize || '80mm',
-      orientation: options.orientation || 'portrait',
-      margin: options.margin || '0mm',
-      copies: options.copies || 1,
-    });
-
-    console.log(printer.print(html, css));
+  ipcMain.handle('print-receipt', async (_event, { printerName, receiptData, options }) => {
+    console.log('Printing receipt command received');
   });
+
+
+
+
+
+
 
   ipcMain.handle('cut-paper', async () => {
     try {
@@ -172,7 +165,7 @@ function createActivationWindow() {
   activationWindow.loadFile(
     isDev
       ? path.join(__dirname, '../../activation.html')
-      : path.join(__dirname, '../dist/activation.html')
+      : path.join(__dirname, '../../dist/activation.html')
   );
 
   activationWindow.on('closed', () => {
@@ -217,7 +210,7 @@ function createSplashWindow() {
   });
 
   splashWindow.loadFile(
-    isDev ? path.join(__dirname, '../../splash.html') : path.join(__dirname, '../dist/splash.html')
+    isDev ? path.join(__dirname, '../../splash.html') : path.join(__dirname, '../../dist/splash.html')
   );
 
   splashWindow.once('ready-to-show', () => {
@@ -479,20 +472,5 @@ ipcMain.handle('firstRun:createLock', () => {
   }
 });
 
-// Handle print window ready event (global listener)
-ipcMain.on('print:ready', () => {
-  logger.info('Print window is ready');
-  if (printWindow && !printWindow.isDestroyed()) {
-    if (!isDev) {
-      printWindow.show();
-    }
-  }
-});
 
-// Handle print window close event (global listener)
-ipcMain.on('print:close', () => {
-  logger.info('Request to close print window');
-  if (printWindow && !printWindow.isDestroyed()) {
-    printWindow.close();
-  }
-});
+

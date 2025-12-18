@@ -19,9 +19,64 @@ export const useSettingsStore = defineStore('settings', () => {
   const isLoading = ref(false);
   const error = ref(null);
 
+  // Stores
+  const notificationStore = useNotificationStore();
+
+  // Helpers
+  const setByPath = (obj, path, val) => {
+    const parts = String(path).split('.');
+    let cur = obj;
+    for (let i = 0; i < parts.length; i++) {
+      const p = parts[i];
+      if (i === parts.length - 1) {
+        cur[p] = val;
+      } else {
+        cur[p] = cur[p] || {};
+        cur = cur[p];
+      }
+    }
+  };
+
+  const deleteByPath = (obj, path) => {
+    const parts = String(path).split('.');
+    let cur = obj;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const p = parts[i];
+      if (!cur[p]) return;
+      cur = cur[p];
+    }
+    delete cur[parts[parts.length - 1]];
+  };
+
+  const parseSettingsArray = (settingsArray) => {
+    const out = {};
+    const arr = Array.isArray(settingsArray) ? settingsArray : [];
+    arr.forEach(({ key, value }) => setByPath(out, key, value));
+    return out;
+  };
+
+  const mergeCompanyFromSettings = (payload) => {
+    if (payload && typeof payload === 'object' && payload.company && typeof payload.company === 'object') {
+      companyInfo.value = {
+        ...companyInfo.value,
+        ...payload.company,
+      };
+    }
+  };
+
   // Getters
   const getSettingValue = computed(() => (key, defaultValue = null) => {
-    return settings.value[key] ?? defaultValue;
+    if (!key) return defaultValue;
+    const keys = String(key).split('.');
+    let current = settings.value;
+    for (const k of keys) {
+      if (current && Object.prototype.hasOwnProperty.call(current, k)) {
+        current = current[k];
+      } else {
+        return defaultValue;
+      }
+    }
+    return current ?? defaultValue;
   });
 
   const companyAddress = computed(() => {
@@ -33,32 +88,38 @@ export const useSettingsStore = defineStore('settings', () => {
   });
 
   // Actions
-  const fetchAllSettings = async () => {
+  const fetchSettings = async () => {
     isLoading.value = true;
     error.value = null;
 
-    const parseSettings = (settingsArray) => {
-      const settings = {};
-      settingsArray.forEach(({ key, value }) => {
-        const keys = key.split('.'); // مثل ['company', 'name']
-        let current = settings;
-
-        // بناء الكائن المتداخل
-        keys.forEach((k, i) => {
-          if (i === keys.length - 1) {
-            current[k] = value;
-          } else {
-            current[k] = current[k] || {};
-            current = current[k];
-          }
-        });
-      });
-      return settings;
-    };
-
     try {
-      const { data } = await api.get('/settings');
-      settings.value = parseSettings(data.data || []);
+      const body = await api.get('/settings');
+
+      let parsed = {};
+      if (Array.isArray(body)) {
+        parsed = parseSettingsArray(body);
+      } else if (body && Array.isArray(body.data)) {
+        parsed = parseSettingsArray(body.data);
+      } else if (body && typeof body === 'object') {
+        const payload = body.data ?? body;
+        if (Array.isArray(payload)) {
+          parsed = parseSettingsArray(payload);
+        } else if (payload && typeof payload === 'object') {
+          const keys = Object.keys(payload);
+          const hasDot = keys.some((k) => k.includes('.'));
+          if (hasDot) {
+            const out = {};
+            keys.forEach((k) => setByPath(out, k, payload[k]));
+            parsed = out;
+          } else {
+            parsed = payload;
+          }
+        }
+      }
+
+      settings.value = parsed;
+      mergeCompanyFromSettings(parsed);
+      return settings.value;
     } catch (err) {
       error.value = err.response?.data?.message || err.message;
       throw err;
@@ -72,21 +133,17 @@ export const useSettingsStore = defineStore('settings', () => {
     error.value = null;
 
     try {
-      const response = await api.get('/settings/company');
-
-      if (response.data.success) {
-        const data = response.data;
-        companyInfo.value = {
-          name: data.name || '',
-          city: data.city || '',
-          area: data.area || '',
-          street: data.street || '',
-          phone: data.phone || '',
-          phone2: data.phone2 || '',
-          logoUrl: data.logoUrl || '',
-          invoiceType: data.invoiceType,
-        };
-      }
+      const { data } = await api.get('/settings/company');
+      companyInfo.value = {
+        name: data?.name || '',
+        city: data?.city || '',
+        area: data?.area || '',
+        street: data?.street || '',
+        phone: data?.phone || '',
+        phone2: data?.phone2 || '',
+        logoUrl: data?.logoUrl || '',
+        invoiceType: data?.invoiceType || '',
+      };
     } catch (err) {
       error.value = err.response?.data?.message || err.message;
       throw err;
@@ -95,18 +152,24 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   };
 
-  const saveCompanyInfo = async (data) => {
+  const saveCompanyInfo = async (payload) => {
     isLoading.value = true;
     error.value = null;
 
     try {
-      const response = await api.put('/settings/company', data);
-      const notificationStore = useNotificationStore();
-      if (response.data) {
-        notificationStore.success('تم حفظ معلومات الشركة بنجاح');
-        companyInfo.value = { ...companyInfo.value, ...data };
-        return response.data;
-      }
+      const { data } = await api.put('/settings/company', payload);
+      notificationStore.success('تم حفظ معلومات الشركة بنجاح');
+      const merged = { ...companyInfo.value, ...(data || payload) };
+      companyInfo.value = merged;
+      // Keep general settings cache aligned for consumers reading settings.company
+      settings.value = {
+        ...settings.value,
+        company: {
+          ...(settings.value.company || {}),
+          ...merged,
+        },
+      };
+      return data;
     } catch (err) {
       error.value = err.response?.data?.message || err.message;
       throw err;
@@ -117,9 +180,10 @@ export const useSettingsStore = defineStore('settings', () => {
 
   const validatePhone = async (phone) => {
     try {
-      const response = await api.post('/settings/validate/phone', { phone });
-      return response.data.isValid;
-    } catch (err) {
+      const { data } = await api.post('/settings/validate/phone', { phone });
+      if (typeof data === 'boolean') return data;
+      return Boolean(data?.isValid);
+    } catch {
       return false;
     }
   };
@@ -129,17 +193,9 @@ export const useSettingsStore = defineStore('settings', () => {
     error.value = null;
 
     try {
-      const response = await api.put(`/settings/${key}`, {
-        value,
-        description,
-      });
-
-      if (response.data.success) {
-        settings.value[key] = value;
-        return response.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to update setting');
-      }
+      const { data } = await api.put(`/settings/${key}`, { value, description });
+      setByPath(settings.value, key, value);
+      return data;
     } catch (err) {
       error.value = err.response?.data?.message || err.message;
       throw err;
@@ -153,14 +209,16 @@ export const useSettingsStore = defineStore('settings', () => {
     error.value = null;
 
     try {
-      const response = await api.put('/settings/bulk', settingsData);
-
-      if (response.data.success) {
-        Object.assign(settings.value, settingsData);
-        return response.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to update settings');
+      const { data } = await api.put('/settings/bulk', settingsData);
+      // Apply updates locally:
+      if (Array.isArray(settingsData)) {
+        settingsData.forEach((entry) => {
+          if (entry && typeof entry.key === 'string') setByPath(settings.value, entry.key, entry.value);
+        });
+      } else if (settingsData && typeof settingsData === 'object') {
+        Object.entries(settingsData).forEach(([k, v]) => setByPath(settings.value, k, v));
       }
+      return data;
     } catch (err) {
       error.value = err.response?.data?.message || err.message;
       throw err;
@@ -174,14 +232,9 @@ export const useSettingsStore = defineStore('settings', () => {
     error.value = null;
 
     try {
-      const response = await api.delete(`/settings/${key}`);
-
-      if (response.data.success) {
-        delete settings.value[key];
-        return response.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to delete setting');
-      }
+      const { data } = await api.delete(`/settings/${key}`);
+      deleteByPath(settings.value, key);
+      return data;
     } catch (err) {
       error.value = err.response?.data?.message || err.message;
       throw err;
@@ -196,12 +249,9 @@ export const useSettingsStore = defineStore('settings', () => {
     error.value = null;
 
     try {
-      const response = await api.post('/settings/danger/reset', {
-        confirmationToken,
-      });
+      const res = await api.post('/settings/danger/reset', { confirmationToken });
 
-      if (response.data.success) {
-        // Reset local state
+      if (res?.success) {
         settings.value = {};
         companyInfo.value = {
           name: '',
@@ -213,10 +263,9 @@ export const useSettingsStore = defineStore('settings', () => {
           logoUrl: '',
           invoiceType: '',
         };
-        return response.data;
-      } else {
-        throw new Error(response.data.message || 'Failed to reset application');
+        return res.data;
       }
+      throw new Error(res?.message || 'Failed to reset application');
     } catch (err) {
       error.value = err.response?.data?.message || err.message;
       throw err;
@@ -236,6 +285,8 @@ export const useSettingsStore = defineStore('settings', () => {
       city: '',
       area: '',
       street: '',
+      phone: '',
+      phone2: '',
       logoUrl: '',
       invoiceType: '',
     };
@@ -247,21 +298,15 @@ export const useSettingsStore = defineStore('settings', () => {
     error.value = null;
 
     try {
-      const response = await api.get('/settings/currency');
-
-      if (response?.success) {
-        const currencyData = response.data || {};
-        settings.value = {
-          ...settings.value,
-          defaultCurrency: currencyData.defaultCurrency,
-          usdRate: currencyData.usdRate,
-          iqdRate: currencyData.iqdRate,
-        };
-
-        return currencyData;
-      }
-
-      throw new Error(response?.message || 'Failed to fetch currency settings');
+      const { data } = await api.get('/settings/currency');
+      const currencyData = data || {};
+      settings.value = {
+        ...settings.value,
+        defaultCurrency: currencyData.defaultCurrency,
+        usdRate: currencyData.usdRate,
+        iqdRate: currencyData.iqdRate,
+      };
+      return currencyData;
     } catch (err) {
       error.value = err.response?.data?.message || err.message;
       throw err;
@@ -275,16 +320,11 @@ export const useSettingsStore = defineStore('settings', () => {
     error.value = null;
 
     try {
-      const response = await api.put('/settings/currency', currencyData);
-      const notificationStore = useNotificationStore();
-
-      if (response.success) {
-        notificationStore.success('تم حفظ إعدادات العملة بنجاح');
-        return response.data;
-      }
+      const { data } = await api.put('/settings/currency', currencyData);
+      notificationStore.success('تم حفظ إعدادات العملة بنجاح');
+      return data;
     } catch (err) {
       error.value = err.response?.data?.message || err.message;
-      const notificationStore = useNotificationStore();
       notificationStore.error('فشل حفظ إعدادات العملة');
       throw err;
     } finally {
@@ -295,8 +335,8 @@ export const useSettingsStore = defineStore('settings', () => {
   // Initialize store
   const initialize = async () => {
     try {
-      await Promise.all([fetchAllSettings(), fetchCompanyInfo()]);
-    } catch (err) {
+      await Promise.all([fetchSettings(), fetchCompanyInfo()]);
+    } catch {
       // Silently handle initialization errors
     }
   };
@@ -313,7 +353,7 @@ export const useSettingsStore = defineStore('settings', () => {
     companyAddress,
 
     // Actions
-    fetchAllSettings,
+    fetchSettings,
     fetchCompanyInfo,
     saveCompanyInfo,
     validatePhone,

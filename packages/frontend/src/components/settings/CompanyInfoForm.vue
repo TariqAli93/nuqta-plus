@@ -136,7 +136,7 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue';
-import { useSettingsStore } from '@/stores/settings';
+import { useSettingsStore } from '../../stores/settings';
 
 // Stores
 const settingsStore = useSettingsStore();
@@ -144,7 +144,6 @@ const settingsStore = useSettingsStore();
 // Refs
 const formRef = ref();
 const isFormValid = ref(false);
-const settings = ref(settingsStore.settings || {});
 
 // Invoice types
 const invoiceTypes = [
@@ -185,32 +184,37 @@ const saveCompanyInfo = async () => {
 
   try {
     await settingsStore.saveCompanyInfo(companyData.value);
-  } catch (error) {
+  } catch {
     // Error handled by notification
   }
+};
+
+const populateFromStore = () => {
+  const source = settingsStore.companyInfo || {};
+  companyData.value = {
+    name: source.name || '',
+    city: source.city || '',
+    area: source.area || '',
+    street: source.street || '',
+    phone: source.phone || '',
+    phone2: source.phone2 || '',
+    logoUrl: source.logoUrl || '',
+    invoiceType: source.invoiceType || invoiceTypes[0].value,
+  };
 };
 
 // Watch for store changes
 watch(
   () => settingsStore.companyInfo,
   (newValue) => {
-    Object.assign(companyData.value, newValue);
+    Object.assign(companyData.value, newValue || {});
   },
   { deep: true, immediate: true }
 );
 
 // Lifecycle
 onMounted(async () => {
-  await settingsStore.fetchAllSettings();
-  settings.value = settingsStore.settings || {};
-  companyData.value = {
-    name: settings.value.company?.name || '',
-    city: settings.value.company?.city || '',
-    area: settings.value.company?.area || '',
-    street: settings.value.company?.street || '',
-    phone: settings.value.company?.phone || '',
-    phone2: settings.value.company?.phone2 || '',
-    invoiceType: settings.value.company?.invoiceType || invoiceTypes[0].value,
-  };
+  await settingsStore.fetchCompanyInfo();
+  populateFromStore();
 });
 </script>

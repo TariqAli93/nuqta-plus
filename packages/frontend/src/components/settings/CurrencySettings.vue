@@ -162,9 +162,11 @@ const rules = {
 const saveCurrencySettings = async () => {
   if (!isFormValid.value) return;
 
+  console.log('Saving currency settings:', currencyData.value);
+
   try {
     await settingsStore.saveCurrencySettings(currencyData.value);
-  } catch (error) {
+  } catch {
     // Error handled by notification
   }
 };
@@ -180,7 +182,7 @@ onMounted(async () => {
         iqdRate: settings.iqdRate || 1,
       };
     }
-  } catch (error) {
+  } catch {
     // Error handled by notification
   }
 });
