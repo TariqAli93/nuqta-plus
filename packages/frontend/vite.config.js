@@ -5,6 +5,7 @@ import { fileURLToPath, URL } from 'node:url';
 import electron from 'vite-plugin-electron/simple';
 import VueDevTools from 'vite-plugin-vue-devtools';
 
+const isDev = process.env.NODE_ENV !== 'production';
 
 export default defineConfig({
   plugins: [
@@ -12,7 +13,8 @@ export default defineConfig({
     vuetify({
       autoImport: true,
     }),
-    VueDevTools(),
+    // Only include Vue DevTools in development mode
+    ...(isDev ? [VueDevTools()] : []),
     electron({
       main: {
         // Shortcut of `build.lib.entry`

@@ -72,12 +72,61 @@ function createWindow() {
     tryToShowMainWindowAfterSplash();
   });
 
+  // Add error handlers for debugging
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+    logger.error(`Main window failed to load: ${errorCode} - ${errorDescription} - ${validatedURL}`);
+    // Path resolution is handled in the main load logic above
+  });
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    logger.info('Main window finished loading');
+  });
+
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    // Load from frontend dist folder: electron/main -> ../../dist
-    mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'));
+    // Try multiple path resolution strategies for production
+    const tryLoadIndex = async () => {
+      // Strategy 1: Relative path from main.js location
+      const relativePath = path.join(__dirname, '../../dist/index.html');
+      logger.info(`Trying to load from relative path: ${relativePath}`);
+      try {
+        await mainWindow.loadFile(relativePath);
+        logger.info('Successfully loaded from relative path');
+        return;
+      } catch (err) {
+        logger.warn(`Failed to load from relative path: ${err.message}`);
+      }
+
+      // Strategy 2: Using app.getAppPath()
+      try {
+        const appPath = app.getAppPath();
+        const indexPath = path.join(appPath, 'dist-electron', 'dist', 'index.html');
+        logger.info(`Trying to load from app path: ${indexPath}`);
+        await mainWindow.loadFile(indexPath);
+        logger.info('Successfully loaded from app path');
+        return;
+      } catch (err) {
+        logger.warn(`Failed to load from app path: ${err.message}`);
+      }
+
+      // Strategy 3: Try resources path (for extraResources)
+      try {
+        const resourcesPath = process.resourcesPath;
+        const indexPath = path.join(resourcesPath, 'dist-electron', 'dist', 'index.html');
+        logger.info(`Trying to load from resources path: ${indexPath}`);
+        await mainWindow.loadFile(indexPath);
+        logger.info('Successfully loaded from resources path');
+      } catch (err) {
+        logger.error(`All path resolution strategies failed. Last error: ${err.message}`);
+        throw err;
+      }
+    };
+
+    tryLoadIndex().catch((err) => {
+      logger.error(`Failed to load index.html after all attempts: ${err.message}`);
+    });
   }
 
   // Handle window close with confirmation
@@ -170,7 +219,7 @@ function createWindow() {
       }
 
       logger.info(`Found ${printers.length} printers`);
-      console.log('Raw printers from Electron:', printers);
+      logger.debug('Printers from Electron', { printers });
 
       if (!printers || printers.length === 0) {
         logger.warn('No printers found on system');
@@ -188,7 +237,6 @@ function createWindow() {
       return formattedPrinters;
     } catch (error) {
       logger.error('Error getting printers:', error);
-      console.error('Error getting printers:', error);
       return [];
     }
   });
@@ -215,8 +263,7 @@ function createWindow() {
 
       const paperConfig = paperSizeConfigs[invoiceType] || paperSizeConfigs['roll-80'];
 
-      console.log('Printing with config:', { printerName, invoiceType, paperConfig });
-      console.log('Receipt data length:', receiptData?.length);
+      logger.debug('Printing receipt', { printerName, invoiceType, paperConfig, receiptDataLength: receiptData?.length });
 
       // Generate HTML content from receipt data
       const htmlContent = generateReceiptHtml(receiptData, invoiceType);
@@ -250,7 +297,7 @@ function createWindow() {
         margins: paperConfig.margins,
       };
 
-      console.log('Print options:', printOptions);
+      logger.debug('Print options', { printOptions });
 
       // Print the content
       return new Promise((resolve) => {
@@ -271,7 +318,6 @@ function createWindow() {
       });
     } catch (error) {
       logger.error('Error printing receipt:', error);
-      console.error('Print error details:', error);
       return {
         success: false,
         error: error.message || 'فشل في الطباعة',
@@ -439,7 +485,6 @@ function createWindow() {
       return { success: true };
     } catch (error) {
       logger.error('Error showing receipt preview:', error);
-      console.error('Preview error details:', error);
       return {
         success: false,
         error: error.message || 'فشل في عرض المعاينة',
@@ -455,20 +500,20 @@ function createWindow() {
 
   ipcMain.handle('cut-paper', async () => {
     try {
-      console.log('Cutting paper command received');
+      logger.debug('Cutting paper command received');
       return { success: true };
     } catch (error) {
-      console.error('Error cutting paper:', error);
+      logger.error('Error cutting paper:', error);
       return { success: false, error: error.message };
     }
   });
 
   ipcMain.handle('kick-drawer', async () => {
     try {
-      console.log('Kicking cash drawer command received');
+      logger.debug('Kicking cash drawer command received');
       return { success: true };
     } catch (error) {
-      console.error('Error kicking cash drawer:', error);
+      logger.error('Error kicking cash drawer:', error);
       return { success: false, error: error.message };
     }
   });
@@ -497,11 +542,60 @@ function createActivationWindow() {
     },
   });
 
-  activationWindow.loadFile(
-    isDev
-      ? path.join(__dirname, '../../activation.html')
-      : path.join(__dirname, '../../dist/activation.html')
-  );
+  // Add error handlers for debugging
+  activationWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+    logger.error(`Activation window failed to load: ${errorCode} - ${errorDescription} - ${validatedURL}`);
+  });
+
+  activationWindow.webContents.on('did-finish-load', () => {
+    logger.info('Activation window finished loading');
+  });
+
+  if (isDev) {
+    activationWindow.loadFile(path.join(__dirname, '../../activation.html'));
+  } else {
+    // Try multiple path resolution strategies for production
+    const tryLoadActivation = async () => {
+      // Strategy 1: Relative path from main.js location
+      const relativePath = path.join(__dirname, '../../dist/activation.html');
+      logger.info(`Trying to load activation from relative path: ${relativePath}`);
+      try {
+        await activationWindow.loadFile(relativePath);
+        logger.info('Successfully loaded activation from relative path');
+        return;
+      } catch (err) {
+        logger.warn(`Failed to load activation from relative path: ${err.message}`);
+      }
+
+      // Strategy 2: Using app.getAppPath()
+      try {
+        const appPath = app.getAppPath();
+        const activationPath = path.join(appPath, 'dist-electron', 'dist', 'activation.html');
+        logger.info(`Trying to load activation from app path: ${activationPath}`);
+        await activationWindow.loadFile(activationPath);
+        logger.info('Successfully loaded activation from app path');
+        return;
+      } catch (err) {
+        logger.warn(`Failed to load activation from app path: ${err.message}`);
+      }
+
+      // Strategy 3: Try resources path
+      try {
+        const resourcesPath = process.resourcesPath;
+        const activationPath = path.join(resourcesPath, 'dist-electron', 'dist', 'activation.html');
+        logger.info(`Trying to load activation from resources path: ${activationPath}`);
+        await activationWindow.loadFile(activationPath);
+        logger.info('Successfully loaded activation from resources path');
+      } catch (err) {
+        logger.error(`All activation path resolution strategies failed. Last error: ${err.message}`);
+        throw err;
+      }
+    };
+
+    tryLoadActivation().catch((err) => {
+      logger.error(`Failed to load activation.html after all attempts: ${err.message}`);
+    });
+  }
 
   activationWindow.on('closed', () => {
     logger.info('Activation window closed');
@@ -544,9 +638,60 @@ function createSplashWindow() {
     },
   });
 
-  splashWindow.loadFile(
-    isDev ? path.join(__dirname, '../../splash.html') : path.join(__dirname, '../../dist/splash.html')
-  );
+  // Add error handlers for debugging
+  splashWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+    logger.error(`Splash window failed to load: ${errorCode} - ${errorDescription} - ${validatedURL}`);
+  });
+
+  splashWindow.webContents.on('did-finish-load', () => {
+    logger.info('Splash window finished loading');
+  });
+
+  if (isDev) {
+    splashWindow.loadFile(path.join(__dirname, '../../splash.html'));
+  } else {
+    // Try multiple path resolution strategies for production
+    const tryLoadSplash = async () => {
+      // Strategy 1: Relative path from main.js location
+      const relativePath = path.join(__dirname, '../../dist/splash.html');
+      logger.info(`Trying to load splash from relative path: ${relativePath}`);
+      try {
+        await splashWindow.loadFile(relativePath);
+        logger.info('Successfully loaded splash from relative path');
+        return;
+      } catch (err) {
+        logger.warn(`Failed to load splash from relative path: ${err.message}`);
+      }
+
+      // Strategy 2: Using app.getAppPath()
+      try {
+        const appPath = app.getAppPath();
+        const splashPath = path.join(appPath, 'dist-electron', 'dist', 'splash.html');
+        logger.info(`Trying to load splash from app path: ${splashPath}`);
+        await splashWindow.loadFile(splashPath);
+        logger.info('Successfully loaded splash from app path');
+        return;
+      } catch (err) {
+        logger.warn(`Failed to load splash from app path: ${err.message}`);
+      }
+
+      // Strategy 3: Try resources path
+      try {
+        const resourcesPath = process.resourcesPath;
+        const splashPath = path.join(resourcesPath, 'dist-electron', 'dist', 'splash.html');
+        logger.info(`Trying to load splash from resources path: ${splashPath}`);
+        await splashWindow.loadFile(splashPath);
+        logger.info('Successfully loaded splash from resources path');
+      } catch (err) {
+        logger.error(`All splash path resolution strategies failed. Last error: ${err.message}`);
+        throw err;
+      }
+    };
+
+    tryLoadSplash().catch((err) => {
+      logger.error(`Failed to load splash.html after all attempts: ${err.message}`);
+    });
+  }
 
   splashWindow.once('ready-to-show', () => {
     splashWindow.show();

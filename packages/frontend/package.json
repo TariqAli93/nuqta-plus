@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build:win": "vite build && electron-builder --win",
-    "publish:win": "vite build && electron-builder --win --publish always",
+    "build": "cross-env NODE_ENV=production vite build",
+    "build:win": "cross-env NODE_ENV=production vite build && electron-builder --win",
+    "publish:win": "cross-env NODE_ENV=production vite build && electron-builder --win --publish always",
     "lint": "eslint src",
     "format": "prettier --write src"
   },
@@ -29,6 +29,7 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.1.2",
+    "cross-env": "^10.1.0",
     "electron": "^39.1.1",
     "electron-builder": "^26.0.12",
     "electron-devtools-installer": "^4.0.0",

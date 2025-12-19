@@ -26,12 +26,17 @@ async function buildBackend() {
     console.log('📦 Copying backend source files...');
     await fs.copy(path.join(SOURCE_DIR, 'src'), path.join(DIST_DIR, 'src'), {
       filter: (src) => {
-        // Exclude test files and unnecessary files
+        // Exclude test files, debug files, and unnecessary files
         const relativePath = path.relative(SOURCE_DIR, src);
         const isTestFile = src.includes('.test.js') || src.includes('.spec.js');
         const isNodeModules = src.includes('node_modules');
+        const isDebugFile = 
+          src.includes('EXAMPLES_DEBUG.js') ||
+          src.includes('DEBUG_GUIDE.md') ||
+          src.includes('DEBUG_README.md') ||
+          src.includes('QUICKSTART_DEBUG.md');
 
-        if (isTestFile || isNodeModules) {
+        if (isTestFile || isNodeModules || isDebugFile) {
           return false;
         }
 
@@ -52,9 +57,12 @@ async function buildBackend() {
 
     // Copy necessary config files
     console.log('⚙️ Copying configuration files...');
+    // Exclude debug documentation files and .env file
     const configFiles = ['.env.example', 'README.md', 'drizzle.config.js'];
+    const excludeFiles = ['DEBUG_GUIDE.md', 'DEBUG_README.md', 'QUICKSTART_DEBUG.md', '.env'];
 
     for (const file of configFiles) {
+      if (excludeFiles.includes(file)) continue;
       const filePath = path.join(SOURCE_DIR, file);
       if (await fs.pathExists(filePath)) {
         await fs.copy(filePath, path.join(DIST_DIR, file));
@@ -86,12 +94,8 @@ async function buildBackend() {
 
     await fs.copy(binSrc, binDest);
 
-    // Copy or create .env file
-    const envPath = path.join(SOURCE_DIR, '.env');
-    if (await fs.pathExists(envPath)) {
-      console.log('🔐 Copying .env file...');
-      await fs.copy(envPath, path.join(DIST_DIR, '.env'));
-    }
+    // Note: .env file is NOT copied to production build for security
+    // Environment variables should be set at runtime or through system environment
 
     // Create start script
     console.log('📝 Creating start script...');
@@ -103,6 +107,9 @@ const __dirname = path.dirname(__filename);
 
 // Set working directory to backend folder
 process.chdir(__dirname);
+
+// Set NODE_ENV to production for production builds
+process.env.NODE_ENV = 'production';
 
 // Set NODE_PATH to include the backend node_modules
 process.env.NODE_PATH = path.join(__dirname, 'node_modules');

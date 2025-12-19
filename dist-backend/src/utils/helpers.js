@@ -77,9 +77,11 @@ export function calculateSaleTotals(items, discount = 0, tax = 0) {
   }, 0);
 
   // Calculate total item-level discounts (مجموع خصومات المنتجات)
+  // item.discount is per unit, so multiply by quantity
   const itemDiscounts = items.reduce((sum, item) => {
-    const itemDiscount = parseFloat(item.discount) || 0;
-    return sum + itemDiscount;
+    const itemDiscountPerUnit = parseFloat(item.discount) || 0;
+    const itemDiscountTotal = itemDiscountPerUnit * (item.quantity || 1);
+    return sum + itemDiscountTotal;
   }, 0);
 
   // Subtotal after item-level discounts (المجموع بعد خصم المنتجات)

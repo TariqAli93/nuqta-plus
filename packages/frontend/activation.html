@@ -7,10 +7,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Codel Activation</title>
 
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900;1000&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+
     <style>
-      @import url('./src/styles/fonts.css');
-      @import url('./src/styles/main.css');
-      @import url('./src/styles/tailwind.css');
+      /* Base font styles */
+      * {
+        font-family: 'Roboto', 'Cairo', 'Tajawal', sans-serif;
+      }
+
+      [dir='rtl'], [lang='ar'] {
+        font-family: 'Cairo', 'Tajawal', sans-serif;
+      }
 
       /* color schema dark/light based on system */
       @media (prefers-color-scheme: dark) {
