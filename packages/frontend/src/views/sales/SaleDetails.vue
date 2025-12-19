@@ -369,17 +369,26 @@
           <v-row>
             <v-col cols="12" md="4">
               <v-text-field
-                v-model.number="paymentData.amount"
+                :model-value="formatNumber(paymentData.amount)"
+                @update:model-value="handlePaymentAmountInput($event)"
                 label="المبلغ"
-                type="number"
                 step="0.01"
                 min="0.01"
                 :hint="`المتبقي: ${formatCurrency(sale.remainingAmount, sale.currency)}`"
                 persistent-hint
                 :rules="[
-                  (v) => !!v || 'المبلغ مطلوب',
-                  (v) => v > 0 || 'المبلغ يجب أن يكون أكبر من صفر',
-                  (v) => v <= sale.remainingAmount || 'المبلغ أكبر من المتبقي',
+                  (v) => {
+                    const num = parseNumber(v);
+                    return !!num || 'المبلغ مطلوب';
+                  },
+                  (v) => {
+                    const num = parseNumber(v);
+                    return num > 0 || 'المبلغ يجب أن يكون أكبر من صفر';
+                  },
+                  (v) => {
+                    const num = parseNumber(v);
+                    return num <= sale.remainingAmount || 'المبلغ أكبر من المتبقي';
+                  },
                 ]"
                 required
               ></v-text-field>
@@ -403,10 +412,6 @@
         </v-form>
       </v-card-text>
     </v-card>
-
-    <div ref="invoiceWrapperRef">
-      <!-- TODO: Add invoice component here -->
-    </div>
   </div>
 </template>
 
@@ -629,6 +634,29 @@ const handlePrint = async () => {
   } finally {
     printing.value = false;
   }
+};
+
+// إضافة دوال تنسيق الأرقام
+const formatNumber = (value) => {
+  if (!value && value !== 0) return '';
+  const numStr = String(value).replace(/,/g, '');
+  if (!/^\d*\.?\d*$/.test(numStr)) return value;
+  // دعم الأرقام العشرية
+  const parts = numStr.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return parts.join('.');
+};
+
+const parseNumber = (value) => {
+  if (!value) return 0;
+  const numStr = String(value).replace(/,/g, '');
+  const num = parseFloat(numStr);
+  return isNaN(num) ? 0 : num;
+};
+
+const handlePaymentAmountInput = (value) => {
+  const num = parseNumber(value);
+  paymentData.value.amount = num;
 };
 
 // lifecycle

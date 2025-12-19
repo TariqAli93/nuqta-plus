@@ -119,7 +119,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watchEffect } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watchEffect, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useTheme } from 'vuetify';
@@ -141,6 +141,12 @@ const error = ref('');
 const rules = { required: (v) => !!v || 'هذا الحقل مطلوب' };
 
 const handleLogin = async () => {
+  await nextTick(); // Ensure DOM is updated
+  if (!loginForm.value) {
+    console.error('Form reference is not available');
+    return;
+  }
+  
   const { valid } = await loginForm.value.validate();
   if (!valid) return;
   loading.value = true;

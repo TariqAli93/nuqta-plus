@@ -53,9 +53,10 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-if="!isEdit || isAdmin || costPriceUnlocked"
-                v-model.number="formData.costPrice"
+                :model-value="formatNumber(formData.costPrice)"
+                @update:model-value="handleCostPriceInput"
                 label="سعر التكلفة"
-                type="number"
+                :suffix="formData.currency"
                 :rules="[rules.required]"
               ></v-text-field>
               <v-text-field
@@ -71,9 +72,10 @@
             </v-col>
             <v-col cols="12" md="6">
               <v-text-field
-                v-model.number="formData.sellingPrice"
+                :model-value="formatNumber(formData.sellingPrice)"
+                @update:model-value="handleSellingPriceInput"
                 label="سعر البيع"
-                type="number"
+                :suffix="formData.currency"
                 :rules="[rules.required]"
               ></v-text-field>
             </v-col>
@@ -395,4 +397,37 @@ onMounted(async () => {
     }
   }
 });
+
+// إضافة دوال تنسيق الأرقام
+const formatNumber = (value) => {
+  if (!value && value !== 0) return '';
+  // إزالة أي فواصل موجودة
+  const numStr = String(value).replace(/,/g, '');
+  // التحقق من أن القيمة رقم (يدعم الأرقام العشرية)
+  if (!/^\d*\.?\d*$/.test(numStr)) return value;
+  // تقسيم الرقم إلى جزء صحيح وجزء عشري
+  const parts = numStr.split('.');
+  // تنسيق الجزء الصحيح مع الفواصل (بعد كل 3 أرقام)
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  // إرجاع الرقم المنسق
+  return parts.join('.');
+};
+
+const parseNumber = (value) => {
+  if (!value) return 0;
+  // إزالة الفواصل وتحويل إلى رقم
+  const numStr = String(value).replace(/,/g, '');
+  const num = parseFloat(numStr);
+  return isNaN(num) ? 0 : num;
+};
+
+const handleCostPriceInput = (value) => {
+  const num = parseNumber(value);
+  formData.value.costPrice = num;
+};
+
+const handleSellingPriceInput = (value) => {
+  const num = parseNumber(value);
+  formData.value.sellingPrice = num;
+};
 </script>

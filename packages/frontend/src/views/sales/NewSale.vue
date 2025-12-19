@@ -72,18 +72,17 @@
             </v-col>
             <v-col cols="12" md="3">
               <v-text-field
-                v-model.number="item.discount"
+                :model-value="formatNumber(item.discount)"
+                @input="(e) => handleItemDiscountInput(item, e.target.value)"
                 :suffix="sale.currency"
                 label="الخصم على الوحدة"
-                type="number"
-                min="0"
                 hint="اختياري"
                 persistent-hint
               />
             </v-col>
             <v-col cols="12" md="12">
               <v-text-field
-                :model-value="formatCurrency(item.quantity * item.unitPrice - (item.discount || 0))"
+                :model-value="formatCurrency(item.quantity * item.unitPrice - ((item.discount || 0) * item.quantity))"
                 :suffix="sale.currency"
                 label="صافي السعر"
                 readonly
@@ -114,13 +113,17 @@
               />
             </v-col>
             <v-col cols="12" md="4">
-              <v-text-field v-model.number="sale.discount" label="الخصم" type="number" />
+              <v-text-field
+                :model-value="formatNumber(sale.discount)"
+                @input="(e) => handleSaleDiscountInput(e.target.value)"
+                label="الخصم"
+              />
             </v-col>
             <v-col cols="12" md="4">
               <v-text-field
-                v-model.number="sale.paidAmount"
+                :model-value="formatNumber(sale.paidAmount)"
+                @input="(e) => handlePaidAmountInput(e.target.value)"
                 label="المبلغ المدفوع"
-                type="number"
                 :hint="sale.paymentType === 'installment' ? 'الدفعة الأولى' : 'المبلغ الكامل'"
                 persistent-hint
               />
@@ -145,18 +148,24 @@
                 <v-col cols="12" md="4">
                   <v-text-field
                     v-model.number="sale.interestRate"
+                    @update:model-value="handleInterestRateChange"
                     label="نسبة الفائدة (%)"
                     type="number"
                     min="0"
                     max="100"
+                    hint="أدخل النسبة المئوية"
+                    persistent-hint
                   />
                 </v-col>
 
                 <v-col cols="12" md="4">
                   <v-text-field
-                    :model-value="formatCurrency(interestValue)"
-                    label="قيمة الفائدة المضافة"
-                    readonly
+                    :model-value="formatNumber(sale.interestAmount)"
+                    @input="(e) => handleInterestAmountChange(e.target.value)"
+                    :suffix="sale.currency"
+                    label="مبلغ الفائدة"
+                    hint="أدخل المبلغ مباشرة"
+                    persistent-hint
                   />
                 </v-col>
               </v-row>
@@ -174,12 +183,59 @@
                     {{ formatCurrency(installmentAmount) }}
                   </span>
                 </div>
+                <div class="py-2 border-b d-flex justify-space-between">
+                  <span>النسبة الفعلية:</span>
+                  <span class="font-weight-bold">
+                    {{ actualInterestRate.toFixed(2) }}%
+                  </span>
+                </div>
                 <div class="mt-2 d-flex justify-space-between">
                   <span>المبلغ المتبقي:</span>
                   <span class="font-weight-bold text-error">
                     {{ formatCurrency(remainingAmount) }}
                   </span>
                 </div>
+              </v-card>
+
+              <!-- جدول الأقساط -->
+              <v-card variant="outlined" class="mt-3">
+                <v-card-title class="text-h6">جدول الأقساط</v-card-title>
+                <v-table>
+                  <thead>
+                    <tr>
+                      <th>رقم القسط</th>
+                      <th>المبلغ</th>
+                      <th>المتبقي بعد القسط</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="installment in installmentSchedule" :key="installment.number">
+                      <td>{{ installment.number }}</td>
+                      <td class="font-weight-bold">{{ formatCurrency(installment.amount) }}</td>
+                      <td>
+                        <span 
+                          :class="{
+                            'text-success font-weight-bold': installment.remaining === 0,
+                            'text-grey': installment.remaining > 0
+                          }"
+                        >
+                          {{ formatCurrency(installment.remaining) }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot v-if="installmentSchedule.length > 0">
+                    <tr class="bg-primary-lighten-5">
+                      <td class="text-left font-weight-bold">الإجمالي</td>
+                      <td class="font-weight-bold text-primary">
+                        {{ formatCurrency(totalWithInterest) }}
+                      </td>
+                      <td class="font-weight-bold">
+                        <span class="text-error">{{ formatCurrency(remainingAmount) }}</span>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </v-table>
               </v-card>
             </div>
           </v-expand-transition>
@@ -241,6 +297,8 @@ const sale = ref({
   paidAmount: 0,
   installmentCount: 3,
   interestRate: 25,
+  interestAmount: 0,
+  interestInputType: 'rate', // 'rate' أو 'amount' لتحديد نوع الإدخال
   notes: '',
 });
 
@@ -279,42 +337,136 @@ const paymentTypes = [
   { label: 'تقسيط', value: 'installment' },
 ];
 
-/* 🧮 حسابات البيع */
+/* �� حسابات البيع محسّنة */
 const subtotal = computed(() =>
   sale.value.items.reduce((s, i) => {
     const itemTotal = i.quantity * i.unitPrice;
-    const itemDiscount = i.discount || 0;
+    const itemDiscount = (i.discount || 0) * i.quantity;
     return s + (itemTotal - itemDiscount);
   }, 0)
 );
-const total = computed(() => subtotal.value - (sale.value.discount || 0));
 
-// ✅ الفائدة عند التقسيط
-const interestValue = computed(() =>
-  sale.value.paymentType === 'installment' ? total.value * (sale.value.interestRate / 100) : 0
-);
-const totalWithInterest = computed(() => total.value + interestValue.value);
-const installmentAmount = computed(() =>
-  sale.value.installmentCount > 0 ? totalWithInterest.value / sale.value.installmentCount : 0
-);
-
-// ✅ المبلغ المتبقي
-const remainingAmount = computed(() => {
-  const finalTotal =
-    sale.value.paymentType === 'installment' ? totalWithInterest.value : total.value;
-  return finalTotal - (sale.value.paidAmount || 0);
+const total = computed(() => {
+  const result = subtotal.value - (sale.value.discount || 0);
+  return Math.max(0, result); // التأكد من عدم وجود قيم سالبة
 });
 
-// ✅ تحديث المبلغ المدفوع تلقائياً عند تغيير نوع الدفع
+// ✅ حساب الفائدة بشكل بسيط
+const interestValue = computed(() => {
+  if (sale.value.paymentType !== 'installment') return 0;
+  
+  const baseAmount = total.value;
+  
+  // إذا كان الإدخال عن طريق المبلغ، استخدم المبلغ مباشرة
+  if (sale.value.interestInputType === 'amount') {
+    return Math.max(0, sale.value.interestAmount || 0);
+  }
+  
+  // فائدة بسيطة: الفائدة = المبلغ × النسبة
+  const rate = sale.value.interestRate || 0;
+  return baseAmount * (rate / 100);
+});
+
+// ✅ حساب الإجمالي بعد الفائدة مع التقريب
+const totalWithInterest = computed(() => {
+  const result = total.value + interestValue.value;
+  return Math.round(result * 100) / 100; // تقريب إلى رقمين عشريين
+});
+
+// ✅ حساب قيمة القسط الواحد بشكل دقيق
+const installmentAmount = computed(() => {
+  if (sale.value.installmentCount <= 0) return 0;
+  
+  const amount = totalWithInterest.value / sale.value.installmentCount;
+  
+  // تقريب إلى رقمين عشريين
+  return Math.round(amount * 100) / 100;
+});
+
+// ✅ حساب المبلغ المتبقي بدقة
+const remainingAmount = computed(() => {
+  const finalTotal = sale.value.paymentType === 'installment' 
+    ? totalWithInterest.value 
+    : total.value;
+  
+  const paid = sale.value.paidAmount || 0;
+  const remaining = finalTotal - paid;
+  
+  return Math.max(0, Math.round(remaining * 100) / 100);
+});
+
+// ✅ جدول الأقساط التفصيلي (مصحح ومحسّن)
+const installmentSchedule = computed(() => {
+  if (sale.value.paymentType !== 'installment') return [];
+  
+  const schedule = [];
+  const totalAmount = totalWithInterest.value;
+  const paidAmount = sale.value.paidAmount || 0;
+  let remaining = Math.round((totalAmount - paidAmount) * 100) / 100;
+  
+  if (remaining <= 0 || sale.value.installmentCount <= 0) return [];
+  
+  // حساب قيمة القسط الواحد (بدون تقريب)
+  const baseInstallment = remaining / sale.value.installmentCount;
+  
+  // مجموع الأقساط المقرّبة (للتأكد من عدم وجود فارق)
+  let totalDistributed = 0;
+  
+  for (let i = 1; i <= sale.value.installmentCount; i++) {
+    const isLast = i === sale.value.installmentCount;
+    
+    let installment;
+    if (isLast) {
+      // آخر قسط = المتبقي بالضبط (لضمان عدم وجود فارق)
+      installment = Math.round((remaining - totalDistributed) * 100) / 100;
+      // التأكد من أن آخر قسط ليس صفراً أو سالباً
+      if (installment <= 0) {
+        // إذا كان المتبقي صفراً أو سالباً بسبب التقريب، استخدم القيمة الأساسية
+        installment = Math.max(0.01, Math.round(baseInstallment * 100) / 100);
+      }
+    } else {
+      // باقي الأقساط: تقريب إلى رقمين عشريين
+      installment = Math.round(baseInstallment * 100) / 100;
+      // التأكد من أن القسط ليس صفراً
+      if (installment <= 0) {
+        installment = 0.01;
+      }
+      totalDistributed += installment;
+    }
+    
+    // تحديث المتبقي قبل إضافة القسط
+    remaining = Math.round((remaining - installment) * 100) / 100;
+    
+    schedule.push({
+      number: i,
+      amount: installment,
+      remaining: Math.max(0, remaining),
+    });
+  }
+  
+  return schedule;
+});
+
+// ✅ إجمالي الفائدة الفعلية (للعرض)
+const actualInterestRate = computed(() => {
+  if (sale.value.paymentType !== 'installment' || total.value === 0) return 0;
+  
+  if (sale.value.interestInputType === 'amount') {
+    return (interestValue.value / total.value) * 100;
+  }
+  
+  return sale.value.interestRate || 0;
+});
+
+// ✅ تحديث المبلغ المدفوع تلقائياً عند تغيير نوع الدفع (محسّن)
 watch(
   () => sale.value.paymentType,
   (newType) => {
     if (newType === 'cash') {
-      // في حالة الدفع النقدي، المبلغ المدفوع = الإجمالي
-      sale.value.paidAmount = total.value;
+      sale.value.paidAmount = Math.round(total.value * 100) / 100;
     } else {
       // في حالة التقسيط، المبلغ المدفوع = قيمة القسط الأول
-      sale.value.paidAmount = installmentAmount.value;
+      sale.value.paidAmount = Math.round(installmentAmount.value * 100) / 100;
     }
   }
 );
@@ -345,14 +497,44 @@ watch(
   { deep: true }
 );
 
-// ✅ تحديث المبلغ المدفوع عند تغيير الإجمالي
+// ✅ تحديث المبلغ المدفوع عند تغيير الإجمالي (محسّن)
 watch(
   () => [total.value, totalWithInterest.value, installmentAmount.value],
   () => {
     if (sale.value.paymentType === 'cash') {
-      sale.value.paidAmount = total.value;
+      sale.value.paidAmount = Math.round(total.value * 100) / 100;
     } else {
-      sale.value.paidAmount = installmentAmount.value;
+      sale.value.paidAmount = Math.round(installmentAmount.value * 100) / 100;
+    }
+  }
+);
+
+// ✅ تحديث المبلغ عند تغيير النسبة (مبسّط)
+watch(
+  () => [total.value, sale.value.interestRate],
+  () => {
+    if (sale.value.paymentType === 'installment' && 
+        sale.value.interestInputType === 'rate' && 
+        total.value > 0) {
+      // فائدة بسيطة: الفائدة = المبلغ × النسبة
+      const rate = sale.value.interestRate || 0;
+      const calculatedInterest = total.value * (rate / 100);
+      sale.value.interestAmount = Math.round(calculatedInterest * 100) / 100;
+    }
+  }
+);
+
+// ✅ تحديث النسبة عند تغيير المبلغ (مبسّط)
+watch(
+  () => [total.value, sale.value.interestAmount],
+  () => {
+    if (sale.value.paymentType === 'installment' && 
+        sale.value.interestInputType === 'amount' && 
+        total.value > 0) {
+      // فائدة بسيطة: النسبة = (الفائدة / المبلغ) × 100
+      const interest = sale.value.interestAmount || 0;
+      const calculatedRate = (interest / total.value) * 100;
+      sale.value.interestRate = Math.round(calculatedRate * 100) / 100;
     }
   }
 );
@@ -361,7 +543,9 @@ watch(
 const itemsTotal = computed(() =>
   sale.value.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0)
 );
-const itemsDiscount = computed(() => sale.value.items.reduce((s, i) => s + (i.discount || 0), 0));
+const itemsDiscount = computed(() => 
+  sale.value.items.reduce((s, i) => s + (i.discount || 0) * i.quantity, 0) // Multiply by quantity
+);
 
 const saleSummary = computed(() => [
   { label: 'إجمالي المنتجات', value: formatCurrency(itemsTotal.value) },
@@ -499,4 +683,65 @@ const formatCurrency = (amount) =>
     currency: sale.value.currency,
     maximumFractionDigits: 0,
   }).format(amount || 0);
+
+// إضافة دوال تنسيق الأرقام
+const formatNumber = (value) => {
+  if (!value && value !== 0) return '';
+  const numStr = String(value).replace(/,/g, '');
+  if (!/^\d*\.?\d*$/.test(numStr)) return value;
+  const parts = numStr.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return parts.join('.');
+};
+
+const parseNumber = (value) => {
+  if (!value) return 0;
+  const numStr = String(value).replace(/,/g, '');
+  const num = parseFloat(numStr);
+  return isNaN(num) ? 0 : num;
+};
+
+// معالجة الخصم على الوحدة
+const handleItemDiscountInput = (item, value) => {
+  const num = parseNumber(value);
+  item.discount = num;
+};
+
+// معالجة الخصم الإضافي
+const handleSaleDiscountInput = (value) => {
+  const num = parseNumber(value);
+  sale.value.discount = num;
+};
+
+// معالجة المبلغ المدفوع
+const handlePaidAmountInput = (value) => {
+  const num = parseNumber(value);
+  sale.value.paidAmount = num;
+};
+
+// معالجة تغيير النسبة المئوية
+const handleInterestRateChange = (value) => {
+  if (value === null || value === undefined || isNaN(value)) {
+    sale.value.interestRate = 0;
+    return;
+  }
+  sale.value.interestRate = Number(value);
+  sale.value.interestInputType = 'rate';
+  // تحديث المبلغ تلقائياً
+  if (total.value > 0) {
+    sale.value.interestAmount = total.value * (Number(value) / 100);
+  }
+};
+
+// معالجة تغيير مبلغ الفائدة
+const handleInterestAmountChange = (value) => {
+  const num = parseNumber(value);
+  sale.value.interestAmount = num;
+  sale.value.interestInputType = 'amount';
+  // تحديث النسبة تلقائياً
+  if (total.value > 0) {
+    sale.value.interestRate = (num / total.value) * 100;
+  }
+};
+
 </script>

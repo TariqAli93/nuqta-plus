@@ -62,6 +62,9 @@
             {{ item.stock }}
           </v-chip>
         </template>
+        <template v-slot:[`item.sellingPrice`]="{ item }">
+          {{ formatNumber(item.sellingPrice) }} {{ item.currency }}
+        </template>
         <template v-slot:[`item.status`]="{ item }">
           <v-chip :color="getStatusColor(item.status)" size="small">
             {{ getStatusText(item.status) }}
@@ -146,6 +149,21 @@ const getStatusText = (status) => {
   };
 
   return texts[status] || status;
+};
+
+// دالة تنسيق الأرقام مع الفواصل
+const formatNumber = (value) => {
+  if (!value && value !== 0) return '0';
+  // إزالة أي فواصل موجودة
+  const numStr = String(value).replace(/,/g, '');
+  // التحقق من أن القيمة رقم (يدعم الأرقام العشرية)
+  if (!/^\d*\.?\d*$/.test(numStr)) return value;
+  // تقسيم الرقم إلى جزء صحيح وجزء عشري
+  const parts = numStr.split('.');
+  // تنسيق الجزء الصحيح مع الفواصل (بعد كل 3 أرقام)
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  // إرجاع الرقم المنسق
+  return parts.join('.');
 };
 
 const handleSearch = () => {

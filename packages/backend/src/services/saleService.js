@@ -111,7 +111,9 @@ export class SaleService {
       }
 
       // Calculate item subtotal
-      const itemSubtotal = item.quantity * item.unitPrice - (item.discount || 0);
+      // item.discount is per unit, so multiply by quantity
+      const itemDiscountTotal = (item.discount || 0) * item.quantity;
+      const itemSubtotal = item.quantity * item.unitPrice - itemDiscountTotal;
 
       // Create sale item
       await db.insert(saleItems).values({
@@ -120,7 +122,7 @@ export class SaleService {
         productName: product.name,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
-        discount: item.discount || 0,
+        discount: itemDiscountTotal, // Store total discount (per unit * quantity)
         subtotal: parseFloat(itemSubtotal.toFixed(2)),
       });
 

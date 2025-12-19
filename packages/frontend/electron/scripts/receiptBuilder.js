@@ -125,33 +125,19 @@ export const getReceiptStyles = (isThermal, paperWidth) => {
     
     .receipt-items th {
       padding: ${isThermal ? '4px 2px' : '6px 4px'};
-      text-align: center;
+      text-align: right;
       font-weight: 700;
       border-bottom: 1px solid #000;
     }
     
     .receipt-items td {
       padding: ${isThermal ? '3px 2px' : '5px 4px'};
-      text-align: center;
+      text-align: right;
       border-bottom: 1px dotted #ccc;
     }
     
     .item-name {
       text-align: right;
-      width: 40%;
-    }
-    
-    .item-qty {
-      width: 15%;
-    }
-    
-    .item-price {
-      width: 20%;
-    }
-    
-    .item-total {
-      width: 25%;
-      font-weight: 600;
     }
     
     .item-discount-hint {
@@ -314,7 +300,7 @@ export const getReceiptStyles = (isThermal, paperWidth) => {
       
       .receipt-content {
         width: 100%;
-        padding: 0;
+        padding: 25px;
       }
       
       @page {
@@ -335,10 +321,16 @@ export const getReceiptStyles = (isThermal, paperWidth) => {
 export const generateReceiptBodyHtml = (receiptData) => {
   const { isInstallment, company, invoice, customer, items, totals, payment, installments, printDate } = receiptData;
   const isSmallReceipt = receiptData.config?.isSmallReceipt || false;
+  
+  // Check if paper width is greater than 88mm to show notes
+  // Extract numeric width from config.width (e.g., "88mm" -> 88, "210mm" -> 210)
+  const paperWidth = parseInt(receiptData.config?.width) || 80;
+  const shouldShowNotes = paperWidth > 88;
 
   // Build items rows
   const itemsRows = items.map(item => {
     if (isSmallReceipt) {
+      // Show notes only if paper width > 88mm
       return `
         <tr>
           <td class="item-name">
@@ -355,10 +347,10 @@ export const generateReceiptBodyHtml = (receiptData) => {
         <tr>
           <td class="item-name">
             <div>${item.name}</div>
-            ${item.notes ? `<div class="item-note">${item.notes}</div>` : ''}
-            ${item.discount ? `<div class="item-discount">خصم: -${item.discount}</div>` : ''}
+            ${item.discount ? `<div class="item-discount">خصم: -${item.discount}</div>` : '<div class="item-discount">خصم: 0</div>'}
           </td>
           <td class="item-qty">${item.quantity}</td>
+          <td class="item-notes">${item.notes ? `<div class="item-note">${item.notes}</div>` : 'لا يوجد ملاحظات'}</td>
           <td class="item-price">${item.unitPrice}</td>
           <td class="item-total">${item.subtotal}</td>
         </tr>
@@ -426,7 +418,7 @@ export const generateReceiptBodyHtml = (receiptData) => {
     `;
   }
 
-  const invoiceTitle = isInstallment ? '📋 عقد بيع بالتقسيط' : '🧾 فاتورة مبيعات';
+  const invoiceTitle = isInstallment ? 'عقد بيع بالتقسيط' : 'فاتورة مبيعات';
   const invoiceClass = isInstallment ? 'invoice-title installment-title' : 'invoice-title';
 
   return `
@@ -435,7 +427,7 @@ export const generateReceiptBodyHtml = (receiptData) => {
       <div class="receipt-header">
         <div class="company-name">${company.name}</div>
         ${company.address ? `<div class="company-info">${company.address}</div>` : ''}
-        ${company.phones.length > 0 ? `<div class="company-info">📞 ${company.phones.join(' | ')}</div>` : ''}
+        ${company.phones.length > 0 ? `<div class="company-info">${company.phones.join(' | ')}</div>` : ''}
       </div>
 
       <div class="divider"></div>
@@ -462,6 +454,7 @@ export const generateReceiptBodyHtml = (receiptData) => {
           <tr>
             <th class="item-name">المنتج</th>
             <th class="item-qty">الكمية</th>
+            ${shouldShowNotes ? '<th class="item-notes">الملاحظات</th>' : ''}
             <th class="item-price">السعر</th>
             <th class="item-total">المجموع</th>
           </tr>
@@ -497,10 +490,10 @@ export const generateReceiptBodyHtml = (receiptData) => {
 
       <!-- Footer -->
       <div class="receipt-footer">
-        <div class="thank-you">🙏 شكراً لتعاملكم معنا</div>
-        ${isInstallment ? '<div class="installment-note">⚠️ يرجى الالتزام بمواعيد سداد الأقساط</div>' : ''}
+        <div class="thank-you">شكراً لتعاملكم معنا</div>
+        ${isInstallment ? '<div class="installment-note">يرجى الالتزام بمواعيد سداد الأقساط</div>' : ''}
         <div class="policy">البضاعة المباعة لا ترد ولا تستبدل</div>
-        <div class="print-date">🖨️ ${printDate}</div>
+        <div class="print-date">${printDate}</div>
       </div>
     </div>
   `;

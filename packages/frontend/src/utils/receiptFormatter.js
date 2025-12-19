@@ -30,6 +30,23 @@ const formatDate = (date) => {
 };
 
 /**
+ * Format date with 12-hour system for printing
+ */
+const formatDate12Hour = (date) => {
+  const d = new Date(date);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // الساعة 0 تصبح 12
+  hours = String(hours).padStart(2, '0');
+  return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
+};
+
+/**
  * Format date only (no time)
  */
 const formatDateOnly = (date) => {
@@ -179,7 +196,7 @@ export const formatReceiptData = (sale, company) => {
     isInstallment,
     company: {
       name: company.name || 'شركة',
-      address: [company.street, company.area, company.city].filter(Boolean).join(' ، '),
+      address: [company.city, company.area, company.street].filter(Boolean).join(' | '),
       phones: [company.phone, company.phone2].filter(Boolean),
     },
     invoice: {
@@ -217,7 +234,7 @@ export const formatReceiptData = (sale, company) => {
       installmentsCount: isInstallment && sale.installments?.length > 0 ? sale.installments.length : null,
     },
     installments: installmentsData,
-    printDate: formatDate(new Date()),
+    printDate: formatDate12Hour(new Date()),
   };
 };
 
@@ -229,15 +246,22 @@ export const formatReceiptData = (sale, company) => {
 export const generateReceiptHtml = (receiptData) => {
   const { config, isInstallment, company, invoice, customer, items, totals, payment, installments, printDate } = receiptData;
   const isSmallReceipt = config.isSmallReceipt;
+  
+  // Check if paper width is greater than 88mm to show notes
+  // Extract numeric width from config.width (e.g., "88mm" -> 88, "210mm" -> 210)
+  const paperWidth = parseInt(config.width) || 80;
+  const shouldShowNotes = paperWidth > 88;
 
   // Build items rows - different layout for small receipts
   const itemsRows = items.map(item => {
     if (isSmallReceipt) {
       // Small receipt: Item & Qty & Price & Total, discount as hint under name
+      // Show notes only if paper width > 88mm
       return `
         <tr>
           <td class="item-name">
             <div>${item.name}</div>
+            ${shouldShowNotes && item.notes ? `<div class="item-note">${item.notes}</div>` : ''}
             ${item.discount ? `<div class="item-discount-hint">خصم: -${item.discount}</div>` : ''}
           </td>
           <td class="item-qty">${item.quantity}</td>
@@ -396,10 +420,10 @@ export const generateReceiptHtml = (receiptData) => {
 
       <!-- Footer -->
       <div class="receipt-footer">
-        <div class="thank-you">🙏 شكراً لتعاملكم معنا</div>
-        ${isInstallment ? '<div class="installment-note">⚠️ يرجى الالتزام بمواعيد سداد الأقساط</div>' : ''}
+        <div class="thank-you">شكراً لتعاملكم معنا</div>
+        ${isInstallment ? '<div class="installment-note">يرجى الالتزام بمواعيد سداد الأقساط</div>' : ''}
         <div class="policy">البضاعة المباعة لا ترد ولا تستبدل</div>
-        <div class="print-date">🖨️ ${printDate}</div>
+        <div class="print-date">${printDate}</div>
       </div>
     </div>
   `;
