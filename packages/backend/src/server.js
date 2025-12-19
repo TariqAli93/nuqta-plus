@@ -1,5 +1,14 @@
 import Fastify from 'fastify';
 import config from './config.js';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// Get package version
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'));
+const version = packageJson.version || '1.0.0';
 // Plugins
 import securityPlugin from './plugins/security.js';
 import authPlugin from './plugins/auth.js';
@@ -18,6 +27,7 @@ import roleRoutes from './routes/roleRoutes.js';
 import permissionRoutes from './routes/permissionRoutes.js';
 import currencyRoutes from './routes/currencyRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
+import alertRoutes from './routes/alertRoutes.js';
 import debugRoutes from './routes/debugRoutes.js';
 
 // Initialize Fastify
@@ -60,7 +70,7 @@ const start = async () => {
       return {
         status: 'ok',
         service: 'nuqtaplus Backend API',
-        version: '1.0.0',
+        version: version,
         timestamp: new Date().toISOString(),
       };
     });
@@ -85,6 +95,7 @@ const start = async () => {
     await fastify.register(permissionRoutes, { prefix: '/api/permissions' });
     await fastify.register(currencyRoutes, { prefix: '/api/currencies' });
     await fastify.register(settingsRoutes, { prefix: '/api/settings' });
+    await fastify.register(alertRoutes, { prefix: '/api/alerts' });
     await fastify.register(debugRoutes, { prefix: '/debug' }); // Debug routes
 
     // Start listening

@@ -9,384 +9,184 @@ import { NotFoundError, ConflictError } from '../utils/errors.js';
  */
 export class SettingsService {
   /**
-   * Get all settings with optional filtering
-   * @param {Object} options - Query options
-   * @param {number} options.page - Page number (default: 1)
-   * @param {number} options.limit - Items per page (default: 50)
-   * @param {string} options.search - Search term for key or description
-   * @returns {Promise<Object>} Settings list with pagination
+   * Get all settings as array of {key, value, description} objects
    */
-  async list({ page = 1, limit = 50, search } = {}) {
-    let where;
-
-    if (search) {
-      where = like(settings.key, `%${search}%`);
-    }
-
-    // Get all results and do manual pagination (sql.js doesn't support offset)
-    const allResults = await db.select().from(settings).where(where);
-
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const data = allResults.slice(startIndex, endIndex);
-    const total = allResults.length;
-
-    return { data, page, limit, total, totalPages: Math.ceil(total / limit) };
-  }
-
-  /**
-   * Get all settings as key-value pairs
-   * @returns {Promise<Object>} Settings object
-   */
-  async getAllAsObject() {
+  async getAll() {
     const allSettings = await db.select().from(settings);
-
     return allSettings;
   }
 
   /**
-   * Get setting by key
-   * @param {string} key - Setting key
-   * @returns {Promise<Object>} Setting record
+   * Get a single setting by key
    */
   async getByKey(key) {
     const [setting] = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
-
     if (!setting) {
-      throw new NotFoundError(`Setting with key '${key}' not found`);
+      throw new NotFoundError(`Setting with key '${key}' not found.`);
     }
-
     return setting;
   }
 
   /**
-   * Get setting by key (alias for backward compatibility)
-   * @param {string} key - Setting key
-   * @returns {Promise<Object>} Setting record
+   * Get setting value by key (returns null if not found)
    */
-  async getSetting(key) {
-    return await this.getByKey(key);
-  }
-
-  /**
-   * Get setting value by key
-   * @param {string} key - Setting key
-   * @param {*} defaultValue - Default value if setting doesn't exist
-   * @returns {Promise<*>} Setting value
-   */
-  async getValue(key, defaultValue = null) {
+  async getValue(key) {
     try {
       const setting = await this.getByKey(key);
-      // Try to parse JSON values, fallback to string
-      try {
-        return JSON.parse(setting.value);
-      } catch {
-        return setting.value;
-      }
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        return defaultValue;
-      }
-      throw error;
+      return setting.value;
+    } catch {
+      return null;
     }
   }
 
   /**
    * Create a new setting
-   * @param {Object} data - Setting data
-   * @param {string} data.key - Setting key (unique)
-   * @param {*} data.value - Setting value
-   * @param {string} data.description - Setting description
-   * @param {number} userId - User ID creating the setting
-   * @returns {Promise<Object>} Created setting
    */
-  async create(data, userId) {
-    const { key, value, description } = data;
-
-    // Check if setting already exists
+  async create({ key, value, description }) {
     const existingSetting = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
-
     if (existingSetting.length > 0) {
-      throw new ConflictError(`Setting with key '${key}' already exists`);
+      throw new ConflictError(`Setting with key '${key}' already exists.`);
     }
-
-    const settingData = {
+    const now = new Date().toISOString();
+    const [newSetting] = await db.insert(settings).values({
       key,
-      value: typeof value === 'string' ? value : JSON.stringify(value),
+      value: String(value),
       description,
-      updatedBy: userId,
-      updatedAt: new Date().toISOString(),
-    };
-
-    const [newSetting] = await db.insert(settings).values(settingData).returning();
-
+      updatedAt: now,
+      createdAt: now,
+    }).returning();
     await saveDatabase();
     return newSetting;
   }
 
   /**
-   * Update setting by key
-   * @param {string} key - Setting key
-   * @param {Object} data - Updated setting data
-   * @param {*} data.value - New setting value
-   * @param {string} data.description - New setting description
-   * @param {number} userId - User ID updating the setting
-   * @returns {Promise<Object>} Updated setting
+   * Update an existing setting
    */
-  async update(key, data, userId) {
-    // Verify setting exists
-    await this.getByKey(key);
-
+  async update(key, { value, description }) {
+    const [existing] = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
+    if (!existing) {
+      throw new NotFoundError(`Setting with key '${key}' not found.`);
+    }
     const updateData = {
-      updatedBy: userId,
       updatedAt: new Date().toISOString(),
     };
+    if (value !== undefined) updateData.value = String(value);
+    if (description !== undefined) updateData.description = description;
 
-    if (data.value !== undefined) {
-      updateData.value = typeof data.value === 'string' ? data.value : JSON.stringify(data.value);
-    }
-
-    if (data.description !== undefined) {
-      updateData.description = data.description;
-    }
-
-    const [updatedSetting] = await db
-      .update(settings)
+    const [updated] = await db.update(settings)
       .set(updateData)
       .where(eq(settings.key, key))
       .returning();
-
     await saveDatabase();
-    return updatedSetting;
+    return updated;
   }
 
   /**
-   * Set setting value (create or update)
-   * @param {string} key - Setting key
-   * @param {*} value - Setting value
-   * @param {string} description - Setting description
-   * @param {number} userId - User ID
-   * @returns {Promise<Object>} Setting record
+   * Upsert (create or update) a setting
    */
-  async setValue(key, value, description = null, userId) {
-    try {
-      // Try to update existing setting
-      return await this.update(key, { value, description }, userId);
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        // Create new setting if it doesn't exist
-        return await this.create({ key, value, description }, userId);
-      }
-      throw error;
+  async upsert({ key, value, description }) {
+    const [existing] = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
+    if (existing) {
+      return this.update(key, { value, description });
     }
+    return this.create({ key, value, description });
   }
 
   /**
-   * Delete setting by key
-   * @param {string} key - Setting key
-   * @param {number} userId - User ID deleting the setting
-   * @returns {Promise<Object>} Deleted setting
+   * Bulk upsert settings from array of {key, value, description?} objects
+   */
+  async bulkUpsert(settingsArray) {
+    const results = [];
+    for (const item of settingsArray) {
+      const result = await this.upsert(item);
+      results.push(result);
+    }
+    return results;
+  }
+
+  /**
+   * Delete a setting by key
    */
   async delete(key) {
-    const existingSetting = await this.getByKey(key);
-
+    const [existing] = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
+    if (!existing) {
+      throw new NotFoundError(`Setting with key '${key}' not found.`);
+    }
     await db.delete(settings).where(eq(settings.key, key));
-
     await saveDatabase();
-    return existingSetting;
+    return { success: true, message: `Setting '${key}' deleted.` };
   }
 
   /**
-   * Bulk update multiple settings
-   * @param {Object} settingsData - Object with key-value pairs
-   * @param {number} userId - User ID updating the settings
-   * @returns {Promise<Array>} Updated settings
+   * Get company information (all settings prefixed with 'company.')
    */
-  async bulkUpdate(settingsData, userId) {
-    const updatedSettings = [];
-
-    for (const [key, value] of Object.entries(settingsData)) {
-      try {
-        const setting = await this.setValue(key, value, null, userId);
-        updatedSettings.push(setting);
-      } catch (error) {
-        // Log error but continue with other settings
-        console.error(`Failed to update setting ${key}:`, error);
-      }
-    }
-
-    await saveDatabase();
-    return updatedSettings;
-  }
-
-  /**
-   * Get settings by key prefix
-   * @param {string} prefix - Key prefix to filter by
-   * @returns {Promise<Array>} Filtered settings
-   */
-  async getByPrefix(prefix) {
-    return await db
-      .select()
+  async getCompanyInfo() {
+    const companySettings = await db.select()
       .from(settings)
-      .where(like(settings.key, `${prefix}%`));
+      .where(like(settings.key, 'company.%'));
+
+    const companyInfo = {};
+    companySettings.forEach(({ key, value }) => {
+      const field = key.replace('company.', '');
+      companyInfo[field] = value;
+    });
+    return companyInfo;
   }
 
   /**
-   * Initialize default settings if they don't exist
-   * @param {Object} defaultSettings - Default settings object
-   * @param {number} userId - User ID initializing settings
-   * @returns {Promise<Array>} Created settings
+   * Save company information (upserts all company.* keys)
    */
-  async initializeDefaults(defaultSettings, userId) {
-    const createdSettings = [];
-
-    for (const [key, config] of Object.entries(defaultSettings)) {
-      try {
-        // Check if setting exists
-        await this.getByKey(key);
-      } catch (error) {
-        if (error instanceof NotFoundError) {
-          // Create default setting
-          const setting = await this.create(
-            {
-              key,
-              value: config.value,
-              description: config.description,
-            },
-            userId
-          );
-          createdSettings.push(setting);
-        }
+  async saveCompanyInfo(companyData) {
+    const updates = [];
+    for (const [field, value] of Object.entries(companyData)) {
+      if (value !== undefined && value !== null) {
+        updates.push({
+          key: `company.${field}`,
+          value: String(value),
+          description: `Company ${field}`,
+        });
       }
     }
-
-    return createdSettings;
+    await this.bulkUpsert(updates);
+    return this.getCompanyInfo();
   }
 
   /**
-   * DANGER ZONE: Reset entire application
-   * @param {number} userId - User ID performing the reset
-   * @returns {Promise<Object>} Reset operation result
-   */
-  // async resetApplication() {
-  //   try {
-  //     // In a real implementation, you would:
-  //     // 1. Backup current data
-  //     // 2. Clear all tables (except users and essential system data)
-  //     // 3. Reset auto-increment counters
-  //     // 4. Reinitialize with defaults
-
-  //     // For now, we'll simulate the reset
-  //     await new Promise((resolve) => setTimeout(resolve, 2000));
-
-  //     await saveDatabase();
-
-  //     return {
-  //       success: true,
-  //       message: 'Application reset completed successfully',
-  //       timestamp: new Date().toISOString(),
-  //     };
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
-
-  /**
-   * Validate phone number format
-   * @param {string} phone - Phone number to validate
-   * @returns {boolean} Is valid phone number
-   */
-  validatePhone(phone) {
-    // Iraqi phone number patterns
-    const patterns = [
-      /^(\+964|0964|964)?[0-9]{10}$/, // Standard format
-      /^07[3-9][0-9]{8}$/, // Mobile format
-      /^01[0-9]{8}$/, // Baghdad landline
-    ];
-
-    return patterns.some((pattern) => pattern.test(phone.replace(/\s|-/g, '')));
-  }
-
-  /**
-   * Save company information with enhanced validation
-   * @param {Object} companyData - Company information
-   * @param {number} userId - User ID
-   * @returns {Promise<Array>} Updated settings
-   */
-  async saveCompanyInfo(companyData, userId) {
-    const { name, city, area, street, phone, phone2, logoUrl, invoiceType } = companyData;
-
-    // Validate invoice type
-    const validInvoiceTypes = ['a4', 'a5', 'roll-58', 'roll-80', 'roll-88'];
-    if (invoiceType && !validInvoiceTypes.includes(invoiceType)) {
-      throw new Error(`Invalid invoice type: ${invoiceType}`);
-    }
-
-    const settingsData = {
-      'company.name': name || '',
-      'company.city': city || '',
-      'company.area': area || '',
-      'company.street': street || '',
-      'company.phone': phone || '',
-      'company.phone2': phone2 || '',
-      'company.logoUrl': logoUrl || '',
-      'company.invoiceType': invoiceType || 'a4',
-    };
-
-    await this.bulkUpdate(settingsData, userId);
-
-    return await this.getByPrefix('company.');
-  }
-
-  /**
-   * Get currency settings
-   * @returns {Promise<Object>} Currency settings
+   * Get currency settings (defaultCurrency, usdRate, iqdRate)
    */
   async getCurrencySettings() {
-    const defaultCurrency = await this.getValue('currency.default', 'IQD');
-    const usdRate = await this.getValue('currency.usd_rate', '1500');
-    const iqdRate = await this.getValue('currency.iqd_rate', '1');
-
-    return {
-      defaultCurrency,
-      usdRate: parseFloat(usdRate),
-      iqdRate: parseFloat(iqdRate),
-    };
+    const currencyKeys = ['defaultCurrency', 'usdRate', 'iqdRate'];
+    const currencyData = {};
+    for (const key of currencyKeys) {
+      const value = await this.getValue(key);
+      if (value !== null) {
+        currencyData[key] = key.includes('Rate') ? parseFloat(value) : value;
+      }
+    }
+    // Defaults
+    if (!currencyData.defaultCurrency) currencyData.defaultCurrency = 'IQD';
+    if (!currencyData.usdRate) currencyData.usdRate = 1500;
+    if (!currencyData.iqdRate) currencyData.iqdRate = 1;
+    return currencyData;
   }
 
   /**
    * Save currency settings
-   * @param {Object} currencyData - Currency settings
-   * @param {number} userId - User ID
-   * @returns {Promise<Object>} Updated currency settings
    */
-  async saveCurrencySettings(currencyData, userId) {
-    const { defaultCurrency, usdRate, iqdRate } = currencyData;
-
-    // Validate default currency
-    const validCurrencies = ['USD', 'IQD'];
-    if (defaultCurrency && !validCurrencies.includes(defaultCurrency)) {
-      throw new Error('Invalid currency. Must be either USD or IQD');
+  async saveCurrencySettings({ defaultCurrency, usdRate, iqdRate }) {
+    console.log('SettingsService.saveCurrencySettings called with:', { defaultCurrency, usdRate, iqdRate });
+    const updates = [];
+    if (defaultCurrency) {
+      updates.push({ key: 'defaultCurrency', value: String(defaultCurrency), description: 'Default currency' });
     }
-
-    // Validate exchange rates
-    if (usdRate && (isNaN(usdRate) || usdRate <= 0)) {
-      throw new Error('Invalid USD exchange rate');
+    if (usdRate !== undefined) {
+      updates.push({ key: 'usdRate', value: String(usdRate), description: 'USD exchange rate' });
     }
-
-    if (iqdRate && (isNaN(iqdRate) || iqdRate <= 0)) {
-      throw new Error('Invalid IQD exchange rate');
+    if (iqdRate !== undefined) {
+      updates.push({ key: 'iqdRate', value: String(iqdRate), description: 'IQD exchange rate' });
     }
-
-    const settingsData = {
-      'currency.default': defaultCurrency || 'IQD',
-      'currency.usd_rate': String(usdRate || 1500),
-      'currency.iqd_rate': String(iqdRate || 1),
-    };
-
-    await this.bulkUpdate(settingsData, userId);
-
-    return await this.getCurrencySettings();
+    await this.bulkUpsert(updates);
+    return this.getCurrencySettings();
   }
 }
 

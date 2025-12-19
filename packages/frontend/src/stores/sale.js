@@ -198,10 +198,10 @@ export const useSaleStore = defineStore('sale', {
       const notificationStore = useNotificationStore();
       try {
         await api.delete(`/sales/${this.currentSale.id}/payments/${paymentId}`);
-        // Update the current sale by removing the payment
-        if (this.currentSale.payments && Array.isArray(this.currentSale.payments)) {
-          this.currentSale.payments = this.currentSale.payments.filter((p) => p.id !== paymentId);
-        }
+        // Refetch the sale to ensure UI is in sync with server state
+        // This is more reliable than manually updating local state
+        // Only show success after refetch succeeds, ensuring UI is updated
+        await this.fetchSale(this.currentSale.id);
         notificationStore.success('تم حذف الدفعة بنجاح');
       } catch (error) {
         notificationStore.error(error.response?.data?.message || 'فشل حذف الدفعة');

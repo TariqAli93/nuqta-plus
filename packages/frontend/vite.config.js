@@ -5,6 +5,7 @@ import { fileURLToPath, URL } from 'node:url';
 import electron from 'vite-plugin-electron/simple';
 import VueDevTools from 'vite-plugin-vue-devtools';
 
+
 export default defineConfig({
   plugins: [
     vue(),

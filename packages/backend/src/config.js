@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { dbFilePath } from '../src/utils/database.js';
+import { dbFilePath } from './utils/database.js';
 
 process.env.DATABASE_PATH = dbFilePath;
 

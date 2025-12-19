@@ -18,6 +18,7 @@ import NewSale from '@/views/sales/NewSale.vue';
 import SaleDetails from '@/views/sales/SaleDetails.vue';
 import Reports from '@/views/Reports.vue';
 import Settings from '@/views/Settings.vue';
+import Notifications from '@/views/Notifications.vue';
 import Users from '@/views/users/Users.vue';
 import Roles from '@/views/roles/Roles.vue';
 import Permissions from '@/views/permissions/Permissions.vue';
@@ -104,6 +105,12 @@ const routes = [
         name: 'Reports',
         component: Reports,
         meta: { permission: 'view:reports' },
+      },
+      {
+        path: 'notifications',
+        name: 'Notifications',
+        component: Notifications,
+        meta: { permission: 'view:sales' }, // Using sales permission for alerts
       },
       { path: 'users', name: 'Users', component: Users, meta: { permission: 'view:users' } },
       { path: 'roles', name: 'Roles', component: Roles, meta: { permission: 'view:roles' } },

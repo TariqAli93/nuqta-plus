@@ -50,6 +50,12 @@
         :headers="headers"
         :items="productStore.products"
         :loading="productStore.loading"
+        :items-per-page="productStore.pagination.limit"
+        :page="productStore.pagination.page"
+        :items-length="productStore.pagination.total"
+        @update:page="changePage"
+        @update:items-per-page="changeItemsPerPage"
+        server-items-length
       >
         <template v-slot:[`item.stock`]="{ item }">
           <v-chip :color="item.stock <= item.minStock ? 'error' : 'success'" size="small">
@@ -143,10 +149,11 @@ const getStatusText = (status) => {
 };
 
 const handleSearch = () => {
+  productStore.pagination.page = 1;
   productStore.fetchProducts({
     search: search.value,
     categoryId: selectedCategory.value,
-    page: productStore.pagination.page,
+    page: 1,
     limit: productStore.pagination.limit,
   });
 };
@@ -187,21 +194,13 @@ const handleDelete = async () => {
 };
 
 onMounted(async () => {
-  const { data: products } = await productStore.fetchProducts({
+  await productStore.fetchProducts({
     page: 1,
-    limit: 100, // Load more products initially
+    limit: productStore.pagination.limit,
   });
 
-  for (const product of products) {
-    if (product.categoryId && !categories.value.find((c) => c.id === product.categoryId)) {
-      const category = await categoryStore.fetchCategory(product.categoryId);
-      categories.value.push(category.data);
-    }
-
-    // if item quantity is less than or equal to minStock, update stock to out_of_stock
-    if (product.stock < 1 && product.status !== 'out_of_stock') {
-      await productStore.updateProduct(product.id, { status: 'out_of_stock' });
-    }
-  }
+  // Fetch all categories for the dropdown
+  const { data } = await categoryStore.fetchCategories();
+  categories.value = data || [];
 });
 </script>

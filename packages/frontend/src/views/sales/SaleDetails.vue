@@ -417,6 +417,7 @@ import { useSaleStore } from '@/stores/sale';
 import { useSettingsStore } from '@/stores/settings';
 import { useNotificationStore } from '@/stores/notification';
 import SelectPrinter from '@/components/SelectPrinter.vue';
+import { formatReceiptData } from '@/utils/receiptFormatter';
 import {
   toYmd,
   toYmdWithTime,
@@ -433,12 +434,44 @@ const settingsStore = useSettingsStore();
 const notificationStore = useNotificationStore();
 
 
-const isPrinting = ref(false);
+const printing = ref(false);
 const invoiceWrapperRef = ref(null);
 const settings = ref(null);
 
 const previewPrint = async () => {
-  console.log('previewing...');
+  if (!sale.value) {
+    notificationStore.error('لا توجد بيانات فاتورة للمعاينة');
+    return;
+  }
+
+  // Get company info from settings
+  const companyInfo = settingsStore.companyInfo;
+  if (!companyInfo || !companyInfo.invoiceType) {
+    notificationStore.error('يرجى إعداد نوع الفاتورة من إعدادات الشركة');
+    return;
+  }
+
+  try {
+    // Format receipt data
+    const receiptData = formatReceiptData(sale.value, companyInfo);
+
+    // Ensure all data is serializable by creating clean copies
+    const cleanReceiptData = JSON.parse(JSON.stringify(receiptData));
+    const cleanCompanyInfo = JSON.parse(JSON.stringify(companyInfo));
+
+    // Call electron API to preview
+    const result = await window.electronAPI.previewReceipt({
+      receiptData: cleanReceiptData,
+      companyInfo: cleanCompanyInfo,
+    });
+
+    if (!result.success) {
+      notificationStore.error(result.error || 'فشل في عرض المعاينة');
+    }
+  } catch (error) {
+    console.error('Preview error:', error);
+    notificationStore.error('حدث خطأ أثناء عرض المعاينة: ' + (error.message || 'خطأ غير معروف'));
+  }
 };
 
 // state
@@ -548,7 +581,54 @@ const addPayment = async () => {
 };
 
 const handlePrint = async () => {
-  console.log('printing...');
+  if (!sale.value) {
+    notificationStore.error('لا توجد بيانات فاتورة للطباعة');
+    return;
+  }
+
+  // Get selected printer
+  const selectedPrinter = saleStore.getPrinter();
+  if (!selectedPrinter) {
+    notificationStore.error('يرجى اختيار طابعة أولاً');
+    return;
+  }
+
+  // Get company info from settings
+  const companyInfo = settingsStore.companyInfo;
+  if (!companyInfo || !companyInfo.invoiceType) {
+    notificationStore.error('يرجى إعداد نوع الفاتورة من إعدادات الشركة');
+    return;
+  }
+
+  try {
+    printing.value = true;
+
+    // Format receipt data
+    const receiptData = formatReceiptData(sale.value, companyInfo);
+
+    // Ensure all data is serializable by creating clean copies
+    // This prevents "object could not be cloned" errors in Electron IPC
+    const cleanReceiptData = JSON.parse(JSON.stringify(receiptData));
+    const cleanCompanyInfo = JSON.parse(JSON.stringify(companyInfo));
+
+    // Call electron API to print
+    const result = await window.electronAPI.printReceipt({
+      printerName: selectedPrinter.name,
+      receiptData: cleanReceiptData,
+      companyInfo: cleanCompanyInfo,
+    });
+
+    if (result.success) {
+      notificationStore.success('تمت الطباعة بنجاح');
+    } else {
+      notificationStore.error(result.error || 'فشل في الطباعة');
+    }
+  } catch (error) {
+    console.error('Print error:', error);
+    notificationStore.error('حدث خطأ أثناء الطباعة: ' + (error.message || 'خطأ غير معروف'));
+  } finally {
+    printing.value = false;
+  }
 };
 
 // lifecycle
@@ -559,9 +639,9 @@ onMounted(async () => {
     sale.value = response.data;
 
     // جلب معلومات الشركة من الإعدادات
-    settings.value = await settingsStore.fetchSettings();
+    await settingsStore.fetchCompanyInfo();
+    settings.value = settingsStore.companyInfo;
 
-    
     // تعيين العملة للدفعات
     if (sale.value) {
       paymentData.value.currency = sale.value.currency;

@@ -567,6 +567,10 @@ export class SaleService {
     for (const item of items) {
       const c = item.currency || 'USD';
       const itemDiscount = item.discount ?? 0;
+      // Prevent division by zero - skip items with zero or invalid quantity
+      if (!item.quantity || item.quantity <= 0) {
+        continue;
+      }
       const netUnitPrice = item.unitPrice - itemDiscount / item.quantity;
       const costPrice = item.productCost ?? 0;
       const profit = (netUnitPrice - costPrice) * item.quantity;

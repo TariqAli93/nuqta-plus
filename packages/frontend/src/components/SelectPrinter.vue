@@ -8,13 +8,23 @@
         <v-card-title>اختر طابعة للطباعة</v-card-title>
         <v-divider />
         <v-card-text>
-          <v-radio-group v-model="selectedPrinter">
+          <div v-if="availablePrinters.length === 0" class="text-center pa-4">
+            <v-icon color="warning" size="48" class="mb-2">mdi-printer-off</v-icon>
+            <p class="text-body-1">لم يتم العثور على أي طابعات</p>
+            <p class="text-caption text-grey">يرجى التأكد من توصيل الطابعة وإعدادات النظام</p>
+            <v-btn color="primary" class="mt-2" @click="refreshPrinters">إعادة المحاولة</v-btn>
+          </div>
+          <v-radio-group v-else v-model="selectedPrinter">
             <v-radio
               v-for="printer in availablePrinters"
               :key="printer.name"
-              :label="printer.name"
+              :label="printer.displayName || printer.name"
               :value="printer"
-            ></v-radio>
+            >
+              <template v-if="printer.isDefault" #label>
+                <span>{{ printer.displayName || printer.name }} <v-chip size="x-small" color="primary">افتراضي</v-chip></span>
+              </template>
+            </v-radio>
           </v-radio-group>
         </v-card-text>
         <v-divider />
@@ -44,21 +54,46 @@ const dialog = ref(false);
 const confirmSelection = () => {
   if (selectedPrinter.value) {
     setPrinter(selectedPrinter.value);
-    success(`تم اختيار الطابعة: ${selectedPrinter.value.name}`);
+    success(`تم اختيار الطابعة: ${selectedPrinter.value.displayName || selectedPrinter.value.name}`);
     dialog.value = false;
   } else {
     error('يرجى اختيار طابعة قبل التأكيد');
   }
 };
 
+const refreshPrinters = async () => {
+  try {
+    const printers = await window.electronAPI.getPrinters();
+    
+    if (!printers || printers.length === 0) {
+      availablePrinters.value = [];
+      error('لم يتم العثور على أي طابعات');
+      return;
+    }
+    
+    availablePrinters.value = printers;
+    success(`تم جلب ${printers.length} طابعة بنجاح`);
+  } catch (err) {
+    console.error('خطأ في تحديث الطابعات:', err);
+    error('خطأ في تحديث الطابعات: ' + (err.message || 'خطأ غير معروف'));
+  }
+};
+
 onMounted(async () => {
   try {
     const printers = await window.electronAPI.getPrinters();
+    
+    if (!printers || printers.length === 0) {
+      availablePrinters.value = [];
+      error('لم يتم العثور على أي طابعات. يرجى التأكد من توصيل الطابعة وإعدادات النظام.');
+      return;
+    }
+    
     availablePrinters.value = printers;
-    success('تم جلب الطابعات بنجاح');
-  } catch (error) {
-    console.error('خطأ في جلب الطابعات:', error);
-    error('خطأ في جلب الطابعات');
+    success(`تم جلب ${printers.length} طابعة بنجاح`);
+  } catch (err) {
+    console.error('خطأ في جلب الطابعات:', err);
+    error('خطأ في جلب الطابعات: ' + (err.message || 'خطأ غير معروف'));
   }
 });
 </script>

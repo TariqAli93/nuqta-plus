@@ -8,7 +8,7 @@
         style="background-color: rgba(var(--v-theme-background), 1)"
       >
         <img
-          src="@/assets/icon.png"
+          src="@/assets/logo.png"
           :src-dark="'@/assets/logo.png'"
           alt="Nuqta Plus Logo"
           id="navigationDrawerLogo"
@@ -86,6 +86,18 @@
 
         <v-spacer></v-spacer>
 
+        <!-- Alerts Badge -->
+        <v-badge
+          :content="alertStore.unreadCount"
+          :model-value="alertStore.unreadCount > 0"
+          color="error"
+          overlap
+        >
+          <v-btn icon :to="{ name: 'Notifications' }">
+            <v-icon>mdi-bell</v-icon>
+          </v-btn>
+        </v-badge>
+
         <v-btn icon @click="toggleTheme">
           <v-icon>{{ isDark ? 'mdi-white-balance-sunny' : 'mdi-weather-night' }}</v-icon>
         </v-btn>
@@ -135,15 +147,17 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useTheme } from 'vuetify';
 import { useAuthStore } from '@/stores/auth';
+import { useAlertStore } from '@/stores/alert';
 
 const router = useRouter();
 const route = useRoute();
 const theme = useTheme();
 const authStore = useAuthStore();
+const alertStore = useAlertStore();
 
 const drawer = ref(true);
 const isDark = computed(() => theme.global.current.value.dark);
@@ -170,6 +184,7 @@ const menuItems = [
   { title: 'المنتجات', icon: 'mdi-package-variant', to: '/products', permission: 'view:products' },
   { title: 'التصنيفات', icon: 'mdi-shape', to: '/categories', permission: 'view:categories' },
   { title: 'التقارير', icon: 'mdi-chart-box', to: '/reports', permission: 'view:reports' },
+  { title: 'التنبيهات', icon: 'mdi-bell', to: '/notifications', permission: 'view:sales' },
 
   {
     title: 'الادارة',
@@ -244,9 +259,22 @@ const toggleTheme = () => {
 };
 
 const handleLogout = () => {
+  alertStore.stopPolling();
   authStore.logout();
   router.push({ name: 'Login' });
 };
+
+// Start polling for alerts when component mounts
+onMounted(() => {
+  if (authStore.isAuthenticated) {
+    alertStore.startPolling();
+  }
+});
+
+// Stop polling when component unmounts
+onUnmounted(() => {
+  alertStore.stopPolling();
+});
 </script>
 
 <style scoped lang="scss">

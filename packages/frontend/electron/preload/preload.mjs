@@ -64,6 +64,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   getPrinters: () => ipcRenderer.invoke('getPrinters'),
   printReceipt: (receiptData) => ipcRenderer.invoke('print-receipt', receiptData),
+  previewReceipt: (receiptData) => ipcRenderer.invoke('preview-receipt', receiptData),
+  
   cutPaper: () => ipcRenderer.invoke('cut-paper'),
   kickDrawer: () => ipcRenderer.invoke('kick-drawer'),
 

@@ -1,245 +1,19 @@
 import settingsController from '../controllers/settingsController.js';
 
 export default async function settingsRoutes(fastify) {
-  // Get all settings with pagination and search
+  /**
+   * Get all settings
+   * Returns array of {key, value, description} objects
+   */
   fastify.get('/', {
     schema: {
       tags: ['Settings'],
-      summary: 'Get all settings with pagination',
-      querystring: {
-        type: 'object',
-        properties: {
-          page: { type: 'integer', minimum: 1, default: 1 },
-          limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
-          search: { type: 'string', description: 'Search in setting keys' },
-        },
-      },
+      summary: 'Get all settings',
       response: {
         200: {
           type: 'object',
           properties: {
             success: { type: 'boolean' },
-            data: {
-              type: 'object',
-              properties: {
-                data: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    properties: {
-                      id: { type: 'integer' },
-                      key: { type: 'string' },
-                      value: { type: 'string' },
-                      description: { type: 'string' },
-                      updatedBy: { type: 'integer' },
-                      updatedAt: { type: 'string' },
-                    },
-                  },
-                },
-                page: { type: 'integer' },
-                limit: { type: 'integer' },
-              },
-            },
-          },
-        },
-      },
-    },
-    preHandler: [fastify.authorize('settings:read')],
-    handler: settingsController.list,
-  });
-
-  // Get all settings as key-value object
-  fastify.get('/all', {
-    schema: {
-      tags: ['Settings'],
-      summary: 'Get all settings as object',
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: { type: 'object' },
-          },
-        },
-      },
-    },
-    preHandler: [fastify.authorize('settings:read')],
-    handler: settingsController.getAll,
-  });
-
-  // Get setting by key
-  fastify.get('/:key', {
-    schema: {
-      tags: ['Settings'],
-      summary: 'Get setting by key',
-      params: {
-        type: 'object',
-        required: ['key'],
-        properties: {
-          key: { type: 'string', description: 'Setting key' },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'object',
-              properties: {
-                id: { type: 'integer' },
-                key: { type: 'string' },
-                value: { type: 'string' },
-                description: { type: 'string' },
-                updatedBy: { type: 'integer' },
-                updatedAt: { type: 'string' },
-              },
-            },
-          },
-        },
-      },
-    },
-    preHandler: [fastify.authorize('settings:read')],
-    handler: settingsController.getByKey,
-  });
-
-  // Create new setting
-  fastify.post('/', {
-    schema: {
-      tags: ['Settings'],
-      summary: 'Create new setting',
-      body: {
-        type: 'object',
-        required: ['key', 'value'],
-        properties: {
-          key: {
-            type: 'string',
-            minLength: 1,
-            maxLength: 255,
-            description: 'Unique setting key',
-          },
-          value: { description: 'Setting value (any type)' },
-          description: {
-            type: 'string',
-            description: 'Setting description',
-          },
-        },
-      },
-      response: {
-        201: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            message: { type: 'string' },
-            data: {
-              type: 'object',
-              properties: {
-                id: { type: 'integer' },
-                key: { type: 'string' },
-                value: { type: 'string' },
-                description: { type: 'string' },
-                updatedBy: { type: 'integer' },
-                updatedAt: { type: 'string' },
-              },
-            },
-          },
-        },
-      },
-    },
-    preHandler: [fastify.authorize('settings:create')],
-    handler: settingsController.create,
-  });
-
-  // Update setting
-  fastify.put('/:key', {
-    schema: {
-      tags: ['Settings'],
-      summary: 'Update setting by key',
-      params: {
-        type: 'object',
-        required: ['key'],
-        properties: {
-          key: { type: 'string', description: 'Setting key' },
-        },
-      },
-      body: {
-        type: 'object',
-        properties: {
-          value: { description: 'New setting value (any type)' },
-          description: {
-            type: 'string',
-            description: 'New setting description',
-          },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            message: { type: 'string' },
-            data: {
-              type: 'object',
-              properties: {
-                id: { type: 'integer' },
-                key: { type: 'string' },
-                value: { type: 'string' },
-                description: { type: 'string' },
-                updatedBy: { type: 'integer' },
-                updatedAt: { type: 'string' },
-              },
-            },
-          },
-        },
-      },
-    },
-    preHandler: [fastify.authorize('settings:update')],
-    handler: settingsController.update,
-  });
-
-  // Delete setting
-  fastify.delete('/:key', {
-    schema: {
-      tags: ['Settings'],
-      summary: 'Delete setting by key',
-      params: {
-        type: 'object',
-        required: ['key'],
-        properties: {
-          key: { type: 'string', description: 'Setting key' },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            message: { type: 'string' },
-          },
-        },
-      },
-    },
-    preHandler: [fastify.authorize('settings:delete')],
-    handler: settingsController.delete,
-  });
-
-  // Bulk update settings
-  fastify.put('/bulk', {
-    schema: {
-      tags: ['Settings'],
-      summary: 'Bulk update multiple settings',
-      body: {
-        type: 'object',
-        patternProperties: {
-          '.*': { description: 'Setting value for the key' },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            message: { type: 'string' },
             data: {
               type: 'array',
               items: {
@@ -249,8 +23,8 @@ export default async function settingsRoutes(fastify) {
                   key: { type: 'string' },
                   value: { type: 'string' },
                   description: { type: 'string' },
-                  updatedBy: { type: 'integer' },
                   updatedAt: { type: 'string' },
+                  createdAt: { type: 'string' },
                 },
               },
             },
@@ -258,11 +32,14 @@ export default async function settingsRoutes(fastify) {
         },
       },
     },
-    preHandler: [fastify.authorize('settings:update')],
-    handler: settingsController.bulkUpdate,
+    onRequest: [fastify.authenticate],
+    handler: settingsController.getAll,
   });
 
-  // Company information endpoints
+  /**
+   * Get company information
+   * Special endpoint for company-specific settings
+   */
   fastify.get('/company', {
     schema: {
       tags: ['Settings'],
@@ -279,152 +56,48 @@ export default async function settingsRoutes(fastify) {
                 city: { type: 'string' },
                 area: { type: 'string' },
                 street: { type: 'string' },
-                phones: {
-                  type: 'array',
-                  items: { type: 'string' },
-                },
+                phone: { type: 'string' },
+                phone2: { type: 'string' },
                 logoUrl: { type: 'string' },
-                invoiceType: {
-                  type: 'string',
-                  enum: ['a4', 'a5', 'roll-58', 'roll-80', 'roll-88'],
-                },
+                invoiceType: { type: 'string' },
               },
             },
           },
         },
       },
     },
-    preHandler: [fastify.authorize('settings:read')],
+    onRequest: [fastify.authenticate],
     handler: settingsController.getCompanyInfo,
   });
 
+  /**
+   * Save company information
+   */
   fastify.put('/company', {
     schema: {
       tags: ['Settings'],
-      summary: 'Update company information',
+      summary: 'Save company information',
       body: {
         type: 'object',
-        required: ['name'],
         properties: {
-          name: {
-            type: 'string',
-            minLength: 1,
-            maxLength: 255,
-            description: 'Company name',
-          },
-          city: {
-            type: 'string',
-            maxLength: 100,
-            description: 'City name',
-          },
-          area: {
-            type: 'string',
-            maxLength: 100,
-            description: 'Area/District name',
-          },
-          street: {
-            type: 'string',
-            maxLength: 200,
-            description: 'Street address',
-          },
-          phones: {
-            type: 'array',
-            maxItems: 5,
-            items: {
-              type: 'string',
-              maxLength: 20,
-            },
-            description: 'Phone numbers array',
-          },
-
-          logoUrl: {
-            type: 'string',
-            description: 'Logo file URL',
-          },
-          invoiceType: {
-            type: 'string',
-            enum: ['a4', 'a5', 'roll-58', 'roll-80', 'roll-88'],
-            description: 'Invoice format type',
-          },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            message: { type: 'string' },
-            data: { type: 'array' },
-          },
+          name: { type: 'string' },
+          city: { type: 'string' },
+          area: { type: 'string' },
+          street: { type: 'string' },
+          phone: { type: 'string' },
+          phone2: { type: 'string' },
+          logoUrl: { type: 'string' },
+          invoiceType: { type: 'string' },
         },
       },
     },
-    preHandler: [fastify.authorize('settings:update')],
+    onRequest: [fastify.authenticate],
     handler: settingsController.saveCompanyInfo,
   });
 
-  // Upload logo
-  fastify.post('/logo', {
-    schema: {
-      tags: ['Settings'],
-      summary: 'Upload company logo',
-      consumes: ['multipart/form-data'],
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            message: { type: 'string' },
-            data: {
-              type: 'object',
-              properties: {
-                logoUrl: { type: 'string' },
-              },
-            },
-          },
-        },
-      },
-    },
-    preHandler: [fastify.authorize('settings:update')],
-    handler: settingsController.uploadLogo,
-  });
-
-  // Validation endpoints
-  fastify.post('/validate/phone', {
-    schema: {
-      tags: ['Settings'],
-      summary: 'Validate phone number format',
-      body: {
-        type: 'object',
-        required: ['phone'],
-        properties: {
-          phone: {
-            type: 'string',
-            description: 'Phone number to validate',
-          },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            data: {
-              type: 'object',
-              properties: {
-                isValid: { type: 'boolean' },
-                phone: { type: 'string' },
-              },
-            },
-          },
-        },
-      },
-    },
-    preHandler: [fastify.authorize('settings:read')],
-    handler: settingsController.validatePhone,
-  });
-
-  // Get currency settings
+  /**
+   * Get currency settings
+   */
   fastify.get('/currency', {
     schema: {
       tags: ['Settings'],
@@ -437,55 +110,6 @@ export default async function settingsRoutes(fastify) {
             data: {
               type: 'object',
               properties: {
-                defaultCurrency: { type: 'string', enum: ['USD', 'IQD'] },
-                usdRate: { type: 'number' },
-                iqdRate: { type: 'number' },
-              },
-            },
-          },
-        },
-      },
-    },
-    preHandler: [fastify.authorize('settings:read')],
-    handler: settingsController.getCurrencySettings,
-  });
-
-  // Save currency settings
-  fastify.put('/currency', {
-    schema: {
-      tags: ['Settings'],
-      summary: 'Save currency settings',
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: 'object',
-        required: ['defaultCurrency', 'usdRate', 'iqdRate'],
-        properties: {
-          defaultCurrency: {
-            type: 'string',
-            enum: ['USD', 'IQD'],
-            description: 'Default currency for the system',
-          },
-          usdRate: {
-            type: 'number',
-            minimum: 0,
-            description: 'Exchange rate for USD',
-          },
-          iqdRate: {
-            type: 'number',
-            minimum: 0,
-            description: 'Exchange rate for IQD',
-          },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            success: { type: 'boolean' },
-            message: { type: 'string' },
-            data: {
-              type: 'object',
-              properties: {
                 defaultCurrency: { type: 'string' },
                 usdRate: { type: 'number' },
                 iqdRate: { type: 'number' },
@@ -495,246 +119,136 @@ export default async function settingsRoutes(fastify) {
         },
       },
     },
-    preHandler: [fastify.authorize('settings:update')],
+    onRequest: [fastify.authenticate],
+    handler: settingsController.getCurrencySettings,
+  });
+
+  /**
+   * Save currency settings
+   */
+  fastify.put('/currency', {
+    schema: {
+      tags: ['Settings'],
+      summary: 'Save currency settings',
+      body: {
+        type: 'object',
+        properties: {
+          defaultCurrency: { type: 'string' },
+          usdRate: { type: 'number' },
+          iqdRate: { type: 'number' },
+        },
+      },
+    },
+    onRequest: [fastify.authenticate],
     handler: settingsController.saveCurrencySettings,
   });
 
-  // DANGER ZONE: System Reset (Admin only)
-  fastify.post('/danger/reset', {
+  /**
+   * Bulk upsert settings
+   */
+  fastify.put('/bulk', {
     schema: {
       tags: ['Settings'],
-      summary: 'Reset entire application (DANGER ZONE - Admin only)',
-      security: [{ bearerAuth: [] }],
+      summary: 'Bulk create or update settings',
       body: {
-        type: 'object',
-        required: ['confirmationToken'],
-        properties: {
-          confirmationToken: {
-            type: 'string',
-            enum: ['RESET_nuqtaplus_APPLICATION'],
-            description: 'Required confirmation token',
-          },
-        },
-      },
-      response: {
-        200: {
+        type: 'array',
+        items: {
           type: 'object',
+          required: ['key', 'value'],
           properties: {
-            success: { type: 'boolean' },
-            message: { type: 'string' },
-            data: {
-              type: 'object',
-              properties: {
-                success: { type: 'boolean' },
-                message: { type: 'string' },
-                timestamp: { type: 'string' },
-              },
-            },
+            key: { type: 'string' },
+            value: { type: 'string' },
+            description: { type: 'string' },
           },
         },
       },
     },
-    preHandler: [fastify.authorize('settings:manage')],
-    handler: settingsController.resetApplication,
+    onRequest: [fastify.authenticate],
+    handler: settingsController.bulkUpsert,
   });
 
-  fastify.post(
-    '/backups',
-    {
-      schema: {
-        tags: ['Settings'],
-        summary: 'Create a backup of the database',
-        security: [{ bearerAuth: [] }],
-        body: {
-          type: 'object',
-          properties: {
-            destinationDir: {
-              type: 'string',
-              description: 'Optional destination directory for the backup',
-            },
-          },
+  /**
+   * Get a single setting by key
+   */
+  fastify.get('/:key', {
+    schema: {
+      tags: ['Settings'],
+      summary: 'Get a single setting by key',
+      params: {
+        type: 'object',
+        properties: {
+          key: { type: 'string' },
         },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              message: { type: 'string' },
-              data: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                  filename: { type: 'string' },
-                },
-              },
-            },
-          },
-        },
+        required: ['key'],
       },
-      preHandler: [fastify.authorize('settings:manage')],
     },
-    settingsController.createBackup
-  );
+    onRequest: [fastify.authenticate],
+    handler: settingsController.getByKey,
+  });
 
-  fastify.get(
-    '/backups',
-    {
-      schema: {
-        tags: ['Settings'],
-        summary: 'List all database backups',
-        description: 'Retrieve all database backup files with their sizes and creation times.',
-        security: [{ bearerAuth: [] }],
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              data: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    id: { type: 'string', description: 'Backup unique identifier' },
-                    filename: { type: 'string', description: 'Backup file name' },
-                    sizeBytes: { type: 'number', description: 'File size in bytes' },
-                    sizeReadable: {
-                      type: 'string',
-                      description: 'File size formatted, e.g. 2.3 MB',
-                    },
-                    createdAt: {
-                      type: 'string',
-                      format: 'date-time',
-                      description: 'File creation time',
-                    },
-                    modifiedAt: {
-                      type: 'string',
-                      format: 'date-time',
-                      description: 'Last modification time',
-                    },
-                  },
-                },
-              },
-            },
-            example: {
-              success: true,
-              data: [
-                {
-                  id: '2025-11-09T23-10-00',
-                  filename: 'backup-2025-11-09T23-10-00.db',
-                  sizeBytes: 2355200,
-                  sizeReadable: '2.24 MB',
-                  createdAt: '2025-11-09T23:10:12.123Z',
-                  modifiedAt: '2025-11-09T23:10:12.123Z',
-                },
-              ],
-            },
-          },
-          401: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean', default: false },
-              message: { type: 'string' },
-            },
-          },
-          500: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean', default: false },
-              message: { type: 'string' },
-              error: { type: 'string' },
-            },
-          },
+  /**
+   * Create a new setting
+   */
+  fastify.post('/', {
+    schema: {
+      tags: ['Settings'],
+      summary: 'Create a new setting',
+      body: {
+        type: 'object',
+        required: ['key', 'value'],
+        properties: {
+          key: { type: 'string' },
+          value: { type: 'string' },
+          description: { type: 'string' },
         },
       },
-      preHandler: [fastify.authorize('settings:read')],
     },
-    settingsController.listBackups
-  );
+    onRequest: [fastify.authenticate],
+    handler: settingsController.create,
+  });
 
-  fastify.delete(
-    '/backups/:id',
-    {
-      schema: {
-        tags: ['Settings'],
-        summary: 'Delete a database backup by ID',
-        security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          required: ['id'],
-          properties: {
-            id: { type: 'string', description: 'Backup unique identifier' },
-          },
+  /**
+   * Update an existing setting
+   */
+  fastify.put('/:key', {
+    schema: {
+      tags: ['Settings'],
+      summary: 'Update a setting',
+      params: {
+        type: 'object',
+        properties: {
+          key: { type: 'string' },
         },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              message: { type: 'string' },
-            },
-          },
+        required: ['key'],
+      },
+      body: {
+        type: 'object',
+        properties: {
+          value: { type: 'string' },
+          description: { type: 'string' },
         },
       },
-      preHandler: [fastify.authorize('settings:delete')],
     },
-    settingsController.deleteBackup
-  );
+    onRequest: [fastify.authenticate],
+    handler: settingsController.update,
+  });
 
-  fastify.get(
-    '/backups/:id/restore',
-    {
-      schema: {
-        tags: ['Settings'],
-        summary: 'Restore the database from a backup',
-        security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          required: ['id'],
-          properties: {
-            id: { type: 'string', description: 'Backup unique identifier' },
-          },
+  /**
+   * Delete a setting
+   */
+  fastify.delete('/:key', {
+    schema: {
+      tags: ['Settings'],
+      summary: 'Delete a setting',
+      params: {
+        type: 'object',
+        properties: {
+          key: { type: 'string' },
         },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              message: { type: 'string' },
-            },
-          },
-        },
+        required: ['key'],
       },
-      preHandler: [fastify.authorize('settings:update')],
     },
-    settingsController.restoreBackup
-  );
-
-  fastify.get(
-    '/backups/:filename/download',
-    {
-      schema: {
-        tags: ['Settings'],
-        summary: 'Download a database backup by filename',
-        security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          required: ['filename'],
-          properties: {
-            filename: { type: 'string', description: 'Backup filename' },
-          },
-        },
-        response: {
-          200: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-              message: { type: 'string' },
-            },
-          },
-        },
-      },
-      preHandler: [fastify.authorize('settings:read')],
-    },
-    settingsController.downloadBackup
-  );
+    onRequest: [fastify.authenticate],
+    handler: settingsController.delete,
+  });
 }

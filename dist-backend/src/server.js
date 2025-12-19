@@ -1,9 +1,19 @@
 import Fastify from 'fastify';
 import config from './config.js';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// Get package version
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'));
+const version = packageJson.version || '1.0.0';
 // Plugins
 import securityPlugin from './plugins/security.js';
 import authPlugin from './plugins/auth.js';
 import errorHandlerPlugin from './plugins/errorHandler.js';
+import debuggerPlugin from './plugins/debugger.js';
 
 // Routes
 import authRoutes from './routes/authRoutes.js';
@@ -17,11 +27,13 @@ import roleRoutes from './routes/roleRoutes.js';
 import permissionRoutes from './routes/permissionRoutes.js';
 import currencyRoutes from './routes/currencyRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
+import alertRoutes from './routes/alertRoutes.js';
+import debugRoutes from './routes/debugRoutes.js';
 
 // Initialize Fastify
 const fastify = Fastify({
   logger: {
-    level: config.logging.level,
+    level: config.logging.level || 'info',
     transport: config.logging.pretty
       ? {
           target: 'pino-pretty',
@@ -48,6 +60,7 @@ console.log('─'.repeat(50));
 const start = async () => {
   try {
     // Register plugins
+    await fastify.register(debuggerPlugin); // Register debugger first to track everything
     await fastify.register(securityPlugin);
     await fastify.register(authPlugin);
     await fastify.register(errorHandlerPlugin);
@@ -57,7 +70,7 @@ const start = async () => {
       return {
         status: 'ok',
         service: 'nuqtaplus Backend API',
-        version: '1.0.0',
+        version: version,
         timestamp: new Date().toISOString(),
       };
     });
@@ -82,6 +95,8 @@ const start = async () => {
     await fastify.register(permissionRoutes, { prefix: '/api/permissions' });
     await fastify.register(currencyRoutes, { prefix: '/api/currencies' });
     await fastify.register(settingsRoutes, { prefix: '/api/settings' });
+    await fastify.register(alertRoutes, { prefix: '/api/alerts' });
+    await fastify.register(debugRoutes, { prefix: '/debug' }); // Debug routes
 
     // Start listening
     await fastify.listen({
