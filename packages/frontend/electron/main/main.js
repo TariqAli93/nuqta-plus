@@ -25,6 +25,7 @@ let activationWindow = null;
 let splashWindow = null; // splash screen window
 let isQuitting = false;
 let backendReady = false;
+let splashTimeout = null; // timeout for showing main window after splash
 
 const backendManager = new BackendManager();
 
@@ -77,16 +78,6 @@ function createWindow() {
   } else {
     // Load from frontend dist folder: electron/main -> ../../dist
     mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'));
-    // add Shortcut to open DevTools in production for debugging
-    mainWindow.webContents.on('before-input-event', (event, input) => {
-      if (
-        (input.control && input.shift && input.key.toLowerCase() === 'i') || // Ctrl+Shift+I
-        input.key === 'F12' // F12
-      ) {
-        event.preventDefault();
-        mainWindow.webContents.openDevTools();
-      }
-    });
   }
 
   // Handle window close with confirmation
@@ -571,7 +562,16 @@ function tryToShowMainWindowAfterSplash() {
   if (!mainWindow.__readyToShow) return;
   if (!backendReady) return;
 
+  // Clear any existing timeout to prevent multiple calls
+  if (splashTimeout) {
+    clearTimeout(splashTimeout);
+    splashTimeout = null;
+  }
+
   const showMainWindow = () => {
+    // Clear timeout reference
+    splashTimeout = null;
+    
     if (splashWindow) {
       try {
         splashWindow.destroy();
@@ -593,7 +593,7 @@ function tryToShowMainWindowAfterSplash() {
 
     if (timeLeft > 0) {
       logger.info(`Splash shown. Waiting ${timeLeft}ms before showing main window`);
-      setTimeout(showMainWindow, timeLeft);
+      splashTimeout = setTimeout(showMainWindow, timeLeft);
     } else {
       logger.info('Splash minimum time already reached, showing main window');
       showMainWindow();
@@ -680,6 +680,12 @@ app.on('before-quit', async (event) => {
 
   isQuitting = true;
   event.preventDefault();
+
+  // Clear splash timeout if exists
+  if (splashTimeout) {
+    clearTimeout(splashTimeout);
+    splashTimeout = null;
+  }
 
   await backendManager.CleanupBackendProcess();
   app.quit();
