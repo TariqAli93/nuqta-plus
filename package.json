@@ -5,14 +5,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development concurrently \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
-    "publish:electron": "node pumb-version.js && pnpm --filter backend build && pnpm --filter frontend run publish:win",
-    "build": "pnpm --filter backend build && pnpm --filter frontend build:win",
-    "lint": "pnpm -r lint",
-    "format": "pnpm -r format",
-    "db:migrate": "pnpm --filter backend db:migrate",
-    "db:generate": "pnpm --filter backend db:generate",
-    "seed": "node ./packages/backend/src/seed.js"
+    "dev": "cross-env NODE_ENV=development concurrently \"cd backend && pnpm dev\" \"cd frontend && pnpm dev\"",
+    "publish:electron": "node pumb-version.js && cd backend && pnpm build && cd ../frontend && pnpm run publish:win",
+    "build": "cd backend && pnpm build && cd ../frontend && pnpm build:win",
+    "lint": "cd backend && pnpm lint && cd ../frontend && pnpm lint",
+    "format": "cd backend && pnpm format && cd ../frontend && pnpm format",
+    "db:migrate": "cd backend && pnpm db:migrate",
+    "db:generate": "cd backend && pnpm db:generate",
+    "seed": "node ./backend/src/seed.js"
   },
   "keywords": [
     "accounting",

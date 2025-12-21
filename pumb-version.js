@@ -3,8 +3,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const ROOT_PACKAGE = path.resolve('package.json');
-const FRONTEND_PACKAGE = path.resolve('packages', 'frontend', 'package.json');
-const BACKEND_PACKAGE = path.resolve('packages', 'backend', 'package.json');
+const FRONTEND_PACKAGE = path.resolve('frontend', 'package.json');
+const BACKEND_PACKAGE = path.resolve('backend', 'package.json');
 
 /**
  * قراءة package.json ككائن

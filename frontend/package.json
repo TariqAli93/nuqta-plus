@@ -30,7 +30,7 @@
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.1.2",
     "cross-env": "^10.1.0",
-    "electron": "^39.1.1",
+    "electron": "^39.2.7",
     "electron-builder": "^26.0.12",
     "electron-devtools-installer": "^4.0.0",
     "postcss": "^8.4.47",
@@ -54,7 +54,7 @@
     ],
     "extraResources": [
       {
-        "from": "../../dist-backend",
+        "from": "../dist-backend",
         "to": "backend",
         "filter": [
           "**/*"
@@ -75,11 +75,11 @@
         ]
       },
       {
-        "from": "./html/activation.html",
+        "from": "./activation.html",
         "to": "dist-electron/dist/activation.html"
       },
       {
-        "from": "./html/splash.html",
+        "from": "./splash.html",
         "to": "dist-electron/dist/splash.html"
       },
       {
@@ -89,7 +89,7 @@
     ],
     "directories": {
       "buildResources": "build",
-      "output": "../../release"
+      "output": "../release"
     },
     "publish": [
       {

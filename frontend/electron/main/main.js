@@ -87,11 +87,24 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   } else {
     // Try multiple path resolution strategies for production
+    // Note: In packaged apps, extraResources are in process.resourcesPath, not app.asar
     const tryLoadIndex = async () => {
-      // Strategy 1: Relative path from main.js location
-      const relativePath = path.join(__dirname, '../../dist/index.html');
-      logger.info(`Trying to load from relative path: ${relativePath}`);
+      // Strategy 1: Try resources path first (for extraResources - most reliable in packaged apps)
       try {
+        const resourcesPath = process.resourcesPath;
+        const indexPath = path.join(resourcesPath, 'dist-electron', 'dist', 'index.html');
+        logger.info(`Trying to load from resources path: ${indexPath}`);
+        await mainWindow.loadFile(indexPath);
+        logger.info('Successfully loaded from resources path');
+        return;
+      } catch (err) {
+        logger.warn(`Failed to load from resources path: ${err.message}`);
+      }
+
+      // Strategy 2: Relative path from main.js location (works if files are in app.asar)
+      try {
+        const relativePath = path.join(__dirname, '../../dist/index.html');
+        logger.info(`Trying to load from relative path: ${relativePath}`);
         await mainWindow.loadFile(relativePath);
         logger.info('Successfully loaded from relative path');
         return;
@@ -99,7 +112,8 @@ function createWindow() {
         logger.warn(`Failed to load from relative path: ${err.message}`);
       }
 
-      // Strategy 2: Using app.getAppPath()
+      // Strategy 3: Using app.getAppPath() (for unpacked apps)
+      let lastError;
       try {
         const appPath = app.getAppPath();
         const indexPath = path.join(appPath, 'dist-electron', 'dist', 'index.html');
@@ -108,20 +122,13 @@ function createWindow() {
         logger.info('Successfully loaded from app path');
         return;
       } catch (err) {
+        lastError = err;
         logger.warn(`Failed to load from app path: ${err.message}`);
       }
 
-      // Strategy 3: Try resources path (for extraResources)
-      try {
-        const resourcesPath = process.resourcesPath;
-        const indexPath = path.join(resourcesPath, 'dist-electron', 'dist', 'index.html');
-        logger.info(`Trying to load from resources path: ${indexPath}`);
-        await mainWindow.loadFile(indexPath);
-        logger.info('Successfully loaded from resources path');
-      } catch (err) {
-        logger.error(`All path resolution strategies failed. Last error: ${err.message}`);
-        throw err;
-      }
+      // All strategies failed
+      logger.error(`All path resolution strategies failed. Last error: ${lastError?.message || 'unknown'}`);
+      throw new Error('Failed to locate index.html file');
     };
 
     tryLoadIndex().catch((err) => {
@@ -556,10 +563,22 @@ function createActivationWindow() {
   } else {
     // Try multiple path resolution strategies for production
     const tryLoadActivation = async () => {
-      // Strategy 1: Relative path from main.js location
-      const relativePath = path.join(__dirname, '../../dist/activation.html');
-      logger.info(`Trying to load activation from relative path: ${relativePath}`);
+      // Strategy 1: Try resources path first (for extraResources - most reliable in packaged apps)
       try {
+        const resourcesPath = process.resourcesPath;
+        const activationPath = path.join(resourcesPath, 'dist-electron', 'dist', 'activation.html');
+        logger.info(`Trying to load activation from resources path: ${activationPath}`);
+        await activationWindow.loadFile(activationPath);
+        logger.info('Successfully loaded activation from resources path');
+        return;
+      } catch (err) {
+        logger.warn(`Failed to load activation from resources path: ${err.message}`);
+      }
+
+      // Strategy 2: Relative path from main.js location
+      try {
+        const relativePath = path.join(__dirname, '../../dist/activation.html');
+        logger.info(`Trying to load activation from relative path: ${relativePath}`);
         await activationWindow.loadFile(relativePath);
         logger.info('Successfully loaded activation from relative path');
         return;
@@ -567,7 +586,8 @@ function createActivationWindow() {
         logger.warn(`Failed to load activation from relative path: ${err.message}`);
       }
 
-      // Strategy 2: Using app.getAppPath()
+      // Strategy 3: Using app.getAppPath()
+      let lastError;
       try {
         const appPath = app.getAppPath();
         const activationPath = path.join(appPath, 'dist-electron', 'dist', 'activation.html');
@@ -576,20 +596,13 @@ function createActivationWindow() {
         logger.info('Successfully loaded activation from app path');
         return;
       } catch (err) {
+        lastError = err;
         logger.warn(`Failed to load activation from app path: ${err.message}`);
       }
 
-      // Strategy 3: Try resources path
-      try {
-        const resourcesPath = process.resourcesPath;
-        const activationPath = path.join(resourcesPath, 'dist-electron', 'dist', 'activation.html');
-        logger.info(`Trying to load activation from resources path: ${activationPath}`);
-        await activationWindow.loadFile(activationPath);
-        logger.info('Successfully loaded activation from resources path');
-      } catch (err) {
-        logger.error(`All activation path resolution strategies failed. Last error: ${err.message}`);
-        throw err;
-      }
+      // All strategies failed
+      logger.error(`All activation path resolution strategies failed. Last error: ${lastError?.message || 'unknown'}`);
+      throw new Error('Failed to locate activation.html file');
     };
 
     tryLoadActivation().catch((err) => {
@@ -652,10 +665,22 @@ function createSplashWindow() {
   } else {
     // Try multiple path resolution strategies for production
     const tryLoadSplash = async () => {
-      // Strategy 1: Relative path from main.js location
-      const relativePath = path.join(__dirname, '../../dist/splash.html');
-      logger.info(`Trying to load splash from relative path: ${relativePath}`);
+      // Strategy 1: Try resources path first (for extraResources - most reliable in packaged apps)
       try {
+        const resourcesPath = process.resourcesPath;
+        const splashPath = path.join(resourcesPath, 'dist-electron', 'dist', 'splash.html');
+        logger.info(`Trying to load splash from resources path: ${splashPath}`);
+        await splashWindow.loadFile(splashPath);
+        logger.info('Successfully loaded splash from resources path');
+        return;
+      } catch (err) {
+        logger.warn(`Failed to load splash from resources path: ${err.message}`);
+      }
+
+      // Strategy 2: Relative path from main.js location
+      try {
+        const relativePath = path.join(__dirname, '../../dist/splash.html');
+        logger.info(`Trying to load splash from relative path: ${relativePath}`);
         await splashWindow.loadFile(relativePath);
         logger.info('Successfully loaded splash from relative path');
         return;
@@ -663,7 +688,8 @@ function createSplashWindow() {
         logger.warn(`Failed to load splash from relative path: ${err.message}`);
       }
 
-      // Strategy 2: Using app.getAppPath()
+      // Strategy 3: Using app.getAppPath()
+      let lastError;
       try {
         const appPath = app.getAppPath();
         const splashPath = path.join(appPath, 'dist-electron', 'dist', 'splash.html');
@@ -672,20 +698,13 @@ function createSplashWindow() {
         logger.info('Successfully loaded splash from app path');
         return;
       } catch (err) {
+        lastError = err;
         logger.warn(`Failed to load splash from app path: ${err.message}`);
       }
 
-      // Strategy 3: Try resources path
-      try {
-        const resourcesPath = process.resourcesPath;
-        const splashPath = path.join(resourcesPath, 'dist-electron', 'dist', 'splash.html');
-        logger.info(`Trying to load splash from resources path: ${splashPath}`);
-        await splashWindow.loadFile(splashPath);
-        logger.info('Successfully loaded splash from resources path');
-      } catch (err) {
-        logger.error(`All splash path resolution strategies failed. Last error: ${err.message}`);
-        throw err;
-      }
+      // All strategies failed
+      logger.error(`All splash path resolution strategies failed. Last error: ${lastError?.message || 'unknown'}`);
+      throw new Error('Failed to locate splash.html file');
     };
 
     tryLoadSplash().catch((err) => {
@@ -760,8 +779,15 @@ app.whenReady().then(async () => {
 
   if (result.ok) {
     createWindow();
-    await backendManager.StartBackend();
-    backendReady = true;
+    try {
+      await backendManager.StartBackend();
+      backendReady = true;
+    } catch (error) {
+      logger.error('Failed to start backend, but continuing with UI:', error);
+      // Set backendReady to true anyway so UI can show
+      // Backend errors will be handled by the UI itself
+      backendReady = true;
+    }
     tryToShowMainWindowAfterSplash();
   } else {
     createActivationWindow();

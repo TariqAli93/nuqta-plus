@@ -32,36 +32,30 @@ export default class BackendManager {
     let command, args, cwd;
 
     if (isDev) {
-      // Dev mode: run backend via pnpm from source
-      const backendPackageDir = path.resolve(__dirname, '../../../../packages/backend');
+      // Dev mode: run backend directly using node --watch
+      const backendPackageDir = path.resolve(__dirname, '../../../../backend');
+      const serverScript = path.join(backendPackageDir, 'src', 'server.js');
 
       command = process.platform === 'win32' ? 'node.exe' : 'node';
-      args = ['dev'];
+      args = ['--watch', serverScript];
       cwd = backendPackageDir;
 
       logger.info(`Starting backend in dev mode from: ${backendPackageDir}`);
     } else {
-      // Production: use packaged Node.js binary
+      // Production: use system Node.js (packaged apps have access to system Node)
       const backendDir = path.join(process.resourcesPath, 'backend');
-      const nodePath = path.join(
-        backendDir,
-        'bin',
-        process.platform === 'win32' ? 'node.exe' : 'node'
-      );
-      const serverScript = path.join(backendDir, 'start.js');
+      const serverScript = path.join(backendDir, 'src', 'server.js');
 
       // Verify files exist
       const fs = await import('fs');
-      if (!fs.existsSync(nodePath)) {
-        logger.error(`Node.js binary not found at: ${nodePath}`);
-        throw new Error(`Node.js binary not found at: ${nodePath}`);
-      }
-      if (!fs.existsSync(serverScript)) {
+      const scriptExists = fs.existsSync(serverScript);
+      if (!scriptExists) {
         logger.error(`Server script not found at: ${serverScript}`);
         throw new Error(`Server script not found at: ${serverScript}`);
       }
 
-      command = nodePath;
+      // Use system Node.js (should be available in PATH)
+      command = process.platform === 'win32' ? 'node.exe' : 'node';
       args = [serverScript];
       cwd = backendDir;
 

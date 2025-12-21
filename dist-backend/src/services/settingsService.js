@@ -174,7 +174,7 @@ export class SettingsService {
    * Save currency settings
    */
   async saveCurrencySettings({ defaultCurrency, usdRate, iqdRate }) {
-    console.log('SettingsService.saveCurrencySettings called with:', { defaultCurrency, usdRate, iqdRate });
+    // Removed console.log - use logger in controller if detailed logging needed
     const updates = [];
     if (defaultCurrency) {
       updates.push({ key: 'defaultCurrency', value: String(defaultCurrency), description: 'Default currency' });

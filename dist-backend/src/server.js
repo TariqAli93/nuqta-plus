@@ -13,7 +13,6 @@ const version = packageJson.version || '1.0.0';
 import securityPlugin from './plugins/security.js';
 import authPlugin from './plugins/auth.js';
 import errorHandlerPlugin from './plugins/errorHandler.js';
-import debuggerPlugin from './plugins/debugger.js';
 
 // Routes
 import authRoutes from './routes/authRoutes.js';
@@ -28,7 +27,9 @@ import permissionRoutes from './routes/permissionRoutes.js';
 import currencyRoutes from './routes/currencyRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
 import alertRoutes from './routes/alertRoutes.js';
-import debugRoutes from './routes/debugRoutes.js';
+
+// Debug features - only in development
+const isProduction = config.server.env === 'production';
 
 // Initialize Fastify
 const fastify = Fastify({
@@ -47,20 +48,18 @@ const fastify = Fastify({
   },
 });
 
-// Enable console.log to work alongside Pino logger
-console.log('\n🚀 nuqtaplus Backend Server Starting...');
-console.log('📊 Console.log statements are now visible');
-console.log('⚙️  Configuration loaded');
-console.log(`🔧 Environment: ${config.server.env}`);
-console.log(`🌐 Host: ${config.server.host}`);
-console.log(`🔌 Port: ${config.server.port}`);
-console.log('─'.repeat(50));
+// Log server startup information using Fastify logger
+// Note: Logger will be available after fastify is initialized
 
 // Start server
 const start = async () => {
   try {
     // Register plugins
-    await fastify.register(debuggerPlugin); // Register debugger first to track everything
+    // Only register debugger plugin in development
+    if (!isProduction) {
+      const { default: debuggerPlugin } = await import('./plugins/debugger.js');
+      await fastify.register(debuggerPlugin);
+    }
     await fastify.register(securityPlugin);
     await fastify.register(authPlugin);
     await fastify.register(errorHandlerPlugin);
@@ -96,7 +95,11 @@ const start = async () => {
     await fastify.register(currencyRoutes, { prefix: '/api/currencies' });
     await fastify.register(settingsRoutes, { prefix: '/api/settings' });
     await fastify.register(alertRoutes, { prefix: '/api/alerts' });
-    await fastify.register(debugRoutes, { prefix: '/debug' }); // Debug routes
+    // Only register debug routes in development
+    if (!isProduction) {
+      const { default: debugRoutes } = await import('./routes/debugRoutes.js');
+      await fastify.register(debugRoutes, { prefix: '/debug' });
+    }
 
     // Start listening
     await fastify.listen({
@@ -104,15 +107,11 @@ const start = async () => {
       host: config.server.host,
     });
 
-    console.log('\n✅ Server successfully started!');
-    console.log(`🌍 Server running on http://${config.server.host}:${config.server.port}`);
-    console.log(`📈 Environment: ${config.server.env}`);
-    console.log(`📝 Log Level: ${config.logging.level}`);
-    console.log('─'.repeat(50));
-    console.log('🎯 Ready to accept requests!\n');
-
+    fastify.log.info('Server successfully started');
     fastify.log.info(`Server running on http://${config.server.host}:${config.server.port}`);
     fastify.log.info(`Environment: ${config.server.env}`);
+    fastify.log.info(`Log Level: ${config.logging.level}`);
+    fastify.log.info('Ready to accept requests');
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

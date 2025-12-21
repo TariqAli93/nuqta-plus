@@ -56,5 +56,5 @@ temp/
 .github/
 
 
-packages/backend/bin/
+backend/bin/
 pump-version.js
