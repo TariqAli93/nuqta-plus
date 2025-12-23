@@ -250,17 +250,12 @@ function createWindow() {
 
   ipcMain.handle('print-receipt', async (_event, { printerName, receiptData, companyInfo }) => {
     try {
-      if (!receiptData) {
-        throw new Error('Receipt data is required');
-      }
+      if (!receiptData) throw new Error('Receipt data is required');
+      if (!companyInfo) throw new Error('Company info is required');
 
-      if (!companyInfo) {
-        throw new Error('Company info is required');
-      }
-
-      // Get paper size configuration based on invoice type
-      const invoiceType = companyInfo.invoiceType || 'roll-80';
-      const paperSizeConfigs = {
+      // Constants
+      const PIXELS_PER_MM = 3.78;
+      const PAPER_SIZE_CONFIGS = {
         'roll-58': { widthMM: 58, heightMM: 297, margins: { marginType: 'none' } },
         'roll-80': { widthMM: 80, heightMM: 297, margins: { marginType: 'none' } },
         'roll-88': { widthMM: 88, heightMM: 297, margins: { marginType: 'none' } },
@@ -268,7 +263,9 @@ function createWindow() {
         a5: { widthMM: 148, heightMM: 210, margins: { marginType: 'default' } },
       };
 
-      const paperConfig = paperSizeConfigs[invoiceType] || paperSizeConfigs['roll-80'];
+      // Get paper size configuration based on invoice type
+      const invoiceType = companyInfo.invoiceType || 'roll-80';
+      const paperConfig = PAPER_SIZE_CONFIGS[invoiceType] || PAPER_SIZE_CONFIGS['roll-80'];
 
       logger.debug('Printing receipt', { printerName, invoiceType, paperConfig, receiptDataLength: receiptData?.length });
 
@@ -278,8 +275,8 @@ function createWindow() {
       // Create a hidden window for printing
       const printWindow = new BrowserWindow({
         show: false,
-        width: Math.round(paperConfig.widthMM * 3.78), // Convert mm to pixels (approximate)
-        height: Math.round(paperConfig.heightMM * 3.78),
+        width: Math.round(paperConfig.widthMM * PIXELS_PER_MM),
+        height: Math.round(paperConfig.heightMM * PIXELS_PER_MM),
         webPreferences: {
           nodeIntegration: false,
           contextIsolation: true,
@@ -289,8 +286,14 @@ function createWindow() {
       // Load the HTML content
       await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
 
-      // Wait for content to be ready
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Wait for fonts and content to be legally ready
+      try {
+        await printWindow.webContents.executeJavaScript('document.fonts.ready');
+      } catch (err) {
+        logger.warn('Error waiting for fonts:', err);
+        // Fallback to small timeout if font check fails
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
 
       // Print options
       const printOptions = {
@@ -304,12 +307,16 @@ function createWindow() {
         margins: paperConfig.margins,
       };
 
-      logger.debug('Print options', { printOptions });
-
       // Print the content
       return new Promise((resolve) => {
         printWindow.webContents.print(printOptions, (success, errorType) => {
-          printWindow.close();
+          // Close window after print attempt
+          // Use setTimeout to ensure print job is sent to spooler before closing
+          setTimeout(() => {
+            if (!printWindow.isDestroyed()) {
+              printWindow.close();
+            }
+          }, 100);
 
           if (success) {
             logger.info('Receipt printed successfully');
@@ -334,167 +341,60 @@ function createWindow() {
 
   ipcMain.handle('preview-receipt', async (_event, { receiptData, companyInfo }) => {
     try {
-      if (!receiptData) {
-        throw new Error('Receipt data is required');
-      }
+      if (!receiptData) throw new Error('Receipt data is required');
+      if (!companyInfo) throw new Error('Company info is required');
 
-      if (!companyInfo) {
-        throw new Error('Company info is required');
-      }
-
-      const invoiceType = companyInfo.invoiceType || 'roll-80';
-      const isThermal = invoiceType.startsWith('roll-');
-
-      // Paper size configurations for window dimensions
-      const paperSizeConfigs = {
-        'roll-58': { width: 380, height: 750, paperWidth: '58mm' },
-        'roll-80': { width: 450, height: 800, paperWidth: '80mm' },
-        'roll-88': { width: 480, height: 800, paperWidth: '88mm' },
-        a4: { width: 700, height: 950, paperWidth: '210mm' },
-        a5: { width: 600, height: 850, paperWidth: '148mm' },
+      // Constants
+      const PIXELS_PER_MM = 3.78;
+      const PAPER_SIZE_CONFIGS = {
+        'roll-58': { widthMM: 58, heightMM: 297, margins: { marginType: 'none' } },
+        'roll-80': { widthMM: 80, heightMM: 297, margins: { marginType: 'none' } },
+        'roll-88': { widthMM: 88, heightMM: 297, margins: { marginType: 'none' } },
+        a4: { widthMM: 210, heightMM: 297, margins: { marginType: 'default' } },
+        a5: { widthMM: 148, heightMM: 210, margins: { marginType: 'default' } },
       };
 
-      const windowConfig = paperSizeConfigs[invoiceType] || paperSizeConfigs['roll-80'];
-      const receiptStyles = getReceiptStyles(isThermal, windowConfig.paperWidth);
-      const receiptBody = generateReceiptBodyHtml(receiptData);
+      // Get paper size configuration based on invoice type
+      const invoiceType = companyInfo.invoiceType || 'roll-80';
+      const paperConfig = PAPER_SIZE_CONFIGS[invoiceType] || PAPER_SIZE_CONFIGS['roll-80'];
 
-      // Create a preview window
-      const previewWindow = new BrowserWindow({
-        width: windowConfig.width,
-        height: windowConfig.height,
-        autoHideMenuBar: true,
-        title: 'معاينة الفاتورة - Receipt Preview',
-        icon: isDev ? join(__dirname, '../../build/icon.png') : join(__dirname, '../build/icon.png'),
+      logger.debug('Printing receipt', { invoiceType, paperConfig, receiptDataLength: receiptData?.length });
+
+      // Generate HTML content from receipt data
+      const htmlContent = generateReceiptHtml(receiptData, invoiceType);
+
+      // Create a hidden window for printing
+      const printWindow = new BrowserWindow({
+        show: true,
+        width: Math.round(paperConfig.widthMM * PIXELS_PER_MM),
+        height: Math.round(paperConfig.heightMM * PIXELS_PER_MM),
         webPreferences: {
           nodeIntegration: false,
           contextIsolation: true,
         },
       });
 
-      // Build preview HTML with toolbar
-      const previewHtml = `<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>معاينة الفاتورة - Receipt Preview</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
-    
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    
-    html, body {
-      font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
-      background: #1a1a2e;
-      min-height: 100vh;
-    }
-    
-    /* Toolbar */
-    .toolbar {
-      position: sticky;
-      top: 0;
-      background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
-      padding: 14px 24px;
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-      z-index: 100;
-      border-bottom: 1px solid #2a2a4a;
-    }
-    
-    .toolbar button {
-      padding: 12px 28px;
-      font-size: 14px;
-      font-weight: 600;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: all 0.25s ease;
-      font-family: 'Cairo', sans-serif;
-    }
-    
-    .btn-print {
-      background: linear-gradient(135deg, #00c853 0%, #00a844 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
-    }
-    
-    .btn-print:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 20px rgba(0, 200, 83, 0.4);
-    }
-    
-    .btn-close {
-      background: linear-gradient(135deg, #546E7A 0%, #455A64 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(84, 110, 122, 0.3);
-    }
-    
-    .btn-close:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 20px rgba(84, 110, 122, 0.4);
-    }
-    
-    /* Preview Container */
-    .preview-container {
-      display: flex;
-      justify-content: center;
-      padding: 30px;
-      min-height: calc(100vh - 70px);
-    }
-    
-    /* Receipt Paper */
-    .receipt-paper {
-      background: white;
-      width: ${windowConfig.paperWidth};
-      max-width: 100%;
-      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
-      border-radius: ${isThermal ? '4px' : '8px'};
-      overflow: hidden;
-      padding: 20px 10px;
-      padding-top: 50px;
-    }
-    
-    /* Receipt Content Styles */
-    ${receiptStyles}
-    
-    /* Print Media */
-    @media print {
-      .toolbar { display: none !important; }
-      html, body { background: white !important; }
-      .preview-container { padding: 0 !important; min-height: auto; }
-      .receipt-paper { 
-        box-shadow: none !important; 
-        border-radius: 0 !important;
-        width: 100% !important;
-        padding-top: 50px !important;
+      // Load the HTML content
+      await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
+
+      // Wait for fonts and content to be legally ready
+      try {
+        await printWindow.webContents.executeJavaScript('document.fonts.ready');
+      } catch (err) {
+        logger.warn('Error waiting for fonts:', err);
+        // Fallback to small timeout if font check fails
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
-    }
-  </style>
-</head>
-<body>
-  <div class="preview-container">
-    <div class="receipt-paper">
-      ${receiptBody}
-    </div>
-  </div>
-</body>
-</html>`;
 
-      // Load the preview HTML content
-      await previewWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(previewHtml)}`);
-      previewWindow.show();
-
-      return { success: true };
+      return {
+        success: true,
+        message: 'تمت الطباعة بنجاح',
+      };
     } catch (error) {
-      logger.error('Error showing receipt preview:', error);
+      logger.error('Error printing receipt:', error);
       return {
         success: false,
-        error: error.message || 'فشل في عرض المعاينة',
+        error: error.message || 'فشل في الطباعة',
       };
     }
   });

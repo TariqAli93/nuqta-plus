@@ -195,8 +195,8 @@ export const formatReceiptData = (sale, company) => {
     config,
     isInstallment,
     company: {
-      name: company.name || 'شركة',
       address: [company.city, company.area, company.street].filter(Boolean).join(' | '),
+      name: company.name || 'شركة',
       phones: [company.phone, company.phone2].filter(Boolean),
     },
     invoice: {
@@ -356,8 +356,8 @@ export const generateReceiptHtml = (receiptData) => {
     <div class="receipt-content ${isInstallment ? 'installment-receipt' : ''}">
       <!-- Header -->
       <div class="receipt-header">
-        <div class="company-name">${company.name}</div>
-        ${company.address ? `<div class="company-info">${company.address}</div>` : ''}
+      ${company.address ? `<div class="company-info">${company.address}</div>` : ''}
+      <div class="company-name">${company.name}</div>
         ${company.phones.length > 0 ? `<div class="company-info">📞 ${company.phones.join(' | ')}</div>` : ''}
       </div>
 

@@ -440,7 +440,6 @@ const notificationStore = useNotificationStore();
 
 
 const printing = ref(false);
-const invoiceWrapperRef = ref(null);
 const settings = ref(null);
 
 const previewPrint = async () => {

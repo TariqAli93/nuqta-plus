@@ -40,6 +40,9 @@ export const getReceiptStyles = (isThermal, paperWidth) => {
     .receipt-header {
       text-align: center;
       margin-bottom: ${isThermal ? '8px' : '15px'};
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     
     .company-name {
@@ -47,11 +50,13 @@ export const getReceiptStyles = (isThermal, paperWidth) => {
       font-weight: 700;
       margin-bottom: ${isThermal ? '4px' : '8px'};
       color: #000;
+      order: 1;
     }
     
     .company-info {
       font-size: ${isThermal ? '9px' : '11px'};
       color: #333;
+      order: 2;
       margin: ${isThermal ? '2px 0' : '4px 0'};
     }
     
@@ -425,8 +430,8 @@ export const generateReceiptBodyHtml = (receiptData) => {
     <div class="receipt-content ${isInstallment ? 'installment-receipt' : ''}">
       <!-- Header -->
       <div class="receipt-header">
-        <div class="company-name">${company.name}</div>
-        ${company.address ? `<div class="company-info">${company.address}</div>` : ''}
+      ${company.address ? `<div class="company-info">${company.address}</div>` : ''}
+      <div class="company-name">${company.name}</div>
         ${company.phones.length > 0 ? `<div class="company-info">${company.phones.join(' | ')}</div>` : ''}
       </div>
 
