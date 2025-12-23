@@ -42,9 +42,10 @@ export default class BackendManager {
 
       logger.info(`Starting backend in dev mode from: ${backendPackageDir}`);
     } else {
-      // Production: use system Node.js (packaged apps have access to system Node)
+      // Production: use bundled Node.js executable
       const backendDir = path.join(process.resourcesPath, 'backend');
       const serverScript = path.join(backendDir, 'src', 'server.js');
+      const bundledNode = path.join(backendDir, 'bin', 'node.exe');
 
       // Verify files exist
       const fs = await import('fs');
@@ -54,12 +55,19 @@ export default class BackendManager {
         throw new Error(`Server script not found at: ${serverScript}`);
       }
 
-      // Use system Node.js (should be available in PATH)
-      command = process.platform === 'win32' ? 'node.exe' : 'node';
+      const nodeExists = fs.existsSync(bundledNode);
+      if (!nodeExists) {
+        logger.error(`Bundled Node.js not found at: ${bundledNode}`);
+        throw new Error(`Bundled Node.js not found at: ${bundledNode}`);
+      }
+
+      // Use bundled Node.js executable
+      command = bundledNode;
       args = [serverScript];
       cwd = backendDir;
 
       logger.info(`Starting backend in production mode from: ${backendDir}`);
+      logger.info(`Using bundled Node.js: ${bundledNode}`);
     }
 
     // ابدأ عملية الخلفية
