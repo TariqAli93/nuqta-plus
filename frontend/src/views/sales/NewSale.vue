@@ -24,11 +24,18 @@
             <v-col cols="12" md="6">
               <v-select
                 v-model="sale.currency"
-                :items="['USD', 'IQD']"
+                :items="availableCurrencies"
                 label="العملة"
                 :rules="[rules.required]"
                 density="comfortable"
-              ></v-select>
+                :disabled="!settingsStore.showSecondaryCurrency"
+                :hint="!settingsStore.showSecondaryCurrency ? 'العملة الثانوية مخفية - يتم استخدام العملة الافتراضية فقط' : ''"
+                persistent-hint
+              >
+                <template v-slot:prepend-inner>
+                  <v-icon>mdi-currency-usd</v-icon>
+                </template>
+              </v-select>
             </v-col>
           </v-row>
 
@@ -335,7 +342,11 @@ const currencySettings = ref({
   defaultCurrency: 'IQD',
   usdRate: 1500,
   iqdRate: 1,
+  showSecondaryCurrency: true,
 });
+
+// Computed property for available currencies
+const availableCurrencies = computed(() => settingsStore.availableCurrencies);
 
 // تحويل سعر بين عملتين بناءً على إعدادات الصرف
 const convertPrice = (amount, from, to) => {
@@ -504,6 +515,21 @@ watch(
   () => sale.value.currency,
   () => {
     applySaleCurrencyToItems();
+  }
+);
+
+// مراقبة تغيير showSecondaryCurrency وإعادة تعيين العملة للافتراضية عند الإخفاء
+watch(
+  () => settingsStore.showSecondaryCurrency,
+  (showSecondary) => {
+    if (!showSecondary) {
+      // إذا تم إخفاء العملة الثانوية، استخدم العملة الافتراضية فقط
+      const defaultCurrency = settingsStore.settings?.defaultCurrency || 'IQD';
+      if (sale.value.currency !== defaultCurrency) {
+        sale.value.currency = defaultCurrency;
+        applySaleCurrencyToItems();
+      }
+    }
   }
 );
 
@@ -793,11 +819,19 @@ onMounted(async () => {
   try {
     const settings = await settingsStore.fetchCurrencySettings();
     if (settings) {
-      currencySettings.value = settings;
-      sale.value.currency = settings.defaultCurrency || 'IQD';
+      currencySettings.value = {
+        ...settings,
+        showSecondaryCurrency: settings.showSecondaryCurrency !== undefined ? settings.showSecondaryCurrency : true,
+      };
+      // استخدام العملة الافتراضية أو أول عملة متاحة
+      const defaultCurrency = settings.defaultCurrency || 'IQD';
+      sale.value.currency = availableCurrencies.value.includes(defaultCurrency) 
+        ? defaultCurrency 
+        : availableCurrencies.value[0] || defaultCurrency;
     }
   } catch {
     // استخدام القيم الافتراضية
+    sale.value.currency = availableCurrencies.value[0] || 'IQD';
   }
 
   // تحميل بيانات المسودة إذا كان هناك draftId في query

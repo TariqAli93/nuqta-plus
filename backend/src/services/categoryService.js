@@ -1,7 +1,7 @@
 import { getDb, saveDatabase } from '../db.js';
 import { categories } from '../models/index.js';
 import { NotFoundError, ConflictError } from '../utils/errors.js';
-import { eq, like, desc } from 'drizzle-orm';
+import { eq, like, desc, sql } from 'drizzle-orm';
 
 export class CategoryService {
   async create(categoryData) {
@@ -34,13 +34,19 @@ export class CategoryService {
       query = query.where(like(categories.name, `%${search}%`));
     }
 
-    // Get all results and do manual pagination (sql.js doesn't support offset)
-    const allResults = await query.orderBy(desc(categories.createdAt));
+    // Get total count for pagination metadata
+    let countQuery = db.select({ count: sql`count(*)` }).from(categories);
+    if (search) {
+      countQuery = countQuery.where(like(categories.name, `%${search}%`));
+    }
+    const countResult = await countQuery.get();
+    const total = Number(countResult?.count || 0);
 
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const results = allResults.slice(startIndex, endIndex);
-    const total = allResults.length;
+    // Get paginated results using offset and limit (better-sqlite3 supports this)
+    const results = await query
+      .orderBy(desc(categories.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit);
 
     return {
       data: results,

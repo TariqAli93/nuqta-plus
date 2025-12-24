@@ -171,28 +171,35 @@ export class SettingsService {
   }
 
   /**
-   * Get currency settings (defaultCurrency, usdRate, iqdRate)
+   * Get currency settings (defaultCurrency, usdRate, iqdRate, showSecondaryCurrency)
    */
   async getCurrencySettings() {
-    const currencyKeys = ['defaultCurrency', 'usdRate', 'iqdRate'];
+    const currencyKeys = ['defaultCurrency', 'usdRate', 'iqdRate', 'showSecondaryCurrency'];
     const currencyData = {};
     for (const key of currencyKeys) {
       const value = await this.getValue(key);
       if (value !== null) {
-        currencyData[key] = key.includes('Rate') ? parseFloat(value) : value;
+        if (key === 'showSecondaryCurrency') {
+          currencyData[key] = value === 'true' || value === true;
+        } else if (key.includes('Rate')) {
+          currencyData[key] = parseFloat(value);
+        } else {
+          currencyData[key] = value;
+        }
       }
     }
     // Defaults
     if (!currencyData.defaultCurrency) currencyData.defaultCurrency = 'IQD';
     if (!currencyData.usdRate) currencyData.usdRate = 1500;
     if (!currencyData.iqdRate) currencyData.iqdRate = 1;
+    if (currencyData.showSecondaryCurrency === undefined) currencyData.showSecondaryCurrency = true;
     return currencyData;
   }
 
   /**
    * Save currency settings
    */
-  async saveCurrencySettings({ defaultCurrency, usdRate, iqdRate }) {
+  async saveCurrencySettings({ defaultCurrency, usdRate, iqdRate, showSecondaryCurrency }) {
     // Removed console.log - use logger in controller if detailed logging needed
     const updates = [];
     if (defaultCurrency) {
@@ -203,6 +210,9 @@ export class SettingsService {
     }
     if (iqdRate !== undefined) {
       updates.push({ key: 'iqdRate', value: String(iqdRate), description: 'IQD exchange rate' });
+    }
+    if (showSecondaryCurrency !== undefined) {
+      updates.push({ key: 'showSecondaryCurrency', value: String(showSecondaryCurrency), description: 'Show secondary currency' });
     }
     await this.bulkUpsert(updates);
     return this.getCurrencySettings();

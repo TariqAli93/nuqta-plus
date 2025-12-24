@@ -1,117 +1,157 @@
 <template>
   <div class="currency-settings">
     <!-- 🔹 شريط الأدوات العلوي -->
-    <v-card class="mb-4">
-      <div class="flex justify-space-between items-center pa-3">
-        <div class="text-h6 font-semibold text-primary">
-          <v-icon class="me-2" color="primary">mdi-currency-usd</v-icon>
-          إعدادات العملة
+    <v-card class="mb-4" elevation="2">
+      <v-card-text class="pa-4">
+        <div class="d-flex justify-space-between align-center flex-wrap ga-2">
+          <div class="d-flex align-center">
+            <v-icon color="primary" size="28" class="me-3">mdi-currency-usd</v-icon>
+            <h2 class="text-h5 font-weight-bold text-primary">إعدادات العملة</h2>
+          </div>
+          <v-btn
+            color="primary"
+            size="default"
+            prepend-icon="mdi-content-save"
+            class="rounded-lg"
+            :loading="settingsStore.isLoading"
+            :disabled="!isFormValid"
+            @click="saveCurrencySettings"
+          >
+            حفظ الإعدادات
+          </v-btn>
         </div>
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-content-save"
-          class="rounded-lg"
-          :loading="settingsStore.isLoading"
-          :disabled="!isFormValid"
-          @click="saveCurrencySettings"
-        >
-          حفظ الإعدادات
-        </v-btn>
-      </div>
+      </v-card-text>
     </v-card>
 
-    <v-card class="mb-4 pa-4">
-      <v-form ref="formRef" v-model="isFormValid">
-        <v-row>
-          <!-- Default Currency -->
-          <v-col cols="12" md="12">
-            <v-select
-              v-model="currencyData.defaultCurrency"
-              label="العملة الافتراضية *"
-              :items="currencies"
-              :rules="[rules.required]"
-              variant="outlined"
-              item-title="text"
-              item-value="value"
-              prepend-inner-icon="mdi-currency-usd"
-              required
-            >
-              <template v-slot:selection="{ item }">
-                <v-chip :color="item.raw.color" class="ma-1">
-                  <v-icon start>{{ item.raw.icon }}</v-icon>
-                  {{ item.raw.text }}
-                </v-chip>
-              </template>
-              <template v-slot:item="{ props, item }">
-                <v-list-item
-                  v-bind="props"
-                  :prepend-icon="item.raw.icon"
-                  :title="item.raw.text"
-                  :subtitle="item.raw.subtitle"
-                ></v-list-item>
-              </template>
-            </v-select>
-          </v-col>
+    <v-card class="mb-4" elevation="1">
+      <v-card-text class="pa-6">
+        <v-form ref="formRef" v-model="isFormValid">
+          <v-row>
+            <!-- Default Currency -->
+            <v-col cols="12" md="6">
+              <v-select
+                v-model="currencyData.defaultCurrency"
+                label="العملة الافتراضية *"
+                :items="currencies"
+                :rules="[rules.required]"
+                variant="outlined"
+                density="comfortable"
+                item-title="text"
+                item-value="value"
+                prepend-inner-icon="mdi-currency-usd"
+                required
+              >
+                <template v-slot:selection="{ item }">
+                  <v-chip :color="item.raw.color" size="small" class="ma-1">
+                    <v-icon start size="18">{{ item.raw.icon }}</v-icon>
+                    {{ item.raw.text }}
+                  </v-chip>
+                </template>
+                <template v-slot:item="{ props, item }">
+                  <v-list-item
+                    v-bind="props"
+                    :prepend-icon="item.raw.icon"
+                    :title="item.raw.text"
+                    :subtitle="item.raw.subtitle"
+                  ></v-list-item>
+                </template>
+              </v-select>
+            </v-col>
 
-          <!-- Exchange Rates Section -->
-          <v-col cols="12">
-            <v-divider class="my-4" />
-            <h4 class="text-h6 mb-3 d-flex align-center">
-              <v-icon class="me-2" color="info">mdi-swap-horizontal</v-icon>
-              أسعار الصرف
-            </h4>
-          </v-col>
+            <!-- Show Secondary Currency Toggle -->
+            <v-col cols="12" md="6">
+              <v-card variant="tonal" color="primary" class="pa-4 h-100 d-flex align-center">
+                <v-switch
+                  v-model="currencyData.showSecondaryCurrency"
+                  label="إظهار العملة الثانوية"
+                  color="primary"
+                  hide-details
+                  class="ma-0"
+                >
+                  <template v-slot:label>
+                    <div class="d-flex align-center">
+                      <v-icon size="20" class="me-2">mdi-eye</v-icon>
+                      <span class="font-weight-medium">إظهار العملة الثانوية</span>
+                    </div>
+                  </template>
+                </v-switch>
+              </v-card>
+            </v-col>
 
-          <!-- USD Exchange Rate -->
-          <v-col cols="12" md="6">
-            <v-text-field
-              v-model.number="currencyData.usdRate"
-              label="سعر صرف الدولار (USD) *"
-              :rules="[rules.required, rules.positiveNumber]"
-              variant="outlined"
-              type="number"
-              prepend-inner-icon="mdi-currency-usd"
-              suffix="IQD"
-              hint="سعر الدولار مقابل الدينار العراقي"
-              persistent-hint
-              required
-            />
-          </v-col>
-
-          <!-- IQD Exchange Rate -->
-          <v-col cols="12" md="6">
-            <v-text-field
-              v-model.number="currencyData.iqdRate"
-              label="سعر صرف الدينار (IQD) *"
-              :rules="[rules.required, rules.positiveNumber]"
-              variant="outlined"
-              type="number"
-              prepend-inner-icon="mdi-currency-ils"
-              disabled
-              hint="القيمة الافتراضية للدينار العراقي"
-              persistent-hint
-              required
-            />
-          </v-col>
-
-          <!-- Info Card -->
-          <v-col cols="12">
-            <v-card variant="tonal" color="info" class="pa-4">
-              <div class="d-flex align-center">
-                <v-icon size="large" class="me-3">mdi-information</v-icon>
-                <div>
-                  <h4 class="text-subtitle-1 font-weight-bold mb-1">معلومات مهمة</h4>
-                  <p class="text-body-2 mb-0">
-                    • العملة الافتراضية ستستخدم في جميع عمليات البيع الجديدة<br />
-                    • يمكنك تغيير أسعار الصرف في أي وقت<br />
-                    • التغييرات ستؤثر على العمليات الجديدة فقط
-                  </p>
-                </div>
+            <!-- Exchange Rates Section -->
+            <v-col cols="12">
+              <v-divider class="my-4" />
+              <div class="d-flex align-center mb-4">
+                <v-icon class="me-2" color="info" size="24">mdi-swap-horizontal</v-icon>
+                <h3 class="text-h6 font-weight-bold">أسعار الصرف</h3>
               </div>
-            </v-card>
-          </v-col>
+            </v-col>
+
+            <!-- USD Exchange Rate -->
+            <v-col 
+              cols="12" 
+              :md="currencyData.showSecondaryCurrency ? 6 : 12"
+              :class="{ 'transition-all': true }"
+            >
+              <v-text-field
+                v-model.number="currencyData.usdRate"
+                label="سعر صرف الدولار (USD) *"
+                :rules="[rules.required, rules.positiveNumber]"
+                variant="outlined"
+                density="comfortable"
+                type="number"
+                prepend-inner-icon="mdi-currency-usd"
+                suffix="IQD"
+                hint="سعر الدولار مقابل الدينار العراقي"
+                persistent-hint
+                required
+              />
+            </v-col>
+
+            <!-- IQD Exchange Rate -->
+            <v-col 
+              v-show="currencyData.showSecondaryCurrency"
+              cols="12" 
+              md="6"
+              :class="{ 'transition-all': true }"
+            >
+              <v-text-field
+                v-model.number="currencyData.iqdRate"
+                label="سعر صرف الدينار (IQD) *"
+                :rules="currencyData.showSecondaryCurrency ? [rules.required, rules.positiveNumber] : []"
+                variant="outlined"
+                density="comfortable"
+                type="number"
+                prepend-inner-icon="mdi-currency-ils"
+                disabled
+                hint="القيمة الافتراضية للدينار العراقي"
+                persistent-hint
+                :required="currencyData.showSecondaryCurrency"
+              />
+            </v-col>
+
+            <!-- Info Card -->
+            <v-col cols="12">
+              <v-card variant="tonal" color="info" class="pa-4" elevation="0">
+                <div class="d-flex align-start">
+                  <v-icon size="24" class="me-3 mt-1">mdi-information</v-icon>
+                  <div>
+                    <h4 class="text-subtitle-1 font-weight-bold mb-2">معلومات مهمة</h4>
+                    <ul class="text-body-2 mb-0 pl-4" style="list-style-type: disc;">
+                      <li>العملة الافتراضية ستستخدم في جميع عمليات البيع الجديدة</li>
+                      <li>يمكنك تغيير أسعار الصرف في أي وقت</li>
+                      <li>التغييرات ستؤثر على العمليات الجديدة فقط</li>
+                      <li v-if="!currencyData.showSecondaryCurrency" class="text-medium-emphasis">
+                        تم إخفاء العملة الثانوية - سيتم عرض العملة الافتراضية فقط
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </v-card>
+            </v-col>
         </v-row>
       </v-form>
+      </v-card-text>
     </v-card>
   </div>
 </template>
@@ -150,6 +190,7 @@ const currencyData = ref({
   defaultCurrency: 'IQD',
   usdRate: 1500,
   iqdRate: 1,
+  showSecondaryCurrency: true,
 });
 
 // Validation rules
@@ -180,6 +221,7 @@ onMounted(async () => {
         defaultCurrency: settings.defaultCurrency || 'IQD',
         usdRate: settings.usdRate || 1500,
         iqdRate: settings.iqdRate || 1,
+        showSecondaryCurrency: settings.showSecondaryCurrency !== undefined ? settings.showSecondaryCurrency : true,
       };
     }
   } catch {
@@ -191,5 +233,25 @@ onMounted(async () => {
 <style scoped>
 .currency-settings {
   width: 100%;
+}
+
+.transition-all {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Smooth transitions for showing/hiding elements */
+.v-col {
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+/* Improve card spacing */
+.v-card {
+  border-radius: 12px;
+}
+
+/* Better form field spacing */
+.v-text-field,
+.v-select {
+  margin-bottom: 8px;
 }
 </style>

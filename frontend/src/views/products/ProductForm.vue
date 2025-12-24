@@ -122,10 +122,18 @@
             <v-col cols="12" md="3">
               <v-select
                 v-model="formData.currency"
-                :items="['USD', 'IQD']"
+                :items="availableCurrencies"
                 label="العملة"
                 :rules="[rules.required]"
-              ></v-select>
+                :disabled="!settingsStore.showSecondaryCurrency"
+                :hint="!settingsStore.showSecondaryCurrency ? 'العملة الثانوية مخفية - يتم استخدام العملة الافتراضية فقط' : ''"
+                persistent-hint
+                density="comfortable"
+              >
+                <template #prepend-inner>
+                  <v-icon>mdi-currency-usd</v-icon>
+                </template>
+              </v-select>
             </v-col>
             <v-col cols="12" md="3">
               <v-text-field
@@ -225,6 +233,7 @@ import { useProductStore } from '@/stores/product';
 import { useCategoryStore } from '@/stores/category';
 import { useAuthStore } from '@/stores/auth';
 import { useNotificationStore } from '@/stores/notification';
+import { useSettingsStore } from '@/stores/settings';
 import api from '@/plugins/axios';
 
 const router = useRouter();
@@ -233,6 +242,7 @@ const productStore = useProductStore();
 const categoryStore = useCategoryStore();
 const authStore = useAuthStore();
 const notification = useNotificationStore();
+const settingsStore = useSettingsStore();
 
 const form = ref(null);
 const adminForm = ref(null);
@@ -273,6 +283,9 @@ const statusOptions = [
 
 const isEdit = computed(() => !!route.params.id);
 const isAdmin = computed(() => authStore.user?.role?.name === 'admin');
+
+// Computed property for available currencies
+const availableCurrencies = computed(() => settingsStore.availableCurrencies);
 
 const rules = {
   required: (v) => !!v || 'هذا الحقل مطلوب',
@@ -470,9 +483,9 @@ const handleCategoryKeydown = async (event) => {
     if (formData.value.categoryId !== newCategory.id) {
       formData.value.categoryId = newCategory.id;
     }
-  } catch {
+  } catch (err) {
     // Error handled by notification in store
-    console.error('Error creating category:', error);
+    console.error('Error creating category:', err);
   } finally {
     creatingCategory.value = false;
   }
@@ -502,10 +515,10 @@ const verifyAdmin = async () => {
       adminVerifyError.value = true;
       adminVerifyErrorMessage.value = 'المستخدم ليس لديه صلاحيات أدمن';
     }
-  } catch {
+  } catch (err) {
     adminVerifyError.value = true;
     adminVerifyErrorMessage.value =
-      error.response?.data?.message || 'بيانات تسجيل الدخول غير صحيحة';
+      err.response?.data?.message || 'بيانات تسجيل الدخول غير صحيحة';
   } finally {
     adminVerifyLoading.value = false;
   }
@@ -549,7 +562,35 @@ watch(
   }
 );
 
+// مراقبة تغيير showSecondaryCurrency وإعادة تعيين العملة للافتراضية عند الإخفاء
+watch(
+  () => settingsStore.showSecondaryCurrency,
+  (showSecondary) => {
+    if (!showSecondary) {
+      // إذا تم إخفاء العملة الثانوية، استخدم العملة الافتراضية فقط
+      const defaultCurrency = settingsStore.settings?.defaultCurrency || 'IQD';
+      if (formData.value.currency !== defaultCurrency) {
+        formData.value.currency = defaultCurrency;
+      }
+    }
+  }
+);
+
 onMounted(async () => {
+  // تحميل إعدادات العملة
+  try {
+    await settingsStore.fetchCurrencySettings();
+    // تعيين العملة الافتراضية إذا لم تكن موجودة
+    if (!formData.value.currency || !availableCurrencies.value.includes(formData.value.currency)) {
+      const defaultCurrency = settingsStore.settings?.defaultCurrency || 'IQD';
+      formData.value.currency = availableCurrencies.value.includes(defaultCurrency) 
+        ? defaultCurrency 
+        : availableCurrencies.value[0] || defaultCurrency;
+    }
+  } catch {
+    // استخدام القيم الافتراضية
+  }
+
   await categoryStore.fetchCategories();
   // تحديث القائمة المحلية من الـ store
   categories.value = Array.isArray(categoryStore.categories) 
@@ -561,6 +602,14 @@ onMounted(async () => {
     try {
       await productStore.fetchProduct(route.params.id);
       formData.value = { ...productStore.currentProduct };
+      
+      // التأكد من أن العملة المحددة متاحة
+      if (!availableCurrencies.value.includes(formData.value.currency)) {
+        const defaultCurrency = settingsStore.settings?.defaultCurrency || 'IQD';
+        formData.value.currency = availableCurrencies.value.includes(defaultCurrency) 
+          ? defaultCurrency 
+          : availableCurrencies.value[0] || defaultCurrency;
+      }
       
       // عند التعديل، عرض اسم التصنيف في حقل البحث
       if (formData.value.categoryId) {

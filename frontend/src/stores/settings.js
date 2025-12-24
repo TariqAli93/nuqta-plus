@@ -88,6 +88,21 @@ export const useSettingsStore = defineStore('settings', () => {
     return parts.join(', ');
   });
 
+  // Get showSecondaryCurrency setting
+  const showSecondaryCurrency = computed(() => {
+    return settings.value?.showSecondaryCurrency !== false; // Default to true
+  });
+
+  // Get available currencies based on showSecondaryCurrency setting
+  const availableCurrencies = computed(() => {
+    const defaultCurrency = settings.value?.defaultCurrency || 'IQD';
+    if (showSecondaryCurrency.value) {
+      return ['USD', 'IQD'];
+    }
+    // If secondary currency is hidden, only show default currency
+    return [defaultCurrency];
+  });
+
   // Actions
   const fetchSettings = async () => {
     isLoading.value = true;
@@ -308,6 +323,7 @@ export const useSettingsStore = defineStore('settings', () => {
         defaultCurrency: currencyData.defaultCurrency,
         usdRate: currencyData.usdRate,
         iqdRate: currencyData.iqdRate,
+        showSecondaryCurrency: currencyData.showSecondaryCurrency,
       };
       return currencyData;
     } catch (err) {
@@ -354,6 +370,8 @@ export const useSettingsStore = defineStore('settings', () => {
     // Getters
     getSettingValue,
     companyAddress,
+    showSecondaryCurrency,
+    availableCurrencies,
 
     // Actions
     fetchSettings,

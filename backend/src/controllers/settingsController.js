@@ -25,6 +25,7 @@ const currencySchema = z.object({
   defaultCurrency: z.string().optional(),
   usdRate: z.number().or(z.string()).optional(),
   iqdRate: z.number().or(z.string()).optional(),
+  showSecondaryCurrency: z.boolean().optional(),
 });
 
 export class SettingsController {
@@ -145,6 +146,9 @@ export class SettingsController {
     const data = { ...parsed.data };
     if (data.usdRate) data.usdRate = Number(data.usdRate);
     if (data.iqdRate) data.iqdRate = Number(data.iqdRate);
+    if (data.showSecondaryCurrency !== undefined) {
+      data.showSecondaryCurrency = data.showSecondaryCurrency === true || data.showSecondaryCurrency === 'true';
+    }
     
     const currencySettings = await settingsService.saveCurrencySettings(data);
     return reply.send({ success: true, data: currencySettings });

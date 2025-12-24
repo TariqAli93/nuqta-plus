@@ -294,13 +294,26 @@ export class SaleService {
       query = query.where(and(...conditions));
     }
 
-    // Get all results and do manual pagination (sql.js doesn't support offset)
-    const allResults = await query.orderBy(desc(sales.createdAt));
+    // Get total count for pagination metadata
+    // Note: We count from sales table only (no joins needed) since all filter conditions
+    // reference only the sales table, and joins would cause incorrect counts if there are
+    // multiple related rows (e.g., multiple saleItems per sale)
+    let countQuery = db
+      .select({ count: sql`count(*)` })
+      .from(sales);
 
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const results = allResults.slice(startIndex, endIndex);
-    const total = allResults.length;
+    if (conditions.length > 0) {
+      countQuery = countQuery.where(and(...conditions));
+    }
+
+    const countResult = await countQuery.get();
+    const total = Number(countResult?.count || 0);
+
+    // Get paginated results using offset and limit (better-sqlite3 supports this)
+    const results = await query
+      .orderBy(desc(sales.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit);
 
     return {
       data: results,

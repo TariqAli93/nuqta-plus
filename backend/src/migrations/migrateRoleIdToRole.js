@@ -1,5 +1,5 @@
-import { readFileSync, existsSync, writeFileSync } from 'fs';
-import initSqlJs from 'sql.js';
+import Database from 'better-sqlite3';
+import { existsSync } from 'fs';
 import config from '../config.js';
 
 /**
@@ -36,55 +36,51 @@ async function migrateRoleIdToRole(sqliteInstance = null) {
         return;
       }
 
-      const SQL = await initSqlJs();
-      const buffer = readFileSync(dbPath);
-      sqlite = new SQL.Database(buffer);
+      sqlite = new Database(dbPath);
       shouldClose = true;
     }
 
     // First, check if users table exists
-    const usersTableCheck = sqlite.exec(`
+    const usersTableCheck = sqlite.prepare(`
       SELECT name FROM sqlite_master WHERE type='table' AND name='users'
-    `);
-    if (!usersTableCheck.length || !usersTableCheck[0].values.length) {
+    `).all();
+    if (!usersTableCheck.length) {
       console.log('✓ Users table does not exist yet - migration will run when table is created');
       if (shouldClose) sqlite.close();
       return;
     }
 
     // Check if role column exists - ALWAYS ensure it exists
-    const roleCheck = sqlite.exec(`
+    const roleCheck = sqlite.prepare(`
       SELECT COUNT(*) as count FROM pragma_table_info('users') WHERE name='role'
-    `);
-    const hasRole = roleCheck.length > 0 && roleCheck[0].values.length > 0 && roleCheck[0].values[0][0] > 0;
+    `).get();
+    const hasRole = roleCheck && roleCheck.count > 0;
 
     // Add role column if it doesn't exist (CRITICAL - always do this)
     if (!hasRole) {
       console.log('→ Adding role column to users table...');
-      sqlite.run(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'cashier'`);
+      sqlite.prepare(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'cashier'`).run();
       console.log('✓ Role column added');
     } else {
       console.log('✓ Role column already exists');
     }
 
     // Now check if roleId column exists (for migration from old schema)
-    const roleIdCheck = sqlite.exec(`
+    const roleIdCheck = sqlite.prepare(`
       SELECT COUNT(*) as count FROM pragma_table_info('users') WHERE name='role_id'
-    `);
-    const hasRoleId = roleIdCheck.length > 0 && roleIdCheck[0].values.length > 0 && roleIdCheck[0].values[0][0] > 0;
+    `).get();
+    const hasRoleId = roleIdCheck && roleIdCheck.count > 0;
 
     if (!hasRoleId) {
       console.log('✓ No roleId column found - schema is already using role column');
-      // Ensure role column exists and save
+      // Ensure role column exists
       if (!hasRole) {
         console.log('→ Adding role column (no roleId migration needed)...');
-        sqlite.run(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'cashier'`);
+        sqlite.prepare(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'cashier'`).run();
         console.log('✓ Role column added');
       }
-      // Save if we opened our own instance
+      // Close if we opened our own instance
       if (shouldClose) {
-        const data = sqlite.export();
-        writeFileSync(dbPath, data);
         sqlite.close();
       }
       console.log('✅ Migration completed - role column ensured');
@@ -96,18 +92,17 @@ async function migrateRoleIdToRole(sqliteInstance = null) {
     // Try to get role mapping from roles table if it exists
     let roleMapping = {};
     try {
-      const rolesTableCheck = sqlite.exec(`
+      const rolesTableCheck = sqlite.prepare(`
         SELECT name FROM sqlite_master WHERE type='table' AND name='roles'
-      `);
+      `).all();
       
-      if (rolesTableCheck.length > 0 && rolesTableCheck[0].values.length > 0) {
+      if (rolesTableCheck.length > 0) {
         console.log('→ Found roles table, attempting to map roleId to role...');
-        const rolesData = sqlite.exec(`SELECT id, name FROM roles`);
+        const rolesData = sqlite.prepare(`SELECT id, name FROM roles`).all();
         
-        if (rolesData.length > 0 && rolesData[0].values.length > 0) {
-          for (const row of rolesData[0].values) {
-            const [id, name] = row;
-            roleMapping[id] = name;
+        if (rolesData.length > 0) {
+          for (const row of rolesData) {
+            roleMapping[row.id] = row.name;
           }
           console.log(`✓ Mapped ${Object.keys(roleMapping).length} roles`);
         }
@@ -117,16 +112,19 @@ async function migrateRoleIdToRole(sqliteInstance = null) {
     }
 
     // Get all users with roleId
-    const usersResult = sqlite.exec(`SELECT id, role_id FROM users WHERE role_id IS NOT NULL`);
+    const usersWithRoleId = sqlite.prepare(`
+      SELECT id, role_id FROM users WHERE role_id IS NOT NULL
+    `).all();
     
-    if (!usersResult.length || !usersResult[0].values.length) {
+    if (!usersWithRoleId.length) {
       console.log('→ No users with roleId found');
     } else {
-      const usersWithRoleId = usersResult[0].values.map(row => ({ id: row[0], role_id: row[1] }));
       console.log(`→ Found ${usersWithRoleId.length} users with roleId, updating...`);
 
       // Find the first user (lowest ID) - will be admin
       const firstUserId = Math.min(...usersWithRoleId.map(u => u.id));
+
+      const updateStmt = sqlite.prepare(`UPDATE users SET role = ? WHERE id = ?`);
 
       for (const user of usersWithRoleId) {
         let roleValue = 'cashier'; // default
@@ -138,34 +136,28 @@ async function migrateRoleIdToRole(sqliteInstance = null) {
           // First user becomes admin as safe default
           roleValue = 'admin';
           console.log(`  → User ${user.id} (first user) -> admin (safe default)`);
-        } else {
-          // Others become cashier
-          roleValue = 'cashier';
         }
 
         // Update user role
-        sqlite.run(`UPDATE users SET role = ? WHERE id = ?`, [roleValue, user.id]);
+        updateStmt.run(roleValue, user.id);
       }
 
       console.log(`✓ Updated ${usersWithRoleId.length} users`);
     }
 
     // Update users without roleId to default 'cashier'
-    const usersWithoutRoleId = sqlite.exec(`
+    const usersWithoutRoleId = sqlite.prepare(`
       SELECT id FROM users WHERE (role_id IS NULL OR role_id = '') AND (role IS NULL OR role = '')
-    `);
+    `).all();
 
-    if (usersWithoutRoleId.length > 0 && usersWithoutRoleId[0].values.length > 0) {
-      const count = usersWithoutRoleId[0].values.length;
-      console.log(`→ Setting default role 'cashier' for ${count} users without roleId...`);
-      sqlite.run(`UPDATE users SET role = 'cashier' WHERE (role_id IS NULL OR role_id = '') AND (role IS NULL OR role = '')`);
+    if (usersWithoutRoleId.length > 0) {
+      console.log(`→ Setting default role 'cashier' for ${usersWithoutRoleId.length} users without roleId...`);
+      sqlite.prepare(`UPDATE users SET role = 'cashier' WHERE (role_id IS NULL OR role_id = '') AND (role IS NULL OR role = '')`).run();
       console.log('✓ Default role set');
     }
 
-    // Save database if we opened our own instance
+    // Close if we opened our own instance
     if (shouldClose) {
-      const data = sqlite.export();
-      writeFileSync(dbPath, data);
       sqlite.close();
     }
 

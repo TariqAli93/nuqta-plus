@@ -1,7 +1,7 @@
-import { drizzle } from 'drizzle-orm/sql-js';
-import { migrate } from 'drizzle-orm/sql-js/migrator';
-import initSqlJs from 'sql.js';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
+import Database from 'better-sqlite3';
+import { mkdirSync } from 'fs';
 import { join, dirname as pathDirname } from 'path';
 import { fileURLToPath } from 'url';
 import config from './config.js';
@@ -12,44 +12,20 @@ const dbPath = config.database.path;
 const dbDir = pathDirname(dbPath);
 mkdirSync(dbDir, { recursive: true });
 
-// Initialize SQLite database with sql.js
-let saveDatabaseFn;
-let closeDatabaseFn;
-
+// Initialize SQLite database with better-sqlite3
 async function initDB() {
-  const SQL = await initSqlJs();
-
-  let buffer;
-  if (existsSync(dbPath)) {
-    buffer = readFileSync(dbPath);
-  }
-
-  const sqlite = new SQL.Database(buffer);
+  // Open database file (better-sqlite3 works directly on file)
+  const sqlite = new Database(dbPath);
 
   // Enable foreign keys
-  sqlite.run('PRAGMA foreign_keys = ON');
+  sqlite.pragma('foreign_keys = ON');
 
-  // Save database function
-  const saveDatabase = () => {
-    const data = sqlite.export();
-    writeFileSync(dbPath, data);
-  };
-
-  // Close database function
-  const closeDatabase = () => {
+  // Auto-close on process exit
+  process.on('exit', () => {
     sqlite.close();
-  };
-
-  // Store the close function for export
-  closeDatabaseFn = closeDatabase;
-
-  // Store the save function for export
-  saveDatabaseFn = saveDatabase;
-
-  // Auto-save on changes
-  process.on('exit', saveDatabase);
+  });
   process.on('SIGINT', () => {
-    saveDatabase();
+    sqlite.close();
     process.exit(0);
   });
 
@@ -59,11 +35,11 @@ async function initDB() {
   // Check if migrations table exists
   const checkMigrationsTable = () => {
     try {
-      const result = sqlite.exec(`
+      const result = sqlite.prepare(`
         SELECT name FROM sqlite_master 
         WHERE type='table' AND name='__drizzle_migrations'
-      `);
-      return result.length > 0 && result[0].values.length > 0;
+      `).all();
+      return result.length > 0;
     } catch {
       return false;
     }
@@ -83,11 +59,11 @@ async function initDB() {
       console.log('✅ Database migrations applied successfully');
     } else {
       // Check if all tables exist
-      const result = sqlite.exec(`
+      const result = sqlite.prepare(`
         SELECT name FROM sqlite_master 
         WHERE type='table' AND name='users'
-      `);
-      const tablesExist = result.length > 0 && result[0].values.length > 0;
+      `).all();
+      const tablesExist = result.length > 0;
 
       if (!tablesExist) {
         // Tables missing - run migrations
@@ -106,7 +82,7 @@ async function initDB() {
     }
   }
 
-  // Run roleId -> role migration if needed (on the same sqlite instance)
+  // Run roleId -> role migration if needed
   try {
     const { default: migrateRoleIdToRole } = await import('./migrations/migrateRoleIdToRole.js');
     await migrateRoleIdToRole(sqlite); // Pass the sqlite instance
@@ -115,8 +91,6 @@ async function initDB() {
     console.log('⚠️  Role migration check skipped:', error.message);
   }
 
-  // Persist DB to disk after migrations
-  saveDatabase();
   return db;
 }
 
@@ -133,10 +107,10 @@ export const getDb = async () => {
   return dbInstance;
 };
 
+// saveDatabase is no longer needed (better-sqlite3 saves automatically)
+// But we keep it for backward compatibility (it will be a no-op)
 export const saveDatabase = () => {
-  if (saveDatabaseFn) {
-    saveDatabaseFn();
-  }
+  // No-op: better-sqlite3 saves automatically
 };
 
 export default dbPromise;

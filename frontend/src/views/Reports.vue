@@ -89,7 +89,14 @@
             :items="currencyOptions"
             label="العملة"
             density="comfortable"
-          />
+            :disabled="!settingsStore.showSecondaryCurrency"
+            :hint="!settingsStore.showSecondaryCurrency ? 'العملة الثانوية مخفية - يتم استخدام العملة الافتراضية فقط' : ''"
+            persistent-hint
+          >
+            <template #prepend-inner>
+              <v-icon>mdi-currency-usd</v-icon>
+            </template>
+          </v-select>
         </v-col>
       </v-row>
       <v-btn color="primary" :loading="loading" @click="fetchReport">
@@ -263,7 +270,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useSaleStore } from '@/stores/sale';
 import { useNotificationStore } from '@/stores/notification';
 import { useSettingsStore } from '@/stores/settings';
@@ -283,13 +290,38 @@ const filters = ref({
   currency: null,
 });
 
-const currencyOptions = [
-  { title: 'دولار (USD)', value: 'USD' },
-  { title: 'دينار عراقي (IQD)', value: 'IQD' },
-];
+// Computed property for available currencies based on settings
+const currencyOptions = computed(() => {
+  const available = settingsStore.availableCurrencies || ['USD', 'IQD'];
+  return available.map(currency => ({
+    title: currency === 'USD' ? 'دولار (USD)' : 'دينار عراقي (IQD)',
+    value: currency,
+  }));
+});
 
-const defaultCurrency = computed(() => settingsStore.settings?.defaultCurrency || 'USD');
-const selectedCurrency = computed(() => filters.value.currency || defaultCurrency.value);
+const defaultCurrency = computed(() => settingsStore.settings?.defaultCurrency || 'IQD');
+const selectedCurrency = computed(() => {
+  // إذا كانت العملة المحددة غير متاحة، استخدم العملة الافتراضية
+  const available = settingsStore.availableCurrencies || ['IQD'];
+  if (filters.value.currency && available.includes(filters.value.currency)) {
+    return filters.value.currency;
+  }
+  return defaultCurrency.value;
+});
+
+// Watch for showSecondaryCurrency changes and reset currency if needed
+watch(
+  () => settingsStore.showSecondaryCurrency,
+  (showSecondary) => {
+    if (!showSecondary) {
+      // إذا تم إخفاء العملة الثانوية، استخدم العملة الافتراضية فقط
+      const defaultCurr = settingsStore.settings?.defaultCurrency || 'IQD';
+      if (filters.value.currency !== defaultCurr) {
+        filters.value.currency = defaultCurr;
+      }
+    }
+  }
+);
 
 const toYmd = (date) => {
   if (!date) return '';

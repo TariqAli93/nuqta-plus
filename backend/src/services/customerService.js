@@ -1,7 +1,7 @@
 import { getDb, saveDatabase } from '../db.js';
 import { customers, sales, saleItems } from '../models/index.js';
 import { NotFoundError, ConflictError } from '../utils/errors.js';
-import { eq, like, or, desc } from 'drizzle-orm';
+import { eq, like, or, desc, sql } from 'drizzle-orm';
 
 export class CustomerService {
   async create(customerData, userId) {
@@ -42,13 +42,21 @@ export class CustomerService {
       );
     }
 
-    // Get all results and do manual pagination (sql.js doesn't support offset)
-    const allResults = await query.orderBy(desc(customers.createdAt));
+    // Get total count for pagination metadata
+    let countQuery = db.select({ count: sql`count(*)` }).from(customers);
+    if (search) {
+      countQuery = countQuery.where(
+        or(like(customers.name, `%${search}%`), like(customers.phone, `%${search}%`))
+      );
+    }
+    const countResult = await countQuery.get();
+    const total = Number(countResult?.count || 0);
 
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const results = allResults.slice(startIndex, endIndex);
-    const total = allResults.length;
+    // Get paginated results using offset and limit (better-sqlite3 supports this)
+    const results = await query
+      .orderBy(desc(customers.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit);
 
     return {
       data: results,
@@ -69,18 +77,29 @@ export class CustomerService {
       throw new NotFoundError('Customer');
     }
 
-    // join sales table and saleItems
+    // Get all sales for this customer
     const salesData = await db
       .select()
       .from(sales)
       .where(eq(sales.customerId, id))
-      .leftJoin(saleItems, eq(sales.id, saleItems.saleId));
+      .orderBy(desc(sales.createdAt));
 
-    salesData.forEach((sale) => {
-      sale.items = saleItems.filter((item) => item.saleId === sale.id);
-    });
+    // Get sale items for each sale
+    const salesWithItems = await Promise.all(
+      salesData.map(async (sale) => {
+        const items = await db
+          .select()
+          .from(saleItems)
+          .where(eq(saleItems.saleId, sale.id));
+        
+        return {
+          ...sale,
+          items,
+        };
+      })
+    );
 
-    customer.sales = salesData;
+    customer.sales = salesWithItems;
 
     return customer;
   }
