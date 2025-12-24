@@ -6,7 +6,7 @@ export default async function productRoutes(fastify) {
   fastify.addHook('onRequest', fastify.authenticate);
 
   fastify.post('/', {
-    onRequest: [fastify.authorize('products:create')],
+    onRequest: [fastify.authenticate, fastify.authorize('products:create')],
     handler: productController.create,
     schema: {
       description: 'Create new product',
@@ -16,7 +16,7 @@ export default async function productRoutes(fastify) {
   });
 
   fastify.get('/', {
-    onRequest: [fastify.authorize('products:read')],
+    onRequest: [fastify.authenticate, fastify.authorize('products:read')],
     handler: productController.getAll,
     schema: {
       description: 'Get all products',
@@ -26,7 +26,7 @@ export default async function productRoutes(fastify) {
   });
 
   fastify.get('/low-stock', {
-    onRequest: [fastify.authorize('products:read')],
+    onRequest: [fastify.authenticate, fastify.authorize('products:read')],
     handler: productController.getLowStock,
     schema: {
       description: 'Get low stock products',
@@ -36,7 +36,7 @@ export default async function productRoutes(fastify) {
   });
 
   fastify.get('/:id', {
-    onRequest: [fastify.authorize('products:read')],
+    onRequest: [fastify.authenticate, fastify.authorize('products:read')],
     handler: productController.getById,
     schema: {
       description: 'Get product by ID',
@@ -46,7 +46,7 @@ export default async function productRoutes(fastify) {
   });
 
   fastify.put('/:id', {
-    onRequest: [fastify.authorize('products:update')],
+    onRequest: [fastify.authenticate, fastify.authorize('products:update')],
     handler: productController.update,
     schema: {
       description: 'Update product',
@@ -56,7 +56,7 @@ export default async function productRoutes(fastify) {
   });
 
   fastify.delete('/:id', {
-    onRequest: [fastify.authorize('products:delete')],
+    onRequest: [fastify.authenticate, fastify.authorize('products:delete')],
     handler: productController.delete,
     schema: {
       description: 'Delete product',

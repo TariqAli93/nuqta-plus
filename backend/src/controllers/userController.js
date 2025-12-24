@@ -8,24 +8,24 @@ const createUserSchema = z.object({
   password: z.string().min(8),
   fullName: z.string().min(2),
   phone: z.string().optional(),
-  roleId: z.number().int().positive(),
+  role: z.enum(['admin', 'cashier', 'manager', 'viewer']).default('cashier'),
 });
 
 const updateUserSchema = z.object({
-  fullName: z.string().min(2),
+  fullName: z.string().min(2).optional(),
   phone: z.string().optional(),
-  roleId: z.number().int().positive(),
-  isActive: z.boolean(),
+  role: z.enum(['admin', 'cashier', 'manager', 'viewer']).optional(),
+  isActive: z.boolean().optional(),
 });
 
 export class UserController {
   async list(request, reply) {
-    const { page = 1, limit = 10, search, roleId, isActive } = request.query || {};
+    const { page = 1, limit = 10, search, role, isActive } = request.query || {};
     const result = await userService.list({
       page: Number(page),
       limit: Number(limit),
       search,
-      roleId: roleId ? Number(roleId) : undefined,
+      role: role || undefined,
       isActive: typeof isActive !== 'undefined' ? isActive === 'true' : undefined,
     });
     return reply.send({ success: true, data: result });

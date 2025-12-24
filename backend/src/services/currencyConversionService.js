@@ -1,4 +1,4 @@
-import db from '../db.js';
+import { getDb } from '../db.js';
 import { currencySettings } from '../models/index.js';
 import { eq } from 'drizzle-orm';
 import { ValidationError, NotFoundError } from '../utils/errors.js';
@@ -18,6 +18,7 @@ export class CurrencyConversionService {
    * @throws {NotFoundError} If currency is not found in database
    */
   async getExchangeRate(fromCurrency, toCurrency) {
+    const db = await getDb();
     // Validate input
     if (!fromCurrency || !toCurrency) {
       throw new ValidationError('Both fromCurrency and toCurrency are required');
@@ -108,6 +109,7 @@ export class CurrencyConversionService {
    * @returns {Promise<Object>} Object with currency codes as keys and rates as values
    */
   async getAllRatesForCurrency(baseCurrency) {
+    const db = await getDb();
     const currencies = await db.select().from(currencySettings).all();
 
     const rates = {};
@@ -156,6 +158,7 @@ export class CurrencyConversionService {
    * الحصول على رمز العملة
    */
   async getCurrencySymbol(currencyCode) {
+    const db = await getDb();
     const [currency] = await db
       .select()
       .from(currencySettings)
@@ -184,6 +187,7 @@ export class CurrencyConversionService {
    * التحقق من صحة رمز العملة
    */
   async validateCurrency(currencyCode) {
+    const db = await getDb();
     const [currency] = await db
       .select()
       .from(currencySettings)
@@ -198,6 +202,7 @@ export class CurrencyConversionService {
    * الحصول على قائمة العملات النشطة
    */
   async getActiveCurrencies() {
+    const db = await getDb();
     const currencies = await db
       .select()
       .from(currencySettings)

@@ -15,7 +15,14 @@ export const useCategoryStore = defineStore('category', {
       const notificationStore = useNotificationStore();
       try {
         const response = await api.get('/categories', { params });
-        this.categories = response.data;
+        // معالجة التنسيقات المختلفة للاستجابة
+        if (response.data?.data && Array.isArray(response.data.data)) {
+          this.categories = response.data.data;
+        } else if (Array.isArray(response.data)) {
+          this.categories = response.data;
+        } else {
+          this.categories = [];
+        }
         return response;
       } catch (error) {
         notificationStore.error(error.response?.data?.message || 'فشل تحميل الفئات');
@@ -45,7 +52,11 @@ export const useCategoryStore = defineStore('category', {
       const notificationStore = useNotificationStore();
       try {
         const response = await api.post('/categories', categoryData);
-        this.categories.unshift(response.data);
+        // استخراج بيانات التصنيف من الاستجابة
+        const newCategory = response.data?.data || response.data;
+        if (newCategory && !this.categories.find(c => c.id === newCategory.id)) {
+          this.categories.unshift(newCategory);
+        }
         notificationStore.success('تم إضافة الفئة بنجاح');
         return response;
       } catch (error) {

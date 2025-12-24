@@ -205,7 +205,12 @@
           <tbody>
             <tr v-for="(item, index) in sale.items" :key="item.id">
               <td class="text-center font-weight-bold">{{ index + 1 }}</td>
-              <td class="text-center">{{ item.productName }}</td>
+              <td class="text-center">
+                <div class="font-weight-bold">{{ item.productName }}</div>
+                <div v-if="item.productDescription" class="text-caption text-grey mt-1">
+                  {{ item.productDescription }}
+                </div>
+              </td>
               <td class="text-center">{{ item.quantity }}</td>
               <td class="text-center">
                 {{ formatCurrency(item.unitPrice, sale.currency) }}

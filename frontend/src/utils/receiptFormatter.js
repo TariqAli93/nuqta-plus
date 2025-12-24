@@ -213,11 +213,12 @@ export const formatReceiptData = (sale, company) => {
     items: (sale.items || []).map((item, index) => ({
       index: index + 1,
       name: item.productName || 'منتج',
+      description: item.productDescription || null,
       quantity: item.quantity || 0,
       unitPrice: formatCurrency(item.unitPrice || 0, currency),
       discount: item.discount > 0 ? formatCurrency(item.discount * item.quantity, currency) : null,
       subtotal: formatCurrency(item.subtotal || 0, currency),
-      notes: item.notes || item.description || null,
+      notes: item.notes || null,
     })),
     totals: {
       itemsSubtotal: formatCurrency(itemsSubtotal + itemsDiscount, currency),
@@ -235,6 +236,7 @@ export const formatReceiptData = (sale, company) => {
     },
     installments: installmentsData,
     printDate: formatDate12Hour(new Date()),
+    theme: company.invoiceTheme || 'classic',
   };
 };
 
@@ -256,11 +258,12 @@ export const generateReceiptHtml = (receiptData) => {
   const itemsRows = items.map(item => {
     if (isSmallReceipt) {
       // Small receipt: Item & Qty & Price & Total, discount as hint under name
-      // Show notes only if paper width > 88mm
+      // Show description and notes only if paper width > 88mm
       return `
         <tr>
           <td class="item-name">
             <div>${item.name}</div>
+            ${shouldShowNotes && item.description ? `<div class="item-description">${item.description}</div>` : ''}
             ${shouldShowNotes && item.notes ? `<div class="item-note">${item.notes}</div>` : ''}
             ${item.discount ? `<div class="item-discount-hint">خصم: -${item.discount}</div>` : ''}
           </td>
@@ -270,11 +273,12 @@ export const generateReceiptHtml = (receiptData) => {
         </tr>
       `;
     } else {
-      // Large receipt: full layout with notes
+      // Large receipt: full layout with description and notes
       return `
         <tr>
           <td class="item-name">
             <div>${item.name}</div>
+            ${item.description ? `<div class="item-description">${item.description}</div>` : ''}
             ${item.notes ? `<div class="item-note">${item.notes}</div>` : ''}
             ${item.discount ? `<div class="item-discount">خصم: -${item.discount}</div>` : ''}
           </td>

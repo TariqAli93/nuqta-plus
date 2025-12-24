@@ -120,4 +120,32 @@ export class SaleController {
       message: 'Sale restored successfully',
     });
   }
+
+  async createDraft(request, reply) {
+    const sale = await saleService.createDraft(request.body, request.user.id);
+    return reply.code(201).send({
+      success: true,
+      data: sale,
+      message: 'Draft saved successfully',
+    });
+  }
+
+  async completeDraft(request, reply) {
+    const validatedData = saleSchema.parse(request.body);
+    const sale = await saleService.completeDraft(request.params.id, validatedData, request.user.id);
+    return reply.send({
+      success: true,
+      data: sale,
+      message: 'Draft completed successfully',
+    });
+  }
+
+  async deleteOldDrafts(request, reply) {
+    const deletedCount = await saleService.deleteOldDrafts();
+    return reply.send({
+      success: true,
+      data: { deletedCount },
+      message: `Deleted ${deletedCount} old draft(s)`,
+    });
+  }
 }

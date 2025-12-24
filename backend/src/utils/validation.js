@@ -20,7 +20,7 @@ export const userSchema = z.object({
     .regex(/[0-9]/, 'Password must contain at least one number'),
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
   phone: z.string().optional(),
-  roleId: z.number().int().positive('Role ID must be a positive integer'),
+  role: z.enum(['admin', 'cashier', 'manager', 'viewer']).default('cashier'),
 });
 
 export const loginSchema = z.object({
@@ -71,7 +71,7 @@ export const saleItemSchema = z.object({
 });
 
 export const saleSchema = z.object({
-  customerId: z.number().int().positive().optional(),
+  customerId: z.union([z.number().int().positive(), z.null()]).optional(),
   currency: z.enum(['USD', 'IQD'], {
     errorMap: () => ({ message: 'Currency must be USD or IQD' }),
   }),
@@ -127,19 +127,6 @@ export const installmentSchema = z.object({
   notes: z.string().optional(),
 });
 
-// Role schemas
-export const roleSchema = z.object({
-  name: z.string().min(2, 'Role name must be at least 2 characters'),
-  description: z.string().optional(),
-});
-
-// Permission schemas
-export const permissionSchema = z.object({
-  name: z.string().min(2, 'Permission name must be at least 2 characters'),
-  resource: z.string().min(2, 'Resource must be at least 2 characters'),
-  action: z.enum(['create', 'read', 'update', 'delete', 'manage']),
-  description: z.string().optional(),
-});
 
 // Query schemas
 export const paginationSchema = z.object({

@@ -6,7 +6,7 @@ export default async function saleRoutes(fastify) {
   fastify.addHook('onRequest', fastify.authenticate);
 
   fastify.post('/', {
-    onRequest: [fastify.authorize('sales:create')],
+    onRequest: [fastify.authenticate, fastify.authorize('sales:create')],
     handler: saleController.create,
     schema: {
       description: 'Create new sale',
@@ -16,7 +16,7 @@ export default async function saleRoutes(fastify) {
   });
 
   fastify.get('/', {
-    onRequest: [fastify.authorize('sales:read')],
+    onRequest: [fastify.authenticate, fastify.authorize('sales:read')],
     handler: saleController.getAll,
     schema: {
       description: 'Get all sales',
@@ -26,7 +26,7 @@ export default async function saleRoutes(fastify) {
   });
 
   fastify.get('/report', {
-    onRequest: [fastify.authorize('sales:read')],
+    onRequest: [fastify.authenticate, fastify.authorize('sales:read')],
     handler: saleController.getSalesReport,
     schema: {
       description: 'Get sales report',
@@ -44,7 +44,7 @@ export default async function saleRoutes(fastify) {
   });
 
   fastify.get('/:id', {
-    onRequest: [fastify.authorize('sales:read')],
+    onRequest: [fastify.authenticate, fastify.authorize('sales:read')],
     handler: saleController.getById,
     schema: {
       description: 'Get sale by ID',
@@ -54,7 +54,7 @@ export default async function saleRoutes(fastify) {
   });
 
   fastify.post('/:id/cancel', {
-    onRequest: [fastify.authorize('sales:delete')],
+    onRequest: [fastify.authenticate, fastify.authorize('sales:delete')],
     handler: saleController.cancel,
     schema: {
       description: 'Cancel sale',
@@ -64,7 +64,7 @@ export default async function saleRoutes(fastify) {
   });
 
   fastify.delete('/:id', {
-    onRequest: [fastify.authorize('sales:delete')],
+    onRequest: [fastify.authenticate, fastify.authorize('sales:delete')],
     handler: saleController.removeSale,
     schema: {
       description: 'Remove sale',
@@ -74,7 +74,7 @@ export default async function saleRoutes(fastify) {
   });
 
   fastify.post('/:id/restore', {
-    onRequest: [fastify.authorize('sales:update')],
+    onRequest: [fastify.authenticate, fastify.authorize('sales:update')],
     handler: saleController.restoreSale,
     schema: {
       description: 'Restore cancelled sale',
@@ -84,7 +84,7 @@ export default async function saleRoutes(fastify) {
   });
 
   fastify.post('/:saleId/payment', {
-    onRequest: [fastify.authorize('sales:update')],
+    onRequest: [fastify.authenticate, fastify.authorize('sales:update')],
     handler: saleController.addPayment,
     schema: {
       description: 'Add payment to sale',
@@ -94,7 +94,7 @@ export default async function saleRoutes(fastify) {
   });
 
   fastify.delete('/:saleId/payments/:paymentId', {
-    onRequest: [fastify.authorize('sales:update')],
+    onRequest: [fastify.authenticate, fastify.authorize('sales:update')],
     handler: saleController.removePayment,
     schema: {
       description: 'Remove payment from sale',
@@ -104,7 +104,7 @@ export default async function saleRoutes(fastify) {
   });
 
   fastify.get('/currency/exchange-rates', {
-    onRequest: [fastify.authorize('sales:read')],
+    onRequest: [fastify.authenticate, fastify.authorize('sales:read')],
     handler: saleController.getExchangeRates,
     schema: {
       description: 'Get exchange rates for all currencies',
@@ -114,10 +114,40 @@ export default async function saleRoutes(fastify) {
   });
 
   fastify.post('/currency/convert', {
-    onRequest: [fastify.authorize('sales:read')],
+    onRequest: [fastify.authenticate, fastify.authorize('sales:read')],
     handler: saleController.convertAmount,
     schema: {
       description: 'Convert amount between currencies',
+      tags: ['sales'],
+      security: [{ bearerAuth: [] }],
+    },
+  });
+
+  fastify.post('/draft', {
+    onRequest: [fastify.authenticate, fastify.authorize('sales:create')],
+    handler: saleController.createDraft,
+    schema: {
+      description: 'Create draft sale',
+      tags: ['sales'],
+      security: [{ bearerAuth: [] }],
+    },
+  });
+
+  fastify.post('/draft/:id/complete', {
+    onRequest: [fastify.authenticate, fastify.authorize('sales:create')],
+    handler: saleController.completeDraft,
+    schema: {
+      description: 'Complete draft sale',
+      tags: ['sales'],
+      security: [{ bearerAuth: [] }],
+    },
+  });
+
+  fastify.delete('/drafts/old', {
+    onRequest: [fastify.authenticate, fastify.authorize('sales:delete')],
+    handler: saleController.deleteOldDrafts,
+    schema: {
+      description: 'Delete old draft sales (older than 1 day)',
       tags: ['sales'],
       security: [{ bearerAuth: [] }],
     },

@@ -265,12 +265,13 @@ function createWindow() {
 
       // Get paper size configuration based on invoice type
       const invoiceType = companyInfo.invoiceType || 'roll-80';
+      const invoiceTheme = companyInfo.invoiceTheme || 'classic';
       const paperConfig = PAPER_SIZE_CONFIGS[invoiceType] || PAPER_SIZE_CONFIGS['roll-80'];
 
-      logger.debug('Printing receipt', { printerName, invoiceType, paperConfig, receiptDataLength: receiptData?.length });
+      logger.debug('Printing receipt', { printerName, invoiceType, invoiceTheme, paperConfig, receiptDataLength: receiptData?.length });
 
       // Generate HTML content from receipt data
-      const htmlContent = generateReceiptHtml(receiptData, invoiceType);
+      const htmlContent = generateReceiptHtml(receiptData, invoiceType, invoiceTheme);
 
       // Create a hidden window for printing
       const printWindow = new BrowserWindow({
@@ -356,12 +357,13 @@ function createWindow() {
 
       // Get paper size configuration based on invoice type
       const invoiceType = companyInfo.invoiceType || 'roll-80';
+      const invoiceTheme = companyInfo.invoiceTheme || 'classic';
       const paperConfig = PAPER_SIZE_CONFIGS[invoiceType] || PAPER_SIZE_CONFIGS['roll-80'];
 
-      logger.debug('Printing receipt', { invoiceType, paperConfig, receiptDataLength: receiptData?.length });
+      logger.debug('Previewing receipt', { invoiceType, invoiceTheme, paperConfig, receiptDataLength: receiptData?.length });
 
       // Generate HTML content from receipt data
-      const htmlContent = generateReceiptHtml(receiptData, invoiceType);
+      const htmlContent = generateReceiptHtml(receiptData, invoiceType, invoiceTheme);
 
       // Create a hidden window for printing
       const printWindow = new BrowserWindow({

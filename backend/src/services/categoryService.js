@@ -1,10 +1,11 @@
-import db, { saveDatabase } from '../db.js';
+import { getDb, saveDatabase } from '../db.js';
 import { categories } from '../models/index.js';
 import { NotFoundError, ConflictError } from '../utils/errors.js';
 import { eq, like, desc } from 'drizzle-orm';
 
 export class CategoryService {
   async create(categoryData) {
+    const db = await getDb();
     // Check for duplicate name
     const [existing] = await db
       .select()
@@ -24,6 +25,7 @@ export class CategoryService {
   }
 
   async getAll(filters = {}) {
+    const db = await getDb();
     const { page = 1, limit = 50, search } = filters;
 
     let query = db.select().from(categories);
@@ -52,6 +54,7 @@ export class CategoryService {
   }
 
   async getById(id) {
+    const db = await getDb();
     const [category] = await db.select().from(categories).where(eq(categories.id, id)).limit(1);
 
     if (!category) {
@@ -62,6 +65,7 @@ export class CategoryService {
   }
 
   async update(id, categoryData) {
+    const db = await getDb();
     const [updated] = await db
       .update(categories)
       .set(categoryData)
@@ -78,6 +82,7 @@ export class CategoryService {
   }
 
   async delete(id) {
+    const db = await getDb();
     const [deleted] = await db.delete(categories).where(eq(categories.id, id)).returning();
 
     if (!deleted) {

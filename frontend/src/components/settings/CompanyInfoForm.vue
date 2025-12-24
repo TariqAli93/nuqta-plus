@@ -50,6 +50,22 @@
             />
           </v-col>
 
+          <!-- Invoice Theme -->
+          <v-col cols="12" md="6">
+            <v-select
+              v-model="companyData.invoiceTheme"
+              label="ثيم الفاتورة"
+              :items="invoiceThemes"
+              variant="outlined"
+              density="comfortable"
+              item-title="text"
+              item-value="value"
+              prepend-inner-icon="mdi-palette"
+              hint="اختر الشكل المناسب للفاتورة"
+              persistent-hint
+            />
+          </v-col>
+
           <!-- Address Section -->
           <v-col cols="12">
             <v-divider class="my-4" />
@@ -154,6 +170,13 @@ const invoiceTypes = [
   { text: 'رول حراري 88mm', value: 'roll-88' },
 ];
 
+// Invoice themes - 3 professional templates
+const invoiceThemes = [
+  { text: 'كلاسيكي تقليدي', value: 'classic' },
+  { text: 'حديث أنيق', value: 'modern' },
+  { text: 'احترافي شركات', value: 'professional' },
+];
+
 // Reactive data
 const companyData = ref({
   name: '',
@@ -164,6 +187,7 @@ const companyData = ref({
   phone2: '',
   logoUrl: '',
   invoiceType: invoiceTypes[0].value,
+  invoiceTheme: invoiceThemes[0].value,
 });
 
 // Validation rules
@@ -200,6 +224,7 @@ const populateFromStore = () => {
     phone2: source.phone2 || '',
     logoUrl: source.logoUrl || '',
     invoiceType: source.invoiceType || invoiceTypes[0].value,
+    invoiceTheme: source.invoiceTheme || invoiceThemes[0].value,
   };
 };
 

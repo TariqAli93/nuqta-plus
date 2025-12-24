@@ -32,7 +32,7 @@ export default async function settingsRoutes(fastify) {
         },
       },
     },
-    onRequest: [fastify.authenticate],
+    onRequest: [fastify.authenticate, fastify.authorize('settings:read')],
     handler: settingsController.getAll,
   });
 
@@ -60,13 +60,14 @@ export default async function settingsRoutes(fastify) {
                 phone2: { type: 'string' },
                 logoUrl: { type: 'string' },
                 invoiceType: { type: 'string' },
+                invoiceTheme: { type: 'string' },
               },
             },
           },
         },
       },
     },
-    onRequest: [fastify.authenticate],
+    onRequest: [fastify.authenticate, fastify.authorize('settings:read')],
     handler: settingsController.getCompanyInfo,
   });
 
@@ -88,10 +89,11 @@ export default async function settingsRoutes(fastify) {
           phone2: { type: 'string' },
           logoUrl: { type: 'string' },
           invoiceType: { type: 'string' },
+          invoiceTheme: { type: 'string' },
         },
       },
     },
-    onRequest: [fastify.authenticate],
+    onRequest: [fastify.authenticate, fastify.authorize('settings:update')],
     handler: settingsController.saveCompanyInfo,
   });
 
@@ -119,7 +121,7 @@ export default async function settingsRoutes(fastify) {
         },
       },
     },
-    onRequest: [fastify.authenticate],
+    onRequest: [fastify.authenticate, fastify.authorize('settings:read')],
     handler: settingsController.getCurrencySettings,
   });
 
@@ -139,7 +141,7 @@ export default async function settingsRoutes(fastify) {
         },
       },
     },
-    onRequest: [fastify.authenticate],
+    onRequest: [fastify.authenticate, fastify.authorize('settings:update')],
     handler: settingsController.saveCurrencySettings,
   });
 
@@ -163,7 +165,7 @@ export default async function settingsRoutes(fastify) {
         },
       },
     },
-    onRequest: [fastify.authenticate],
+    onRequest: [fastify.authenticate, fastify.authorize('settings:update')],
     handler: settingsController.bulkUpsert,
   });
 
@@ -182,7 +184,7 @@ export default async function settingsRoutes(fastify) {
         required: ['key'],
       },
     },
-    onRequest: [fastify.authenticate],
+    onRequest: [fastify.authenticate, fastify.authorize('settings:read')],
     handler: settingsController.getByKey,
   });
 
@@ -203,7 +205,7 @@ export default async function settingsRoutes(fastify) {
         },
       },
     },
-    onRequest: [fastify.authenticate],
+    onRequest: [fastify.authenticate, fastify.authorize('settings:create')],
     handler: settingsController.create,
   });
 
@@ -229,7 +231,7 @@ export default async function settingsRoutes(fastify) {
         },
       },
     },
-    onRequest: [fastify.authenticate],
+    onRequest: [fastify.authenticate, fastify.authorize('settings:update')],
     handler: settingsController.update,
   });
 
@@ -248,7 +250,7 @@ export default async function settingsRoutes(fastify) {
         required: ['key'],
       },
     },
-    onRequest: [fastify.authenticate],
+    onRequest: [fastify.authenticate, fastify.authorize('settings:delete')],
     handler: settingsController.delete,
   });
 }

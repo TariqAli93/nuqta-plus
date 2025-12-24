@@ -9,7 +9,7 @@ export const useUsersStore = defineStore('users', {
     limit: 10,
     total: 0,
     loading: false,
-    filters: { search: '', roleId: null, isActive: null },
+    filters: { search: '', role: null, isActive: null },
     current: null,
   }),
   actions: {
@@ -19,7 +19,7 @@ export const useUsersStore = defineStore('users', {
       try {
         const params = { page: this.page, limit: this.limit };
         if (this.filters.search) params.search = this.filters.search;
-        if (this.filters.roleId) params.roleId = this.filters.roleId;
+        if (this.filters.role) params.role = this.filters.role;
         if (this.filters.isActive !== null) params.isActive = this.filters.isActive;
         const { data } = await api.get('/users', { params });
         this.list = data.data;

@@ -106,13 +106,32 @@ async function initDB() {
     }
   }
 
+  // Run roleId -> role migration if needed (on the same sqlite instance)
+  try {
+    const { default: migrateRoleIdToRole } = await import('./migrations/migrateRoleIdToRole.js');
+    await migrateRoleIdToRole(sqlite); // Pass the sqlite instance
+  } catch (error) {
+    // Migration is optional - log but don't fail
+    console.log('⚠️  Role migration check skipped:', error.message);
+  }
+
   // Persist DB to disk after migrations
   saveDatabase();
   return db;
 }
 
-// Export async initialized db
-export const db = await initDB();
+// Export async initialized db promise
+export const dbPromise = initDB();
+
+// Cache the resolved db instance
+let dbInstance = null;
+
+// Helper to get the db instance (resolves promise once and caches)
+export const getDb = async () => {
+  if (dbInstance) return dbInstance;
+  dbInstance = await dbPromise;
+  return dbInstance;
+};
 
 export const saveDatabase = () => {
   if (saveDatabaseFn) {
@@ -120,4 +139,4 @@ export const saveDatabase = () => {
   }
 };
 
-export default db;
+export default dbPromise;

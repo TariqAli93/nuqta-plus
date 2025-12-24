@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import api from '@/plugins/axios';
 import { useNotificationStore } from '@/stores/notification';
+import { hasPermission, getRolePermissions, matchesPermissionPattern } from '@/auth/permissionMatrix.js';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -16,12 +17,13 @@ export const useAuthStore = defineStore('auth', {
 
     /**
      * Check if user has a specific permission
+     * Uses the permission matrix to check if user's role has the permission
      * @param {string|Array} permission - Permission name or array of permissions
      * @returns {boolean} True if user has the permission
      */
     hasPermission: (state) => (permission) => {
-      const perms = state.user?.permissions;
-      if (!Array.isArray(perms)) return false;
+      const userRole = state.user?.role;
+      if (!userRole) return false;
 
       const permissionList = Array.isArray(permission) ? permission : [permission];
 
@@ -29,15 +31,21 @@ export const useAuthStore = defineStore('auth', {
         // Skip invalid permission values
         if (!perm || typeof perm !== 'string') return false;
 
-        // Direct permission match
-        if (perms.includes(perm)) return true;
+        // Check permission using matrix
+        if (hasPermission(perm, userRole)) return true;
 
-        // Check for manage:<resource> permission
+        // Check for manage:<resource> pattern
+        // If checking for 'create:sales' and user has 'manage:sales', allow
         const parts = perm.split(':');
-        if (parts.length === 2 && perms.includes(`manage:${parts[1]}`)) return true;
+        if (parts.length === 2) {
+          const managePerm = `manage:${parts[1]}`;
+          if (hasPermission(managePerm, userRole)) return true;
+        }
 
-        // Check for super admin permission (manage:*)
-        if (perms.includes('manage:*')) return true;
+        // Check for manage:* pattern (admin only, but handled by matrix)
+        if (matchesPermissionPattern(perm, 'manage:*')) {
+          return hasPermission('manage:*', userRole);
+        }
 
         return false;
       });
@@ -49,8 +57,9 @@ export const useAuthStore = defineStore('auth', {
     hasAnyPermission:
       (state) =>
       (permissions = []) => {
-        if (!Array.isArray(state.user?.permissions)) return false;
-        return permissions.some((perm) => state.user.permissions.includes(perm));
+        const userRole = state.user?.role;
+        if (!userRole) return false;
+        return permissions.some((perm) => hasPermission(perm, userRole));
       },
 
     /**
@@ -59,8 +68,9 @@ export const useAuthStore = defineStore('auth', {
     hasAllPermissions:
       (state) =>
       (permissions = []) => {
-        if (!Array.isArray(state.user?.permissions)) return false;
-        return permissions.every((perm) => state.user.permissions.includes(perm));
+        const userRole = state.user?.role;
+        if (!userRole) return false;
+        return permissions.every((perm) => hasPermission(perm, userRole));
       },
   },
 

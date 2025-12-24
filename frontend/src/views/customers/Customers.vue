@@ -3,7 +3,7 @@
     <v-card class="mb-4">
       <div class="flex justify-space-between items-center pa-3">
         <div class="text-h6 font-semibold text-primary">إدارة العملاء</div>
-        <v-btn color="primary" prepend-icon="mdi-plus" to="/customers/new"> عميل جديد </v-btn>
+        <v-btn color="primary" prepend-icon="mdi-plus" size="default" to="/customers/new"> عميل جديد </v-btn>
       </div>
     </v-card>
 
@@ -27,6 +27,7 @@
         :items="customerStore.customers"
         :loading="customerStore.loading"
         :items-per-page="10"
+        density="comfortable"
       >
         <template v-slot:[`item.actions`]="{ item }">
           <v-btn
@@ -34,15 +35,21 @@
             size="small"
             variant="text"
             :to="`/customers/${item.id}/edit`"
-          ></v-btn>
+            title="تعديل"
+          >
+            <v-icon size="20">mdi-pencil</v-icon>
+          </v-btn>
           <v-btn
+            v-if="canDeleteCustomers"
             icon="mdi-delete"
             size="small"
             variant="text"
             color="error"
-            v-can="['delete:customers']"
             @click="confirmDelete(item)"
-          ></v-btn>
+            title="حذف"
+          >
+            <v-icon size="20">mdi-delete</v-icon>
+          </v-btn>
         </template>
       </v-data-table>
     </v-card>
@@ -55,11 +62,11 @@
         <v-divider></v-divider>
 
         <v-card-actions>
-          <v-btn color="error" variant="elevated" @click="handleDelete" :loading="deleting"
+          <v-btn color="error" variant="elevated" size="default" @click="handleDelete" :loading="deleting"
             >حذف</v-btn
           >
           <v-spacer />
-          <v-btn @click="deleteDialog = false">إلغاء</v-btn>
+          <v-btn variant="outlined" size="default" @click="deleteDialog = false">إلغاء</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -67,10 +74,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useCustomerStore } from '@/stores/customer';
+import { useAuthStore } from '@/stores/auth';
+import * as uiAccess from '@/auth/uiAccess.js';
 
 const customerStore = useCustomerStore();
+const authStore = useAuthStore();
+
+const userRole = computed(() => authStore.user?.role);
+const canDeleteCustomers = computed(() => userRole.value ? uiAccess.canDeleteCustomers(userRole.value) : false);
 
 const search = ref('');
 const deleteDialog = ref(false);

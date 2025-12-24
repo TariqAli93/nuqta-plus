@@ -18,6 +18,7 @@ const companySchema = z.object({
   phone2: z.string().optional(),
   logoUrl: z.string().optional(),
   invoiceType: z.string().optional(),
+  invoiceTheme: z.string().optional(),
 });
 
 const currencySchema = z.object({

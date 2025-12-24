@@ -2,52 +2,18 @@ import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 
 // Users Table
+// Simplified RBAC: role is stored as text enum ('admin', 'cashier', 'manager', 'viewer')
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   username: text('username').notNull().unique(),
   password: text('password').notNull(),
   fullName: text('full_name').notNull(),
   phone: text('phone'),
-  roleId: integer('role_id').references(() => roles.id),
+  role: text('role').notNull().default('cashier'), // 'admin', 'cashier', 'manager', 'viewer'
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
   lastLoginAt: text('last_login_at'),
   createdAt: text('created_at').default(sql`(datetime('now','localtime'))`),
   updatedAt: text('updated_at').default(sql`(datetime('now','localtime'))`),
-});
-
-// Roles Table
-export const roles = sqliteTable('roles', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  name: text('name').notNull().unique(),
-  description: text('description'),
-  createdAt: text('created_at').default(sql`(datetime('now','localtime'))`),
-  updatedAt: text('updated_at').default(sql`(datetime('now','localtime'))`),
-  createdBy: integer('created_by').references(() => users.id),
-});
-
-// Permissions Table
-export const permissions = sqliteTable('permissions', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  name: text('name').notNull().unique(),
-  resource: text('resource').notNull(),
-  action: text('action').notNull(),
-  description: text('description'),
-  createdAt: text('created_at').default(sql`(datetime('now','localtime'))`),
-  updatedAt: text('updated_at').default(sql`(datetime('now','localtime'))`),
-  createdBy: integer('created_by').references(() => users.id),
-});
-
-// Role Permissions Junction Table
-export const rolePermissions = sqliteTable('role_permissions', {
-  roleId: integer('role_id')
-    .notNull()
-    .references(() => roles.id, { onDelete: 'cascade' }),
-  permissionId: integer('permission_id')
-    .notNull()
-    .references(() => permissions.id, { onDelete: 'cascade' }),
-  createdAt: text('created_at').default(sql`(datetime('now','localtime'))`),
-  updatedAt: text('updated_at').default(sql`(datetime('now','localtime'))`),
-  createdBy: integer('created_by').references(() => users.id),
 });
 
 // Customers Table
@@ -183,30 +149,6 @@ export const currencySettings = sqliteTable('currency_settings', {
   updatedAt: text('updated_at').default(sql`(datetime('now','localtime'))`),
 });
 
-// Inventory Transactions Table
-export const inventoryTransactions = sqliteTable('inventory_transactions', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  productId: integer('product_id').references(() => products.id),
-  type: text('type').notNull(), // 'in', 'out', 'adjustment'
-  quantity: integer('quantity').notNull(),
-  reference: text('reference'), // invoice number, order number, etc.
-  notes: text('notes'),
-  createdBy: integer('created_by').references(() => users.id),
-  createdAt: text('created_at').default(sql`(datetime('now','localtime'))`),
-});
-
-// Activity Logs Table
-export const activityLogs = sqliteTable('activity_logs', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  userId: integer('user_id').references(() => users.id),
-  action: text('action').notNull(),
-  resource: text('resource').notNull(),
-  resourceId: integer('resource_id'),
-  details: text('details'),
-  ipAddress: text('ip_address'),
-  createdAt: text('created_at').default(sql`(datetime('now','localtime'))`),
-});
-
 // Settings Table
 export const settings = sqliteTable('settings', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -215,14 +157,4 @@ export const settings = sqliteTable('settings', {
   description: text('description'),
   updatedAt: text('updated_at').default(sql`(datetime('now','localtime'))`),
   updatedBy: integer('updated_by').references(() => users.id),
-});
-
-export const licenses = sqliteTable('licenses', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  licenseKey: text('license_key').notNull().unique(),
-  issuedTo: text('issued_to'),
-  isActive: integer('is_active', { mode: 'boolean' }).default(false),
-  issuedAt: text('issued_at').default(sql`(datetime('now','localtime'))`),
-  expiresAt: text('expires_at').notNull(),
-  createdBy: integer('created_by').references(() => users.id),
 });

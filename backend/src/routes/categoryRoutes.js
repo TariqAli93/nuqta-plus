@@ -6,7 +6,7 @@ export default async function categoryRoutes(fastify) {
   fastify.addHook('onRequest', fastify.authenticate);
 
   fastify.post('/', {
-    onRequest: [fastify.authorize('categories:create')],
+    onRequest: [fastify.authenticate, fastify.authorize('categories:create')],
     handler: categoryController.create,
     schema: {
       description: 'Create new category',
@@ -16,7 +16,7 @@ export default async function categoryRoutes(fastify) {
   });
 
   fastify.get('/', {
-    onRequest: [fastify.authorize('categories:read')],
+    onRequest: [fastify.authenticate, fastify.authorize('categories:read')],
     handler: categoryController.getAll,
     schema: {
       description: 'Get all categories',
@@ -26,7 +26,7 @@ export default async function categoryRoutes(fastify) {
   });
 
   fastify.get('/:id', {
-    onRequest: [fastify.authorize('categories:read')],
+    onRequest: [fastify.authenticate, fastify.authorize('categories:read')],
     handler: categoryController.getById,
     schema: {
       description: 'Get category by ID',
@@ -36,7 +36,7 @@ export default async function categoryRoutes(fastify) {
   });
 
   fastify.put('/:id', {
-    onRequest: [fastify.authorize('categories:update')],
+    onRequest: [fastify.authenticate, fastify.authorize('categories:update')],
     handler: categoryController.update,
     schema: {
       description: 'Update category',
@@ -46,7 +46,7 @@ export default async function categoryRoutes(fastify) {
   });
 
   fastify.delete('/:id', {
-    onRequest: [fastify.authorize('categories:delete')],
+    onRequest: [fastify.authenticate, fastify.authorize('categories:delete')],
     handler: categoryController.delete,
     schema: {
       description: 'Delete category',

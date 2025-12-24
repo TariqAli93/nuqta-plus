@@ -20,10 +20,7 @@ import customerRoutes from './routes/customerRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import saleRoutes from './routes/saleRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
-import rbacRoutes from './routes/rbacRoutes.js';
 import userRoutes from './routes/userRoutes.js';
-import roleRoutes from './routes/roleRoutes.js';
-import permissionRoutes from './routes/permissionRoutes.js';
 import currencyRoutes from './routes/currencyRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
 import alertRoutes from './routes/alertRoutes.js';
@@ -88,10 +85,7 @@ const start = async () => {
     await fastify.register(productRoutes, { prefix: '/api/products' });
     await fastify.register(saleRoutes, { prefix: '/api/sales' });
     await fastify.register(categoryRoutes, { prefix: '/api/categories' });
-    await fastify.register(rbacRoutes, { prefix: '/api/rbac' });
     await fastify.register(userRoutes, { prefix: '/api/users' });
-    await fastify.register(roleRoutes, { prefix: '/api/roles' });
-    await fastify.register(permissionRoutes, { prefix: '/api/permissions' });
     await fastify.register(currencyRoutes, { prefix: '/api/currencies' });
     await fastify.register(settingsRoutes, { prefix: '/api/settings' });
     await fastify.register(alertRoutes, { prefix: '/api/alerts' });
@@ -99,6 +93,18 @@ const start = async () => {
     if (!isProduction) {
       const { default: debugRoutes } = await import('./routes/debugRoutes.js');
       await fastify.register(debugRoutes, { prefix: '/debug' });
+    }
+
+    // Delete old draft sales on startup
+    try {
+      const { SaleService } = await import('./services/saleService.js');
+      const saleService = new SaleService();
+      const deletedCount = await saleService.deleteOldDrafts();
+      if (deletedCount > 0) {
+        fastify.log.info(`Deleted ${deletedCount} old draft sale(s) on startup`);
+      }
+    } catch (error) {
+      fastify.log.warn('Failed to delete old drafts on startup:', error.message);
     }
 
     // Start listening

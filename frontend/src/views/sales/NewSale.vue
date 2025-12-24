@@ -3,8 +3,8 @@
     <v-card class="mb-4">
       <div class="flex items-center justify-space-between pa-3">
         <div class="font-semibold text-h6 text-primary">بطاقة بيع جديدة</div>
-        <v-btn color="primary" @click="router.back()">
-          <v-icon>mdi-arrow-left</v-icon>
+        <v-btn color="primary" size="default" variant="text" @click="handleCancel">
+          <v-icon size="24">mdi-arrow-left</v-icon>
         </v-btn>
       </div>
     </v-card>
@@ -14,7 +14,11 @@
           <!-- 🧍 العميل والعملة -->
           <v-row>
             <v-col cols="12" md="6">
-              <CustomerSelector v-model="sale.customerId" />
+              <CustomerSelector v-model="sale.customerId" :required="false" />
+              <div class="text-caption text-grey mt-1">
+                <v-icon size="16" class="ml-1">mdi-information</v-icon>
+                اختياري - يمكنك إتمام البيع بدون تحديد عميل
+              </div>
             </v-col>
 
             <v-col cols="12" md="6">
@@ -23,6 +27,7 @@
                 :items="['USD', 'IQD']"
                 label="العملة"
                 :rules="[rules.required]"
+                density="comfortable"
               ></v-select>
             </v-col>
           </v-row>
@@ -39,6 +44,7 @@
             @keyup.enter="handleBarcodeScan"
             autofocus
             class="mb-4"
+            density="comfortable"
           />
 
           <v-row v-for="(item, index) in sale.items" :key="index" class="mb-3 align-center">
@@ -51,6 +57,7 @@
                 label="المنتج"
                 :rules="[rules.required]"
                 @update:model-value="updateProductDetails(item)"
+                density="comfortable"
               />
             </v-col>
             <v-col cols="12" md="3">
@@ -60,6 +67,7 @@
                 type="number"
                 min="1"
                 :rules="[rules.required]"
+                density="comfortable"
               />
             </v-col>
             <v-col cols="12" md="3">
@@ -68,6 +76,7 @@
                 :suffix="sale.currency"
                 label="سعر الوحدة"
                 readonly
+                density="comfortable"
               />
             </v-col>
             <v-col cols="12" md="3">
@@ -78,6 +87,7 @@
                 label="الخصم على الوحدة"
                 hint="اختياري"
                 persistent-hint
+                density="comfortable"
               />
             </v-col>
             <v-col cols="12" md="12">
@@ -88,14 +98,15 @@
                 readonly
                 hint="بعد الخصم"
                 persistent-hint
+                density="comfortable"
               />
             </v-col>
             <v-col cols="12" md="1" class="d-flex align-center">
-              <v-btn icon="mdi-delete" color="error" variant="text" @click="removeItem(index)" />
+              <v-btn icon="mdi-delete" size="small" color="error" variant="text" @click="removeItem(index)" />
             </v-col>
           </v-row>
 
-          <v-btn color="primary" prepend-icon="mdi-plus" @click="addItem" class="mb-4">
+          <v-btn color="primary" prepend-icon="mdi-plus" size="default" @click="addItem" class="mb-4">
             إضافة منتج
           </v-btn>
 
@@ -110,13 +121,25 @@
                 item-title="label"
                 item-value="value"
                 label="نوع الفاتورة"
+                density="comfortable"
               />
+              <v-alert
+                v-if="sale.paymentType === 'installment' && !sale.customerId"
+                type="warning"
+                variant="tonal"
+                density="compact"
+                class="mt-2"
+              >
+                <v-icon size="16" class="ml-1">mdi-alert</v-icon>
+                يجب تحديد عميل للبيع بالتقسيط
+              </v-alert>
             </v-col>
             <v-col cols="12" md="4">
               <v-text-field
                 :model-value="formatNumber(sale.discount)"
                 @input="(e) => handleSaleDiscountInput(e.target.value)"
                 label="الخصم"
+                density="comfortable"
               />
             </v-col>
             <v-col cols="12" md="4">
@@ -126,6 +149,7 @@
                 label="المبلغ المدفوع"
                 :hint="sale.paymentType === 'installment' ? 'الدفعة الأولى' : 'المبلغ الكامل'"
                 persistent-hint
+                density="comfortable"
               />
             </v-col>
           </v-row>
@@ -142,6 +166,7 @@
                     label="عدد الأقساط"
                     type="number"
                     min="1"
+                    density="comfortable"
                   />
                 </v-col>
 
@@ -155,6 +180,7 @@
                     max="100"
                     hint="أدخل النسبة المئوية"
                     persistent-hint
+                    density="comfortable"
                   />
                 </v-col>
 
@@ -166,6 +192,7 @@
                     label="مبلغ الفائدة"
                     hint="أدخل المبلغ مباشرة"
                     persistent-hint
+                    density="comfortable"
                   />
                 </v-col>
               </v-row>
@@ -255,12 +282,12 @@
           </v-card>
 
           <!-- 📝 ملاحظات -->
-          <v-textarea v-model="sale.notes" label="ملاحظات" rows="3" auto-grow class="mb-4" />
+          <v-textarea v-model="sale.notes" label="ملاحظات" rows="3" auto-grow class="mb-4" density="comfortable" />
 
           <!-- أزرار -->
           <div class="gap-2 d-flex">
-            <v-btn color="primary" :loading="loading" @click="submitSale"> حفظ البيع </v-btn>
-            <v-btn variant="outlined" @click="$router.back()">إلغاء</v-btn>
+            <v-btn color="primary" size="default" :loading="loading" @click="submitSale"> حفظ البيع </v-btn>
+            <v-btn variant="outlined" size="default" @click="handleCancel">إلغاء</v-btn>
           </div>
         </v-form>
       </v-card-text>
@@ -270,11 +297,12 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router';
 import { useSaleStore, useProductStore, useNotificationStore, useSettingsStore } from '@/stores';
 import CustomerSelector from '@/components/CustomerSelector.vue';
 
 const router = useRouter();
+const route = useRoute();
 const saleStore = useSaleStore();
 const productStore = useProductStore();
 const settingsStore = useSettingsStore();
@@ -625,6 +653,11 @@ const handleBarcodeScan = () => {
 
 /* 💾 حفظ البيع */
 const submitSale = async () => {
+  // التحقق من أن العميل مطلوب فقط للبيع بالتقسيط
+  if (sale.value.paymentType === 'installment' && !sale.value.customerId) {
+    notify.error('يجب تحديد عميل للبيع بالتقسيط');
+    return;
+  }
   const { valid } = await form.value.validate();
   if (!valid) return notify.error('يرجى تعبئة جميع الحقول');
 
@@ -647,16 +680,108 @@ const submitSale = async () => {
 
   loading.value = true;
   try {
-    const saleResponse = await saleStore.createSale(sale.value);
+    let saleResponse;
+    
+    // إذا كانت هناك مسودة، أكملها بدلاً من إنشاء بيع جديد
+    if (currentDraftId.value) {
+      saleResponse = await saleStore.completeDraft(currentDraftId.value, sale.value);
+    } else {
+      saleResponse = await saleStore.createSale(sale.value);
+    }
+    
+    saleCompleted.value = true; // تم حفظ البيع بنجاح
     notify.success('تم حفظ البيع بنجاح ✅');
 
-    router.push({ name: 'SaleDetails', params: { id: saleResponse.data.id } });
+    const saleId = saleResponse.data?.data?.id || saleResponse.data?.id;
+    router.push({ name: 'SaleDetails', params: { id: saleId } });
   } catch (error) {
     notify.error('حدث خطأ أثناء حفظ البيع. يرجى المحاولة مرة أخرى.');
+    console.error(error);
   } finally {
     loading.value = false;
   }
 };
+
+// متغيرات لتتبع حالة العملية
+const saleCompleted = ref(false);
+const isCancelled = ref(false);
+const draftSaved = ref(false);
+const currentDraftId = ref(null);
+
+// دالة للإلغاء مع حذف المسودة إن وجدت
+const handleCancel = async () => {
+  isCancelled.value = true;
+  
+  // إذا كانت هناك مسودة محفوظة، احذفها
+  if (currentDraftId.value) {
+    try {
+      await saleStore.removeSale(currentDraftId.value);
+    } catch (error) {
+      console.error('Failed to delete draft:', error);
+    }
+  }
+  
+  router.back();
+};
+
+// متغير لمنع التكرار
+const isSavingDraft = ref(false);
+
+// حفظ المسودة عند الخروج من الصفحة
+const saveDraft = async () => {
+  // لا نحفظ المسودة إذا:
+  // 1. تم حفظ البيع بنجاح
+  // 2. تم الضغط على زر الإلغاء
+  // 3. لا توجد منتجات في القائمة
+  // 4. تم حفظ المسودة بالفعل
+  // 5. جاري حفظ المسودة حالياً
+  if (saleCompleted.value || isCancelled.value || !sale.value.items || sale.value.items.length === 0 || draftSaved.value || isSavingDraft.value) {
+    return;
+  }
+
+  isSavingDraft.value = true;
+  try {
+    // التأكد من إرسال customerId إذا كان موجوداً
+    const draftData = {
+      ...sale.value,
+      customerId: sale.value.customerId || null,
+    };
+    
+    const response = await saleStore.createDraft(draftData);
+    if (response?.data?.data?.id) {
+      currentDraftId.value = response.data.data.id;
+      draftSaved.value = true;
+    }
+    // لا نعرض إشعار للمستخدم عند حفظ المسودة تلقائياً
+  } catch (error) {
+    // فشل حفظ المسودة - لا نعرض خطأ للمستخدم
+    console.error('Failed to save draft:', error);
+  } finally {
+    isSavingDraft.value = false;
+  }
+};
+
+// حفظ المسودة قبل مغادرة الصفحة (مرة واحدة فقط)
+onBeforeRouteLeave(async (to, from, next) => {
+  // إذا كان الانتقال إلى صفحة أخرى (ليس إلغاء)، احفظ المسودة
+  if (!saleCompleted.value && !isCancelled.value && !draftSaved.value && !isSavingDraft.value) {
+    await saveDraft();
+  }
+  next();
+});
+
+// حفظ المسودة عند إغلاق/إعادة تحميل الصفحة (فقط إذا لم يتم الانتقال)
+// نستخدم window.addEventListener بدلاً من onBeforeUnmount لتجنب التكرار
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    if (!saleCompleted.value && !isCancelled.value && !draftSaved.value && !isSavingDraft.value) {
+      // حفظ متزامن (لا يمكن استخدام async في beforeunload)
+      saveDraft().catch(() => {
+        // تجاهل الأخطاء في beforeunload
+      });
+    }
+  });
+}
 
 /* ⚙️ تحميل البيانات */
 onMounted(async () => {
@@ -671,8 +796,54 @@ onMounted(async () => {
       currencySettings.value = settings;
       sale.value.currency = settings.defaultCurrency || 'IQD';
     }
-  } catch (error) {
+  } catch {
     // استخدام القيم الافتراضية
+  }
+
+  // تحميل بيانات المسودة إذا كان هناك draftId في query
+  const draftId = route.query.draftId;
+  if (draftId) {
+    try {
+      loading.value = true;
+      const draftResponse = await saleStore.fetchSale(Number(draftId));
+      const draftData = draftResponse.data?.data || draftResponse.data;
+      
+      if (draftData && draftData.status === 'draft') {
+        currentDraftId.value = draftData.id;
+        draftSaved.value = true;
+        
+        // ملء النموذج ببيانات المسودة
+        sale.value.customerId = draftData.customerId || null;
+        sale.value.currency = draftData.currency || 'IQD';
+        sale.value.paymentType = draftData.paymentType || 'cash';
+        sale.value.discount = draftData.discount || 0;
+        sale.value.tax = draftData.tax || 0;
+        sale.value.notes = draftData.notes || '';
+        
+        // تحميل عناصر المسودة
+        if (draftData.items && draftData.items.length > 0) {
+          sale.value.items = draftData.items.map(item => {
+            const product = products.value.find(p => p.id === item.productId);
+            return {
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              discount: item.discount || 0,
+              unitPriceOriginal: product?.sellingPrice || item.unitPrice,
+              originalCurrency: product?.currency || sale.value.currency,
+              availableStock: product?.stock || 0,
+            };
+          });
+        }
+        
+        notify.info('تم تحميل المسودة');
+      }
+    } catch (error) {
+      notify.error('فشل تحميل المسودة');
+      console.error('Failed to load draft:', error);
+    } finally {
+      loading.value = false;
+    }
   }
 });
 

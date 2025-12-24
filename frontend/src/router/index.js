@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import * as uiAccess from '@/auth/uiAccess.js';
 
 // Layouts
 import MainLayout from '@/layouts/MainLayout.vue';
@@ -20,8 +21,6 @@ import Reports from '@/views/Reports.vue';
 import Settings from '@/views/Settings.vue';
 import Notifications from '@/views/Notifications.vue';
 import Users from '@/views/users/Users.vue';
-import Roles from '@/views/roles/Roles.vue';
-import Permissions from '@/views/permissions/Permissions.vue';
 import Forbidden from '@/views/errors/Forbidden.vue'; // 👈 صفحة 403
 import Profile from '@/views/Profile.vue';
 import About from '@/views/About.vue';
@@ -44,82 +43,69 @@ const routes = [
     component: MainLayout,
     meta: { requiresAuth: true },
     children: [
-      { path: '', name: 'Dashboard', component: Dashboard, meta: { permission: 'view:dashboard' } },
+      { path: '', name: 'Dashboard', component: Dashboard },
       {
         path: 'customers',
         name: 'Customers',
         component: Customers,
-        meta: { permission: 'view:customers' },
       },
       {
         path: 'customers/new',
         name: 'NewCustomer',
         component: CustomerForm,
-        meta: { permission: ['create:customers', 'manage:customers'] },
+        meta: { requiresWrite: true },
       },
       {
         path: 'customers/:id/edit',
         name: 'EditCustomer',
         component: CustomerForm,
-        meta: { permission: ['update:customers', 'manage:customers'] },
+        meta: { requiresWrite: true },
       },
       {
         path: 'products',
         name: 'Products',
         component: Products,
-        meta: { permission: 'view:products' },
       },
       {
         path: 'products/new',
         name: 'NewProduct',
         component: ProductForm,
-        meta: { permission: ['create:products', 'manage:products'] },
+        meta: { requiresManageProducts: true },
       },
       {
         path: 'products/:id/edit',
         name: 'EditProduct',
         component: ProductForm,
-        meta: { permission: ['update:products', 'manage:products'] },
+        meta: { requiresManageProducts: true },
       },
       {
         path: 'categories',
         name: 'Categories',
         component: Categories,
-        meta: { permission: 'view:categories' },
       },
-      { path: 'sales', name: 'Sales', component: Sales, meta: { permission: 'view:sales' } },
+      { path: 'sales', name: 'Sales', component: Sales },
       {
         path: 'sales/new',
         name: 'NewSale',
         component: NewSale,
-        meta: { permission: ['create:sales', 'manage:sales'] },
+        meta: { requiresCreateSales: true },
       },
       {
         path: 'sales/:id',
         name: 'SaleDetails',
         component: SaleDetails,
-        meta: { permission: 'view:sales' },
       },
       {
         path: 'reports',
         name: 'Reports',
         component: Reports,
-        meta: { permission: 'view:reports' },
       },
       {
         path: 'notifications',
         name: 'Notifications',
         component: Notifications,
-        meta: { permission: 'view:sales' }, // Using sales permission for alerts
       },
-      { path: 'users', name: 'Users', component: Users, meta: { permission: 'view:users' } },
-      { path: 'roles', name: 'Roles', component: Roles, meta: { permission: 'view:roles' } },
-      {
-        path: 'permissions',
-        name: 'Permissions',
-        component: Permissions,
-        meta: { permission: 'view:permissions' },
-      },
+      { path: 'users', name: 'Users', component: Users, meta: { requiresViewUsers: true } },
       { path: 'profile', name: 'Profile', component: Profile }, // 👈 صفحة الملف الشخصي
       { path: 'settings', name: 'Settings', component: Settings },
       { path: 'about', name: 'About', component: About }, // 👈 صفحة حول البرنامج
@@ -136,8 +122,8 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
-  // ✅ تحقق من تحميل المستخدم والصلاحيات بعد تسجيل الدخول
-  if (authStore.isAuthenticated && !authStore.user?.permissions.length) {
+  // ✅ تحقق من تحميل المستخدم بعد تسجيل الدخول
+  if (authStore.isAuthenticated && !authStore.user) {
     try {
       await authStore.getProfile();
     } catch (e) {
@@ -150,12 +136,20 @@ router.beforeEach(async (to, from, next) => {
     return next({ name: 'Login' });
   }
 
-  // 2️⃣ التحقق من الصلاحيات
-  if (to.meta.permission) {
-    const required = Array.isArray(to.meta.permission) ? to.meta.permission : [to.meta.permission];
-    const hasPermission = authStore.hasPermission(required);
-
-    if (!hasPermission) {
+  // 2️⃣ التحقق من الصلاحيات بناءً على الدور (role-based)
+  const userRole = authStore.user?.role;
+  if (userRole) {
+    // Check route-specific access requirements
+    if (to.meta.requiresViewUsers && !uiAccess.canViewUsers(userRole)) {
+      return next({ name: 'Forbidden' });
+    }
+    if (to.meta.requiresManageProducts && !uiAccess.canManageProducts(userRole)) {
+      return next({ name: 'Forbidden' });
+    }
+    if (to.meta.requiresCreateSales && !uiAccess.canCreateSales(userRole)) {
+      return next({ name: 'Forbidden' });
+    }
+    if (to.meta.requiresWrite && !uiAccess.canWrite(userRole)) {
       return next({ name: 'Forbidden' });
     }
   }

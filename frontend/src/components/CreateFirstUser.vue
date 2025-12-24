@@ -282,7 +282,6 @@ const handleCreateUser = async () => {
       username: username.value,
       password: password.value,
       fullName: fullName.value,
-      roleId: 1,
       phone: phone.value,
     });
     // حفظ التوكن مؤقتاً لاستخدامه في الخطوة التالية

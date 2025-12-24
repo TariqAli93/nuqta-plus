@@ -157,6 +157,13 @@ export const getReceiptStyles = (isThermal, paperWidth) => {
       margin-top: 2px;
     }
     
+    .item-description {
+      font-size: ${isThermal ? '8px' : '10px'};
+      color: #555;
+      margin-top: 2px;
+      font-style: normal;
+    }
+    
     .item-note {
       font-size: ${isThermal ? '8px' : '10px'};
       color: #666;
@@ -319,6 +326,333 @@ export const getReceiptStyles = (isThermal, paperWidth) => {
 };
 
 /**
+ * Get receipt styles based on theme
+ * @param {boolean} isThermal - Whether it's a thermal printer
+ * @param {string} paperWidth - Paper width (e.g., '80mm', '210mm')
+ * @param {string} theme - Theme name ('classic', 'modern', 'minimal', 'professional', 'colorful')
+ * @returns {string} CSS styles
+ */
+export const getReceiptStylesByTheme = (isThermal, paperWidth, theme = 'classic') => {
+  const baseStyles = getReceiptStyles(isThermal, paperWidth);
+  
+  // Calculate spacing based on paper width (58mm, 80mm, 88mm, A5, A4)
+  const paperWidthNum = parseInt(paperWidth) || 80;
+  let headerPadding, headerMargin, dividerMargin, titlePadding, metaPadding, itemPadding, totalsPadding, paymentPadding, titleFontSize, nameFontSize, metaFontSize;
+  
+  if (paperWidthNum <= 58) {
+    // 58mm - Very compact
+    headerPadding = '4px';
+    headerMargin = '4px';
+    dividerMargin = '3px 0';
+    titlePadding = '2px';
+    metaPadding = '3px';
+    itemPadding = '3px 2px';
+    totalsPadding = '4px';
+    paymentPadding = '4px';
+    titleFontSize = '10px';
+    nameFontSize = '12px';
+    metaFontSize = '8px';
+  } else if (paperWidthNum <= 80) {
+    // 80mm - Compact
+    headerPadding = '6px';
+    headerMargin = '6px';
+    dividerMargin = '4px 0';
+    titlePadding = '3px';
+    metaPadding = '4px';
+    itemPadding = '4px 3px';
+    totalsPadding = '6px';
+    paymentPadding = '6px';
+    titleFontSize = '11px';
+    nameFontSize = '13px';
+    metaFontSize = '9px';
+  } else if (paperWidthNum <= 88) {
+    // 88mm - Medium
+    headerPadding = '8px';
+    headerMargin = '8px';
+    dividerMargin = '5px 0';
+    titlePadding = '4px';
+    metaPadding = '5px';
+    itemPadding = '5px 4px';
+    totalsPadding = '8px';
+    paymentPadding = '8px';
+    titleFontSize = '12px';
+    nameFontSize = '14px';
+    metaFontSize = '9px';
+  } else if (paperWidthNum <= 148) {
+    // A5 - Medium-Large
+    headerPadding = '10px';
+    headerMargin = '10px';
+    dividerMargin = '6px 0';
+    titlePadding = '5px';
+    metaPadding = '6px';
+    itemPadding = '6px 5px';
+    totalsPadding = '10px';
+    paymentPadding = '10px';
+    titleFontSize = '14px';
+    nameFontSize = '16px';
+    metaFontSize = '10px';
+  } else {
+    // A4 - Large
+    headerPadding = '12px';
+    headerMargin = '12px';
+    dividerMargin = '8px 0';
+    titlePadding = '6px';
+    metaPadding = '8px';
+    itemPadding = '8px 6px';
+    totalsPadding = '12px';
+    paymentPadding = '12px';
+    titleFontSize = '16px';
+    nameFontSize = '18px';
+    metaFontSize = '11px';
+  }
+  
+  // Theme-specific overrides - 3 Professional Templates (No shadows, muted colors, optimized spacing)
+  const themeStyles = {
+    classic: `
+      /* Classic Traditional Theme - Clean and Professional */
+      .receipt-header {
+        background: #f8f9fa;
+        padding: ${headerPadding};
+        border: 1px solid #dee2e6;
+        margin-bottom: ${headerMargin};
+      }
+      .company-name {
+        font-weight: 700;
+        color: #212529;
+        font-size: ${nameFontSize};
+      }
+      .company-info {
+        color: #495057;
+        font-size: ${metaFontSize};
+      }
+      .divider {
+        border-top: 1px solid #495057;
+        border-bottom: 1px solid #dee2e6;
+        margin: ${dividerMargin};
+      }
+      .divider-thick {
+        border-top: 2px solid #495057;
+      }
+      .invoice-title {
+        font-weight: 700;
+        color: #212529;
+        border-bottom: 2px solid #495057;
+        padding-bottom: ${titlePadding};
+        font-size: ${titleFontSize};
+      }
+      .receipt-meta {
+        font-size: ${metaFontSize};
+        color: #495057;
+        padding: ${metaPadding};
+      }
+      .receipt-items th {
+        background: #e9ecef;
+        border: 1px solid #ced4da;
+        font-weight: 700;
+        color: #212529;
+        padding: ${itemPadding};
+        font-size: ${metaFontSize};
+      }
+      .receipt-items td {
+        border: 1px solid #dee2e6;
+        color: #212529;
+        padding: ${itemPadding};
+      }
+      .receipt-items tr:nth-child(even) {
+        background: #f8f9fa;
+      }
+      .receipt-totals {
+        background: #e9ecef;
+        padding: ${totalsPadding};
+        border: 1px solid #ced4da;
+      }
+      .receipt-payment {
+        background: #f8f9fa;
+        padding: ${paymentPadding};
+        border: 1px solid #dee2e6;
+      }
+      .receipt-payment .paid {
+        color: #198754;
+        font-weight: 700;
+      }
+      .receipt-payment .remaining {
+        color: #dc3545;
+        font-weight: 700;
+      }
+    `,
+    modern: `
+      /* Modern Elegant Theme - Contemporary Professional */
+      .receipt-header {
+        background: #5a6c7d;
+        color: #ffffff;
+        padding: ${headerPadding};
+        border: 1px solid #495057;
+        margin-bottom: ${headerMargin};
+      }
+      .company-name {
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: 0.5px;
+        font-size: ${nameFontSize};
+      }
+      .company-info {
+        color: #e9ecef;
+        font-size: ${metaFontSize};
+      }
+      .divider {
+        border-top: 2px solid #5a6c7d;
+        border-bottom: none;
+        margin: ${dividerMargin};
+      }
+      .divider-thick {
+        border-top: 3px solid #5a6c7d;
+      }
+      .invoice-title {
+        color: #5a6c7d;
+        font-weight: 700;
+        font-size: ${titleFontSize};
+        letter-spacing: 0.5px;
+      }
+      .receipt-meta {
+        font-size: ${metaFontSize};
+        color: #495057;
+        padding: ${metaPadding};
+      }
+      .receipt-items th {
+        background: #5a6c7d;
+        color: #ffffff;
+        border: 1px solid #495057;
+        font-weight: 700;
+        padding: ${itemPadding};
+        font-size: ${metaFontSize};
+      }
+      .receipt-items td {
+        border-bottom: 1px solid #dee2e6;
+        color: #212529;
+        padding: ${itemPadding};
+      }
+      .receipt-items tr:nth-child(even) {
+        background: #f8f9fa;
+      }
+      .receipt-totals {
+        background: #e9ecef;
+        border: 2px solid #5a6c7d;
+        padding: ${totalsPadding};
+      }
+      .receipt-payment {
+        background: #f8f9fa;
+        border: 1px solid #5a6c7d;
+        padding: ${paymentPadding};
+      }
+      .receipt-payment .paid {
+        color: #198754;
+        font-weight: 700;
+      }
+      .receipt-payment .remaining {
+        color: #dc3545;
+        font-weight: 700;
+      }
+    `,
+    professional: `
+      /* Professional Corporate Theme - Business Style */
+      .receipt-header {
+        background: #2c3e50;
+        color: #ffffff;
+        padding: ${headerPadding};
+        border: 2px solid #1a252f;
+        margin-bottom: ${headerMargin};
+      }
+      .company-name {
+        font-weight: 800;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: ${nameFontSize};
+        border-bottom: 2px solid #ffffff;
+        padding-bottom: ${titlePadding};
+        margin-bottom: ${titlePadding};
+      }
+      .company-info {
+        color: #ecf0f1;
+        font-weight: 500;
+        font-size: ${metaFontSize};
+      }
+      .divider {
+        border-top: 2px solid #2c3e50;
+        border-bottom: 1px solid #bdc3c7;
+        margin: ${dividerMargin};
+      }
+      .divider-thick {
+        border-top: 3px solid #2c3e50;
+      }
+      .invoice-title {
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #2c3e50;
+        font-size: ${titleFontSize};
+        letter-spacing: 0.5px;
+        border: 2px solid #2c3e50;
+        padding: ${titlePadding};
+        background: #ecf0f1;
+      }
+      .receipt-meta {
+        background: #ecf0f1;
+        padding: ${metaPadding};
+        border: 1px solid #bdc3c7;
+        font-weight: 600;
+        font-size: ${metaFontSize};
+        color: #2c3e50;
+      }
+      .receipt-items th {
+        background: #2c3e50;
+        color: #ffffff;
+        border: 1px solid #1a252f;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: ${itemPadding};
+        font-size: ${metaFontSize};
+      }
+      .receipt-items td {
+        border: 1px solid #bdc3c7;
+        font-weight: 500;
+        color: #2c3e50;
+        padding: ${itemPadding};
+      }
+      .receipt-items tr:nth-child(even) {
+        background: #ecf0f1;
+      }
+      .receipt-totals {
+        background: #2c3e50;
+        color: #ffffff;
+        border: 2px solid #1a252f;
+        padding: ${totalsPadding};
+        font-weight: 700;
+      }
+      .receipt-totals span {
+        color: #ffffff;
+      }
+      .receipt-payment {
+        background: #ecf0f1;
+        padding: ${paymentPadding};
+        border: 2px solid #2c3e50;
+        font-weight: 700;
+      }
+      .receipt-payment .paid {
+        color: #27ae60;
+        font-weight: 700;
+      }
+      .receipt-payment .remaining {
+        color: #e74c3c;
+        font-weight: 700;
+      }
+    `,
+  };
+  
+  return baseStyles + (themeStyles[theme] || themeStyles.classic);
+};
+
+/**
  * Generate receipt body HTML from formatted receipt data
  * @param {Object} receiptData - Formatted receipt data from formatReceiptData()
  * @returns {string} HTML body content
@@ -335,11 +669,13 @@ export const generateReceiptBodyHtml = (receiptData) => {
   // Build items rows
   const itemsRows = items.map(item => {
     if (isSmallReceipt) {
-      // Show notes only if paper width > 88mm
+      // Show description and notes only if paper width > 88mm
       return `
         <tr>
           <td class="item-name">
             <div>${item.name}</div>
+            ${shouldShowNotes && item.description ? `<div class="item-description">${item.description}</div>` : ''}
+            ${shouldShowNotes && item.notes ? `<div class="item-note">${item.notes}</div>` : ''}
             ${item.discount ? `<div class="item-discount-hint">خصم: -${item.discount}</div>` : ''}
           </td>
           <td class="item-qty">${item.quantity}</td>
@@ -352,6 +688,7 @@ export const generateReceiptBodyHtml = (receiptData) => {
         <tr>
           <td class="item-name">
             <div>${item.name}</div>
+            ${item.description ? `<div class="item-description">${item.description}</div>` : ''}
             ${item.discount ? `<div class="item-discount">خصم: -${item.discount}</div>` : '<div class="item-discount">خصم: 0</div>'}
           </td>
           <td class="item-qty">${item.quantity}</td>
@@ -508,9 +845,10 @@ export const generateReceiptBodyHtml = (receiptData) => {
  * Generate complete HTML document for printing
  * @param {Object} receiptData - Formatted receipt data from formatReceiptData()
  * @param {string} invoiceType - Invoice type (roll-58, roll-80, roll-88, a4, a5)
+ * @param {string} invoiceTheme - Invoice theme (classic, modern, minimal, professional, colorful)
  * @returns {string} Complete HTML document
  */
-export const generateReceiptHtml = (receiptData, invoiceType) => {
+export const generateReceiptHtml = (receiptData, invoiceType, invoiceTheme = 'classic') => {
   const isThermal = invoiceType.startsWith('roll-');
   
   // Get paper width based on invoice type
@@ -523,7 +861,10 @@ export const generateReceiptHtml = (receiptData, invoiceType) => {
   };
   
   const paperWidth = paperWidths[invoiceType] || '80mm';
-  const receiptStyles = getReceiptStyles(isThermal, paperWidth);
+  
+  // Use theme from receiptData if available, otherwise use parameter
+  const theme = receiptData?.theme || invoiceTheme || 'classic';
+  const receiptStyles = getReceiptStylesByTheme(isThermal, paperWidth, theme);
   const receiptBody = generateReceiptBodyHtml(receiptData);
 
   return `<!DOCTYPE html>

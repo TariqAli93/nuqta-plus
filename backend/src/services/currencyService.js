@@ -1,5 +1,5 @@
-import db, { saveDatabase } from '../db.js';
-import { currencySettings, activityLogs } from '../models/schema.js';
+import { getDb, saveDatabase } from '../db.js';
+import { currencySettings } from '../models/schema.js';
 import { eq } from 'drizzle-orm';
 
 /**
@@ -11,6 +11,7 @@ import { eq } from 'drizzle-orm';
  * Get all currencies
  */
 export async function list() {
+  const db = await getDb();
   const currencies = await db.select().from(currencySettings).all();
   return currencies;
 }
@@ -19,6 +20,7 @@ export async function list() {
  * Get currency by code
  */
 export async function getByCode(currencyCode) {
+  const db = await getDb();
   const currency = await db
     .select()
     .from(currencySettings)
@@ -36,6 +38,7 @@ export async function getByCode(currencyCode) {
  * Update exchange rate
  */
 export async function updateExchangeRate(currencyCode, newRate, userId) {
+  const db = await getDb();
   const currency = await db
     .select()
     .from(currencySettings)
@@ -60,16 +63,6 @@ export async function updateExchangeRate(currencyCode, newRate, userId) {
     .returning()
     .get();
 
-  // Log activity
-  await db.insert(activityLogs).values({
-    userId,
-    action: 'update',
-    resource: 'currency',
-    resourceId: updated.id,
-    details: `Updated ${currencyCode} exchange rate to ${newRate}`,
-    createdAt: new Date().toISOString(),
-  });
-
   // Persist changes to disk
   saveDatabase();
 
@@ -80,6 +73,7 @@ export async function updateExchangeRate(currencyCode, newRate, userId) {
  * Update currency settings
  */
 export async function update(currencyCode, data, userId) {
+  const db = await getDb();
   const currency = await db
     .select()
     .from(currencySettings)
@@ -100,16 +94,6 @@ export async function update(currencyCode, data, userId) {
     .returning()
     .get();
 
-  // Log activity
-  await db.insert(activityLogs).values({
-    userId,
-    action: 'update',
-    resource: 'currency',
-    resourceId: updated.id,
-    details: `Updated currency ${currencyCode}`,
-    createdAt: new Date().toISOString(),
-  });
-
   // Persist changes to disk
   saveDatabase();
 
@@ -120,6 +104,7 @@ export async function update(currencyCode, data, userId) {
  * Get active currencies
  */
 export async function getActiveCurrencies() {
+  const db = await getDb();
   const currencies = await db
     .select()
     .from(currencySettings)
@@ -133,6 +118,7 @@ export async function getActiveCurrencies() {
  * Get base currency
  */
 export async function getBaseCurrency() {
+  const db = await getDb();
   const currency = await db
     .select()
     .from(currencySettings)

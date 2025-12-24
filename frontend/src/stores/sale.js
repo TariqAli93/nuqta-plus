@@ -12,7 +12,7 @@ export const useSaleStore = defineStore('sale', {
       try {
         const stored = localStorage.getItem('selectedPrinter');
         return stored ? JSON.parse(stored) : null;
-      } catch (error) {
+      } catch {
         // If JSON is invalid, clear it and return null
         localStorage.removeItem('selectedPrinter');
         return null;
@@ -93,8 +93,8 @@ export const useSaleStore = defineStore('sale', {
 
         const response = await api.post('/sales', saleData);
 
-        if (response.data) {
-          this.sales.unshift(response.data);
+        if (response.data?.data) {
+          this.sales.unshift(response.data.data);
         }
 
         notificationStore.success('تم إضافة المبيعة بنجاح');
@@ -145,6 +145,37 @@ export const useSaleStore = defineStore('sale', {
     },
 
     /**
+     * Remove a sale (for drafts)
+     * @param {number} id - Sale ID to remove
+     */
+    async removeSale(id) {
+      this.loading = true;
+      const notificationStore = useNotificationStore();
+      try {
+        if (!id) {
+          throw new Error('Sale ID is required');
+        }
+
+        const response = await api.delete(`/sales/${id}`);
+
+        // Remove from sales list
+        const index = this.sales.findIndex((s) => s.id === id);
+        if (index !== -1) {
+          this.sales.splice(index, 1);
+        }
+
+        notificationStore.success('تم حذف المسودة بنجاح');
+        return response;
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || 'فشل حذف المسودة';
+        notificationStore.error(errorMessage);
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    /**
      * Get sales report with filters
      * @param {Object} queryParams - Report query parameters
      */
@@ -158,7 +189,9 @@ export const useSaleStore = defineStore('sale', {
           throw new Error('Invalid response from server');
         }
 
-        return response.data;
+        // Backend returns { success: true, data: report }
+        // Extract the actual report data
+        return response.data.data || response.data;
       } catch (error) {
         const errorMessage = error.response?.data?.message || 'فشل تحميل تقرير المبيعات';
         notificationStore.error(errorMessage);
@@ -252,6 +285,69 @@ export const useSaleStore = defineStore('sale', {
 
     getPrinter() {
       return this.printer;
+    },
+
+    /**
+     * Create a draft sale
+     * @param {Object} saleData - Sale data
+     */
+    async createDraft(saleData) {
+      try {
+        // Prepare draft data (only essential fields)
+        const draftData = {
+          currency: saleData.currency || 'USD',
+          paymentType: saleData.paymentType || 'cash',
+          items: (saleData.items || []).map(item => ({
+            productId: item.productId,
+            productName: item.productName || '',
+            quantity: item.quantity || 1,
+            unitPrice: item.unitPrice || 0,
+            discount: item.discount || 0,
+          })),
+          discount: saleData.discount || 0,
+          tax: saleData.tax || 0,
+          notes: saleData.notes || null,
+        };
+
+        // إضافة customerId فقط إذا كان موجوداً
+        if (saleData.customerId !== undefined && saleData.customerId !== null) {
+          draftData.customerId = saleData.customerId;
+        }
+
+        const response = await api.post('/sales/draft', draftData);
+        return response;
+      } catch (error) {
+        // Don't show error notification for draft saves (silent save)
+        console.error('Failed to save draft:', error);
+        throw error;
+      }
+    },
+
+    /**
+     * Complete a draft sale
+     * @param {number} draftId - Draft sale ID
+     * @param {Object} saleData - Complete sale data
+     */
+    async completeDraft(draftId, saleData) {
+      this.loading = true;
+      const notificationStore = useNotificationStore();
+      try {
+        const response = await api.post(`/sales/draft/${draftId}/complete`, saleData);
+
+        if (!response.data) {
+          throw new Error('Invalid response from server');
+        }
+
+        this.currentSale = response.data?.data || response.data;
+        notificationStore.success('تم إكمال البيع بنجاح');
+        return response;
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || 'فشل إكمال البيع';
+        notificationStore.error(errorMessage);
+        throw error;
+      } finally {
+        this.loading = false;
+      }
     },
   },
 });

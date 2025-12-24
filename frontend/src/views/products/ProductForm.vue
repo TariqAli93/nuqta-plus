@@ -31,13 +31,53 @@
               ></v-text-field>
             </v-col>
             <v-col cols="12" md="6">
-              <v-select
+              <v-autocomplete
                 v-model="formData.categoryId"
                 :items="categories"
                 item-title="name"
                 item-value="id"
                 label="التصنيف"
-              ></v-select>
+                v-model:search="categorySearch"
+                :custom-filter="customCategoryFilter"
+                clearable
+                autocomplete="off"
+                @keydown="handleCategoryKeydown"
+                @update:model-value="handleCategorySelect"
+              >
+                <template v-slot:no-data>
+                  <v-list-item 
+                    v-if="categorySearch && categorySearch.trim() && !creatingCategory && !isSearchValueInList"
+                    @click="handleCategoryEnter"
+                    class="cursor-pointer"
+                    :class="{ 'bg-primary-lighten-5': true }"
+                  >
+                    <v-list-item-prepend>
+                      <v-icon color="primary">mdi-plus-circle</v-icon>
+                    </v-list-item-prepend>
+                    <v-list-item-title class="text-primary font-weight-medium">
+                      اضغط Enter للإنشاء: "{{ categorySearch }}"
+                    </v-list-item-title>
+                  </v-list-item>
+                  <v-list-item v-else-if="creatingCategory">
+                    <v-list-item-prepend>
+                      <v-progress-circular
+                        indeterminate
+                        color="primary"
+                        size="20"
+                        width="2"
+                      ></v-progress-circular>
+                    </v-list-item-prepend>
+                    <v-list-item-title>
+                      جاري إنشاء التصنيف "{{ categorySearch }}"...
+                    </v-list-item-title>
+                  </v-list-item>
+                  <v-list-item v-else>
+                    <v-list-item-title class="text-grey">
+                      ابدأ بالكتابة للبحث أو إنشاء تصنيف جديد
+                    </v-list-item-title>
+                  </v-list-item>
+                </template>
+              </v-autocomplete>
             </v-col>
             <v-col cols="12" md="6">
               <v-text-field
@@ -179,7 +219,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useProductStore } from '@/stores/product';
 import { useCategoryStore } from '@/stores/category';
@@ -198,6 +238,8 @@ const form = ref(null);
 const adminForm = ref(null);
 const loading = ref(false);
 const categories = ref([]);
+const categorySearch = ref('');
+const creatingCategory = ref(false);
 const formData = ref({
   name: '',
   sku: '',
@@ -314,7 +356,7 @@ const handleSubmit = async () => {
       await productStore.createProduct(formData.value);
     }
     router.push({ name: 'Products' });
-  } catch (error) {
+  } catch {
     // Error handled by notification
   } finally {
     loading.value = false;
@@ -324,6 +366,116 @@ const handleSubmit = async () => {
 const handleBarcodeScan = () => {
   const code = formData.value?.barcode?.trim();
   if (!code) return;
+};
+
+// فلترة مخصصة للتصنيفات
+const customCategoryFilter = (item, queryText) => {
+  if (!queryText) return true;
+  if (!item) return false;
+  // Vuetify v-autocomplete يمرر item ككائن يحتوي على raw أو مباشرة ككائن
+  const category = item.raw || item;
+  if (!category || !category.name) return false;
+  const searchText = queryText.toLowerCase();
+  const itemText = category.name.toLowerCase();
+  return itemText.includes(searchText);
+};
+
+// التحقق من وجود القيمة المدخلة في القائمة
+const isSearchValueInList = computed(() => {
+  if (!categorySearch.value || !categorySearch.value.trim()) return false;
+  const searchValue = categorySearch.value.trim().toLowerCase();
+  return categories.value.some(
+    (cat) => cat.name.toLowerCase() === searchValue
+  );
+});
+
+// معالجة اختيار التصنيف من القائمة
+const handleCategorySelect = (value) => {
+  if (value && typeof value === 'object' && value.name) {
+    // إذا كان value كائن (عند استخدام return-object)
+    formData.value.categoryId = value.id;
+    categorySearch.value = value.name;
+  } else if (value && typeof value === 'number') {
+    // إذا كان value رقم (ID)
+    const selectedCategory = categories.value.find(cat => cat.id === value);
+    if (selectedCategory) {
+      categorySearch.value = selectedCategory.name;
+    }
+  } else if (!value) {
+    // عند مسح القيمة
+    categorySearch.value = '';
+  }
+};
+
+// معالجة الضغط على المفاتيح في حقل التصنيف
+const handleCategoryKeydown = async (event) => {
+  if (event.key !== 'Enter') return;
+  
+  const searchValue = categorySearch.value?.trim();
+  if (!searchValue) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  // التحقق من أن القيمة غير موجودة في القائمة
+  const exists = categories.value.some(
+    (cat) => cat.name.toLowerCase() === searchValue.toLowerCase()
+  );
+
+  if (exists) {
+    // إذا كانت موجودة، حددها
+    const foundCategory = categories.value.find(
+      (cat) => cat.name.toLowerCase() === searchValue.toLowerCase()
+    );
+    if (foundCategory) {
+      formData.value.categoryId = foundCategory.id;
+      // عرض اسم التصنيف في حقل البحث
+      categorySearch.value = foundCategory.name;
+    }
+    return;
+  }
+
+  // إنشاء التصنيف الجديد
+  if (creatingCategory.value) return; // منع الطلبات المتعددة
+
+  creatingCategory.value = true;
+  try {
+    // إنشاء التصنيف الجديد
+    const createResponse = await categoryStore.createCategory({ name: searchValue });
+    // استخراج بيانات التصنيف من الاستجابة
+    const newCategory = createResponse.data?.data || createResponse.data;
+    
+    if (!newCategory || !newCategory.id) {
+      throw new Error('فشل إنشاء التصنيف');
+    }
+    
+    // إعادة تحميل قائمة التصنيفات بالكامل من الـ store
+    await categoryStore.fetchCategories();
+    
+    // تحديث القائمة المحلية من الـ store
+    categories.value = Array.isArray(categoryStore.categories) 
+      ? [...categoryStore.categories] 
+      : [];
+    
+    // تحديد التصنيف الجديد
+    formData.value.categoryId = newCategory.id;
+    
+    // عرض اسم التصنيف في حقل البحث بدلاً من مسحه
+    categorySearch.value = newCategory.name;
+    
+    // استخدام nextTick لضمان تحديث المكون بشكل صحيح
+    await nextTick();
+    
+    // التأكد من أن القيمة محددة بشكل صحيح
+    if (formData.value.categoryId !== newCategory.id) {
+      formData.value.categoryId = newCategory.id;
+    }
+  } catch {
+    // Error handled by notification in store
+    console.error('Error creating category:', error);
+  } finally {
+    creatingCategory.value = false;
+  }
 };
 
 // Admin verification
@@ -350,7 +502,7 @@ const verifyAdmin = async () => {
       adminVerifyError.value = true;
       adminVerifyErrorMessage.value = 'المستخدم ليس لديه صلاحيات أدمن';
     }
-  } catch (error) {
+  } catch {
     adminVerifyError.value = true;
     adminVerifyErrorMessage.value =
       error.response?.data?.message || 'بيانات تسجيل الدخول غير صحيحة';
@@ -381,16 +533,47 @@ watch(
   }
 );
 
+// مراقبة تغيير categoryId وتحديث categorySearch تلقائياً
+watch(
+  () => formData.value.categoryId,
+  (newCategoryId) => {
+    if (newCategoryId) {
+      const selectedCategory = categories.value.find(cat => cat.id === newCategoryId);
+      if (selectedCategory && categorySearch.value !== selectedCategory.name) {
+        categorySearch.value = selectedCategory.name;
+      }
+    } else if (!newCategoryId && categorySearch.value) {
+      // عند مسح التصنيف، امسح البحث أيضاً
+      categorySearch.value = '';
+    }
+  }
+);
+
 onMounted(async () => {
-  const response = await categoryStore.fetchCategories();
-  categories.value = response.data;
+  await categoryStore.fetchCategories();
+  // تحديث القائمة المحلية من الـ store
+  categories.value = Array.isArray(categoryStore.categories) 
+    ? [...categoryStore.categories] 
+    : [];
 
   if (isEdit.value) {
     loading.value = true;
     try {
       await productStore.fetchProduct(route.params.id);
       formData.value = { ...productStore.currentProduct };
-    } catch (error) {
+      
+      // عند التعديل، عرض اسم التصنيف في حقل البحث
+      if (formData.value.categoryId) {
+        // استخدام nextTick لضمان تحميل categories أولاً
+        await nextTick();
+        const selectedCategory = categories.value.find(
+          cat => cat.id === formData.value.categoryId
+        );
+        if (selectedCategory) {
+          categorySearch.value = selectedCategory.name;
+        }
+      }
+    } catch {
       // Error handled by notification
     } finally {
       loading.value = false;

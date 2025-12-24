@@ -1,10 +1,11 @@
-import db, { saveDatabase } from '../db.js';
+import { getDb, saveDatabase } from '../db.js';
 import { customers, sales, saleItems } from '../models/index.js';
 import { NotFoundError, ConflictError } from '../utils/errors.js';
 import { eq, like, or, desc } from 'drizzle-orm';
 
 export class CustomerService {
   async create(customerData, userId) {
+    const db = await getDb();
     // Check for duplicate phone
     const [existing] = await db
       .select()
@@ -30,6 +31,7 @@ export class CustomerService {
   }
 
   async getAll(filters = {}) {
+    const db = await getDb();
     const { page = 1, limit = 10, search } = filters;
 
     let query = db.select().from(customers);
@@ -60,6 +62,7 @@ export class CustomerService {
   }
 
   async getById(id) {
+    const db = await getDb();
     const [customer] = await db.select().from(customers).where(eq(customers.id, id)).limit(1);
 
     if (!customer) {
@@ -83,6 +86,7 @@ export class CustomerService {
   }
 
   async update(id, customerData) {
+    const db = await getDb();
     const [updated] = await db
       .update(customers)
       .set({
@@ -102,6 +106,7 @@ export class CustomerService {
   }
 
   async delete(id) {
+    const db = await getDb();
     const [deleted] = await db.delete(customers).where(eq(customers.id, id)).returning();
 
     if (!deleted) {
@@ -114,6 +119,7 @@ export class CustomerService {
   }
 
   async updateDebt(customerId, amount) {
+    const db = await getDb();
     const customer = await this.getById(customerId);
 
     const [updated] = await db

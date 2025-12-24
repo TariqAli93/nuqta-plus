@@ -24,11 +24,11 @@
           </v-col>
           <v-col cols="12" md="4">
             <v-select
-              v-model="store.filters.roleId"
+              v-model="store.filters.role"
               :items="roleOptions"
               label="الدور"
-              item-title="name"
-              item-value="id"
+              item-title="title"
+              item-value="value"
               variant="outlined"
               density="comfortable"
               clearable
@@ -64,9 +64,9 @@
           <v-skeleton-loader type="table"></v-skeleton-loader>
         </template>
 
-        <template #[`item.roleId`]="{ item }">
+        <template #[`item.role`]="{ item }">
           <v-chip color="primary" variant="flat" size="small">
-            {{ getRoleName(item.roleId) }}
+            {{ getRoleName(item.role) }}
           </v-chip>
         </template>
 
@@ -114,10 +114,10 @@
             />
             <v-text-field v-model="form.phone" label="الهاتف" variant="outlined" />
             <v-select
-              v-model="form.roleId"
+              v-model="form.role"
               :items="roleOptions"
-              item-title="name"
-              item-value="id"
+              item-title="title"
+              item-value="value"
               label="الدور"
               required
               variant="outlined"
@@ -188,17 +188,15 @@
 <script setup>
 import { ref, onMounted, reactive } from 'vue';
 import { useUsersStore } from '@/stores/users';
-import { useRolesStore } from '@/stores/roles';
 
 const store = useUsersStore();
-const roleStore = useRolesStore();
 
 const headers = [
   { title: 'المعرف', key: 'id' },
   { title: 'اسم المستخدم', key: 'username' },
   { title: 'الاسم الكامل', key: 'fullName' },
   { title: 'الهاتف', key: 'phone' },
-  { title: 'الدور', key: 'roleId' },
+  { title: 'الدور', key: 'role' },
   { title: 'الحالة', key: 'isActive' },
   { title: 'خيارات', key: 'actions', sortable: false },
 ];
@@ -208,7 +206,13 @@ const statusOptions = [
   { title: 'معطل', value: false },
 ];
 
-const roleOptions = ref([]);
+// Role enum options
+const roleOptions = [
+  { title: 'مدير', value: 'admin' },
+  { title: 'كاشير', value: 'cashier' },
+  { title: 'مدير متجر', value: 'manager' },
+  { title: 'مشاهد', value: 'viewer' },
+];
 
 const showForm = ref(false);
 const formRef = ref(null);
@@ -227,7 +231,7 @@ const form = reactive({
   username: '',
   fullName: '',
   phone: '',
-  roleId: null,
+  role: 'cashier',
   password: '',
   isActive: true,
 });
@@ -237,9 +241,9 @@ const resetPwInfo = reactive({
   userId: null,
 });
 
-function getRoleName(roleId) {
-  const role = roleOptions.value.find((r) => r.id === roleId);
-  return role ? role.name : '-';
+function getRoleName(role) {
+  const roleOption = roleOptions.find((r) => r.value === role);
+  return roleOption ? roleOption.title : role || '-';
 }
 
 function openForm(item) {
@@ -250,7 +254,7 @@ function openForm(item) {
       username: '',
       fullName: '',
       phone: '',
-      roleId: null,
+      role: 'cashier',
       password: '',
       isActive: true,
     });
@@ -274,7 +278,7 @@ async function save() {
     await store.update(form.id, {
       fullName: form.fullName,
       phone: form.phone,
-      roleId: form.roleId,
+      role: form.role,
       isActive: form.isActive,
     });
   } else {
@@ -282,7 +286,7 @@ async function save() {
       username: form.username,
       fullName: form.fullName,
       phone: form.phone,
-      roleId: form.roleId,
+      role: form.role,
       password: form.password,
     });
   }
@@ -307,8 +311,6 @@ async function resetPw() {
 }
 
 onMounted(async () => {
-  await roleStore.fetch();
-  roleOptions.value = roleStore.list;
   await store.fetch();
 });
 </script>

@@ -1,4 +1,4 @@
-import db, { saveDatabase } from '../db.js';
+import { getDb, saveDatabase } from '../db.js';
 import { settings } from '../models/index.js';
 import { eq, like } from 'drizzle-orm';
 import { NotFoundError, ConflictError } from '../utils/errors.js';
@@ -12,6 +12,7 @@ export class SettingsService {
    * Get all settings as array of {key, value, description} objects
    */
   async getAll() {
+    const db = await getDb();
     const allSettings = await db.select().from(settings);
     return allSettings;
   }
@@ -20,6 +21,7 @@ export class SettingsService {
    * Get a single setting by key
    */
   async getByKey(key) {
+    const db = await getDb();
     const [setting] = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
     if (!setting) {
       throw new NotFoundError(`Setting with key '${key}' not found.`);
@@ -43,6 +45,7 @@ export class SettingsService {
    * Create a new setting
    */
   async create({ key, value, description }) {
+    const db = await getDb();
     const existingSetting = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
     if (existingSetting.length > 0) {
       throw new ConflictError(`Setting with key '${key}' already exists.`);
@@ -63,6 +66,7 @@ export class SettingsService {
    * Update an existing setting
    */
   async update(key, { value, description }) {
+    const db = await getDb();
     const [existing] = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
     if (!existing) {
       throw new NotFoundError(`Setting with key '${key}' not found.`);
@@ -85,6 +89,7 @@ export class SettingsService {
    * Upsert (create or update) a setting
    */
   async upsert({ key, value, description }) {
+    const db = await getDb();
     const [existing] = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
     if (existing) {
       return this.update(key, { value, description });
@@ -108,6 +113,7 @@ export class SettingsService {
    * Delete a setting by key
    */
   async delete(key) {
+    const db = await getDb();
     const [existing] = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
     if (!existing) {
       throw new NotFoundError(`Setting with key '${key}' not found.`);
@@ -121,6 +127,7 @@ export class SettingsService {
    * Get company information (all settings prefixed with 'company.')
    */
   async getCompanyInfo() {
+    const db = await getDb();
     const companySettings = await db.select()
       .from(settings)
       .where(like(settings.key, 'company.%'));
@@ -130,7 +137,19 @@ export class SettingsService {
       const field = key.replace('company.', '');
       companyInfo[field] = value;
     });
-    return companyInfo;
+    
+    // Return with default values
+    return {
+      name: companyInfo.name || '',
+      city: companyInfo.city || '',
+      area: companyInfo.area || '',
+      street: companyInfo.street || '',
+      phone: companyInfo.phone || '',
+      phone2: companyInfo.phone2 || '',
+      logoUrl: companyInfo.logoUrl || '',
+      invoiceType: companyInfo.invoiceType || '',
+      invoiceTheme: companyInfo.invoiceTheme || 'classic',
+    };
   }
 
   /**

@@ -152,6 +152,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { useTheme } from 'vuetify';
 import { useAuthStore } from '@/stores/auth';
 import { useAlertStore } from '@/stores/alert';
+import * as uiAccess from '@/auth/uiAccess.js';
 
 const router = useRouter();
 const route = useRoute();
@@ -209,20 +210,36 @@ const menuItems = [
   { title: 'حول البرنامج', icon: 'mdi-information', to: '/about', permission: null },
 ];
 
-// 🔹 فلترة القائمة حسب صلاحيات المستخدم
+// 🔹 فلترة القائمة حسب الدور (role-based)
 const filteredMenu = computed(() => {
+  const userRole = authStore.user?.role;
+  if (!userRole) return [];
+
   return menuItems
     .map((item) => {
       // 1) إذا ماكو مجموعة — فلترة عادية
       if (!item.group) {
         if (!item.permission) return item;
-        return authStore.hasPermission(item.permission) ? item : null;
+        // Map old permissions to role checks
+        const permission = item.permission;
+        if (permission === 'view:users' && !uiAccess.canViewUsers(userRole)) return null;
+        if (permission === 'view:settings' && !uiAccess.canManageSettings(userRole)) return null;
+        if (permission === 'view:roles' || permission === 'view:permissions') {
+          // Legacy routes - hide them
+          return null;
+        }
+        // All other view permissions are allowed for authenticated users
+        return item;
       }
 
       // 2) معالجة المجموعات (sub items)
       const allowedSubs = item.group.items.filter((sub) => {
         if (!sub.permission) return true;
-        return authStore.hasPermission(sub.permission);
+        const perm = sub.permission;
+        if (perm === 'view:users' && !uiAccess.canViewUsers(userRole)) return false;
+        if (perm === 'view:settings' && !uiAccess.canManageSettings(userRole)) return false;
+        if (perm === 'view:roles' || perm === 'view:permissions') return false; // Legacy
+        return true;
       });
 
       // إذا ماكو عناصر مسموحة → نشيل المجموعة كاملة

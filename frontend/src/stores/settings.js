@@ -15,6 +15,7 @@ export const useSettingsStore = defineStore('settings', () => {
     phone2: '',
     logoUrl: '',
     invoiceType: '',
+    invoiceTheme: '',
   });
   const isLoading = ref(false);
   const error = ref(null);
@@ -143,6 +144,7 @@ export const useSettingsStore = defineStore('settings', () => {
         phone2: data?.phone2 || '',
         logoUrl: data?.logoUrl || '',
         invoiceType: data?.invoiceType || '',
+        invoiceTheme: data?.invoiceTheme || 'classic',
       };
     } catch (err) {
       error.value = err.response?.data?.message || err.message;
@@ -262,6 +264,7 @@ export const useSettingsStore = defineStore('settings', () => {
           phone2: '',
           logoUrl: '',
           invoiceType: '',
+          invoiceTheme: '',
         };
         return res.data;
       }

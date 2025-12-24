@@ -78,7 +78,7 @@ function translateFieldName(field = '') {
     password: 'كلمة المرور',
     fullName: 'الاسم الكامل',
     phone: 'رقم الهاتف',
-    roleId: 'الدور',
+    role: 'الدور',
     role: 'الدور',
     permissions: 'الصلاحيات',
 

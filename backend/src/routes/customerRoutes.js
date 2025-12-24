@@ -6,7 +6,7 @@ export default async function customerRoutes(fastify) {
   fastify.addHook('onRequest', fastify.authenticate);
 
   fastify.post('/', {
-    onRequest: [fastify.authorize('customers:create')],
+    onRequest: [fastify.authenticate, fastify.authorize('customers:create')],
     handler: customerController.create,
     schema: {
       description: 'Create new customer',
@@ -16,7 +16,7 @@ export default async function customerRoutes(fastify) {
   });
 
   fastify.get('/', {
-    onRequest: [fastify.authorize('customers:read')],
+    onRequest: [fastify.authenticate, fastify.authorize('customers:read')],
     handler: customerController.getAll,
     schema: {
       description: 'Get all customers',
@@ -34,7 +34,7 @@ export default async function customerRoutes(fastify) {
   });
 
   fastify.get('/:id', {
-    onRequest: [fastify.authorize('customers:read')],
+    onRequest: [fastify.authenticate, fastify.authorize('customers:read')],
     handler: customerController.getById,
     schema: {
       description: 'Get customer by ID',
@@ -50,7 +50,7 @@ export default async function customerRoutes(fastify) {
   });
 
   fastify.put('/:id', {
-    onRequest: [fastify.authorize('customers:update')],
+    onRequest: [fastify.authenticate, fastify.authorize('customers:update')],
     handler: customerController.update,
     schema: {
       description: 'Update customer',
@@ -60,7 +60,7 @@ export default async function customerRoutes(fastify) {
   });
 
   fastify.delete('/:id', {
-    onRequest: [fastify.authorize('customers:delete')],
+    onRequest: [fastify.authenticate, fastify.authorize('customers:delete')],
     handler: customerController.delete,
     schema: {
       description: 'Delete customer',

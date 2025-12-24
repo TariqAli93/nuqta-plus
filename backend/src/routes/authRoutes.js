@@ -22,13 +22,13 @@ export default async function authRoutes(fastify) {
       tags: ['auth'],
       body: {
         type: 'object',
-        required: ['username', 'password', 'fullName', 'roleId'],
+        required: ['username', 'password', 'fullName'],
         properties: {
           username: { type: 'string' },
           password: { type: 'string' },
           fullName: { type: 'string' },
           phone: { type: 'string' },
-          roleId: { type: 'number' },
+          role: { type: 'string', enum: ['admin', 'cashier', 'manager', 'viewer'] },
         },
       },
     },
@@ -65,7 +65,6 @@ export default async function authRoutes(fastify) {
           password: { type: 'string' },
           fullName: { type: 'string' },
           phone: { type: 'string' },
-          roleId: { type: 'number' },
         },
       },
     },

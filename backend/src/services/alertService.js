@@ -1,4 +1,4 @@
-import db from '../db.js';
+import { getDb } from '../db.js';
 import { installments, products, customers, sales } from '../models/index.js';
 import { eq, and, lte, gt } from 'drizzle-orm';
 
@@ -8,6 +8,7 @@ export class AlertService {
    * @returns {Promise<Array>} Array of overdue installments
    */
   async getOverdueInstallments() {
+    const db = await getDb();
     const today = new Date().toISOString().split('T')[0];
     
     const overdue = await db
@@ -45,6 +46,7 @@ export class AlertService {
    * @returns {Promise<Array>} Array of low stock products
    */
   async getLowStockProducts() {
+    const db = await getDb();
     const lowStock = await db
       .select()
       .from(products)
@@ -65,6 +67,7 @@ export class AlertService {
    * @returns {Promise<Array>} Array of out of stock products
    */
   async getOutOfStockProducts() {
+    const db = await getDb();
     const outOfStock = await db
       .select()
       .from(products)

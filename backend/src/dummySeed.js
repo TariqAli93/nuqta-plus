@@ -1,4 +1,4 @@
-import db, { saveDatabase } from './db.js';
+import { getDb, saveDatabase } from './db.js';
 import {
   customers,
   categories,
@@ -7,7 +7,6 @@ import {
   saleItems,
   payments,
   installments,
-  inventoryTransactions,
 } from './models/index.js';
 import { sql } from 'drizzle-orm';
 
@@ -15,6 +14,7 @@ async function seed() {
   console.log('🌱 Starting database seeding...\n');
 
   try {
+    const db = await getDb();
     // Helper: Count rows of a table
     const countTable = async (table) => {
       const result = await db
@@ -331,39 +331,10 @@ async function seed() {
         },
       ]);
 
-      await db.insert(inventoryTransactions).values([
-        {
-          productId: iphone?.id ?? null,
-          type: 'out',
-          quantity: 1,
-          reference: 'INV-2001',
-          notes: 'صرف مبيع نقدي',
-        },
-        {
-          productId: laptop?.id ?? null,
-          type: 'out',
-          quantity: 1,
-          reference: 'INV-2002',
-          notes: 'صرف مبيع أقساط',
-        },
-        {
-          productId: rice?.id ?? null,
-          type: 'out',
-          quantity: 2,
-          reference: 'INV-2002',
-          notes: 'صرف مواد استهلاكية',
-        },
-        {
-          productId: charger?.id ?? null,
-          type: 'out',
-          quantity: 1,
-          reference: 'INV-2002',
-          notes: 'صرف إكسسوار مع الجهاز',
-        },
-      ]);
+      // Inventory transactions removed - stock is managed directly in products table
 
       console.log(
-        '✓ Demo sales, items, payments, installments, and inventory transactions inserted'
+        '✓ Demo sales, items, payments, and installments inserted'
       );
     } else {
       console.log('↩️ Sales already exist, skipping demo sales');

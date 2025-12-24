@@ -4,9 +4,10 @@
       <div class="flex items-center justify-space-between pa-3">
         <div class="font-semibold text-h6 text-primary">إدارة المنتجات</div>
         <v-btn
-          v-can.hide="['create:products']"
+          v-if="canManageProducts"
           color="primary"
           prepend-icon="mdi-plus"
+          size="default"
           to="/products/new"
         >
           منتج جديد
@@ -56,6 +57,7 @@
         @update:page="changePage"
         @update:items-per-page="changeItemsPerPage"
         server-items-length
+        density="comfortable"
       >
         <template v-slot:[`item.stock`]="{ item }">
           <v-chip :color="item.stock <= item.minStock ? 'error' : 'success'" size="small">
@@ -76,15 +78,21 @@
             size="small"
             variant="text"
             :to="`/products/${item.id}/edit`"
-          ></v-btn>
+            title="تعديل"
+          >
+            <v-icon size="20">mdi-pencil</v-icon>
+          </v-btn>
           <v-btn
+            v-if="canDeleteProducts"
             icon="mdi-delete"
             size="small"
             variant="text"
             color="error"
-            v-can="['delete:products']"
             @click="confirmDelete(item)"
-          ></v-btn>
+            title="حذف"
+          >
+            <v-icon size="20">mdi-delete</v-icon>
+          </v-btn>
         </template>
       </v-data-table>
     </v-card>
@@ -97,9 +105,9 @@
         <v-divider></v-divider>
 
         <v-card-actions>
-          <v-btn color="error" variant="elevated" @click="handleDelete">حذف</v-btn>
+          <v-btn color="error" variant="elevated" size="default" @click="handleDelete">حذف</v-btn>
           <v-spacer />
-          <v-btn @click="deleteDialog = false">إلغاء</v-btn>
+          <v-btn variant="outlined" size="default" @click="deleteDialog = false">إلغاء</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -107,12 +115,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useProductStore } from '@/stores/product';
 import { useCategoryStore } from '@/stores/category';
+import { useAuthStore } from '@/stores/auth';
+import * as uiAccess from '@/auth/uiAccess.js';
 
 const productStore = useProductStore();
 const categoryStore = useCategoryStore();
+const authStore = useAuthStore();
+
+const userRole = computed(() => authStore.user?.role);
+const canManageProducts = computed(() => userRole.value ? uiAccess.canManageProducts(userRole.value) : false);
+const canDeleteProducts = computed(() => userRole.value ? uiAccess.canManageProducts(userRole.value) : false);
 
 const search = ref('');
 const selectedCategory = ref(null);

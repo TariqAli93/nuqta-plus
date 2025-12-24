@@ -1,10 +1,11 @@
-import db, { saveDatabase } from '../db.js';
+import { getDb, saveDatabase } from '../db.js';
 import { products, categories } from '../models/index.js';
 import { NotFoundError, ConflictError } from '../utils/errors.js';
 import { eq, like, or, and, desc, lte } from 'drizzle-orm';
 
 export class ProductService {
   async create(productData, userId) {
+    const db = await getDb();
     // Check for duplicate SKU
     if (productData.sku) {
       const [existing] = await db
@@ -32,6 +33,7 @@ export class ProductService {
   }
 
   async getAll(filters = {}) {
+    const db = await getDb();
     const { page = 1, limit = 10, search, categoryId } = filters;
 
     // Build base query
@@ -104,6 +106,7 @@ export class ProductService {
   }
 
   async getById(id) {
+    const db = await getDb();
     const [product] = await db
       .select({
         id: products.id,
@@ -136,6 +139,7 @@ export class ProductService {
   }
 
   async update(id, productData) {
+    const db = await getDb();
     const [updated] = await db
       .update(products)
       .set({
@@ -155,6 +159,7 @@ export class ProductService {
   }
 
   async delete(id) {
+    const db = await getDb();
     const [deleted] = await db.delete(products).where(eq(products.id, id)).returning();
 
     if (!deleted) {
@@ -167,6 +172,7 @@ export class ProductService {
   }
 
   async updateStock(productId, quantity) {
+    const db = await getDb();
     const product = await this.getById(productId);
 
     const [updated] = await db
@@ -184,6 +190,7 @@ export class ProductService {
   }
 
   async getLowStock() {
+    const db = await getDb();
     const lowStockProducts = await db
       .select()
       .from(products)

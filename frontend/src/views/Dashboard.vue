@@ -66,19 +66,27 @@
     </div>
 
     <!-- Charts and Quick Actions -->
-    <div class="flex items-center justify-between mb-2">
-      <h2 class="text-xl font-bold">إجراءات سريعة</h2>
-    </div>
+    <div v-if="filteredQuickActions.length > 0">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-xl font-bold">إجراءات سريعة</h2>
+      </div>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <v-card
-        v-for="(action, idx) in quickActions"
-        :key="action.title"
-        :to="action.to"
-        color="sureface"
-        v-can="action.permission"
-        class="relative block p-5 overflow-hidden transition-all border border-gray-200 group rounded-2xl translate hover:scale-102 hover:shadow-2xl dark:border-gray-700"
+      <div 
+        :class="{
+          'grid gap-4': true,
+          'grid-cols-1': filteredQuickActions.length === 1,
+          'grid-cols-1 sm:grid-cols-2': filteredQuickActions.length === 2,
+          'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3': filteredQuickActions.length === 3,
+          'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4': filteredQuickActions.length >= 4
+        }"
       >
+        <v-card
+          v-for="(action, idx) in filteredQuickActions"
+          :key="action.title"
+          :to="action.to"
+          color="sureface"
+          class="relative block p-5 overflow-hidden transition-all border border-gray-200 group rounded-2xl translate hover:scale-102 hover:shadow-2xl dark:border-gray-700"
+        >
         <!-- Animated background gradient -->
         <div
           class="absolute inset-0 transition-opacity duration-500 opacity-0 pointer-events-none group-hover:opacity-10"
@@ -187,6 +195,7 @@
           "
         ></div>
       </v-card>
+      </div>
     </div>
 
     <!-- Recent Sales -->
@@ -195,7 +204,7 @@
         <v-card>
           <v-card-title>أحدث المبيعات</v-card-title>
           <v-card-text>
-            <v-table>
+            <v-table density="comfortable">
               <thead>
                 <tr>
                   <th>رقم الفاتورة</th>
@@ -208,7 +217,7 @@
               <tbody>
                 <tr v-if="loading">
                   <td colspan="5" class="text-center pa-4">
-                    <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                    <v-progress-circular indeterminate color="primary" size="32"></v-progress-circular>
                   </td>
                 </tr>
                 <tr v-else-if="recentSales.length === 0">
@@ -237,16 +246,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watchEffect, onUnmounted } from 'vue';
+import { ref, computed, onMounted, watchEffect, onUnmounted } from 'vue';
 import { useSaleStore } from '@/stores/sale';
 import { useProductStore } from '@/stores/product';
 import { useCustomerStore } from '@/stores/customer';
 import { useLoading } from '@/composables/useLoading';
+import { useAuthStore } from '@/stores/auth';
+import * as uiAccess from '@/auth/uiAccess.js';
 
 const saleStore = useSaleStore();
 const productStore = useProductStore();
 const customerStore = useCustomerStore();
+const authStore = useAuthStore();
 const { useAsyncData } = useLoading();
+
+const userRole = computed(() => authStore.user?.role);
 
 const loading = ref(false);
 const stats = ref({
@@ -275,6 +289,21 @@ const quickActions = [
   },
   { title: 'التقارير', icon: 'mdi-chart-box', to: '/reports', permission: 'read:reports' },
 ];
+
+const isActionAllowed = (action) => {
+  if (!action || !userRole.value) return false;
+  const perm = action.permission;
+  if (!perm) return true; // If no permission specified, allow it
+  if (perm === 'create:sales') return uiAccess.canCreateSales(userRole.value);
+  if (perm === 'create:customers') return uiAccess.canManageCustomers(userRole.value);
+  if (perm === 'create:products') return uiAccess.canManageProducts(userRole.value);
+  if (perm === 'read:reports') return uiAccess.canViewReports(userRole.value);
+  return true;
+};
+
+const filteredQuickActions = computed(() => {
+  return quickActions.filter(action => isActionAllowed(action));
+});
 
 const formatCurrency = (amount, curr) => {
   const symbol = curr === 'USD' ? '$' : 'IQD';
