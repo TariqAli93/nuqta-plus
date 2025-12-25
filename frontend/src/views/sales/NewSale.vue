@@ -15,10 +15,10 @@
           <v-row>
             <v-col cols="12" md="6">
               <CustomerSelector v-model="sale.customerId" :required="false" />
-              <div class="text-caption text-grey mt-1">
-                <v-icon size="16" class="ml-1">mdi-information</v-icon>
-                اختياري - يمكنك إتمام البيع بدون تحديد عميل
-              </div>
+              <FormFieldHelp
+                help-text="اختياري - يمكنك إتمام البيع بدون تحديد عميل"
+                tooltip="العميل اختياري للبيع النقدي، ولكنه مطلوب للبيع بالتقسيط"
+              />
             </v-col>
 
             <v-col cols="12" md="6">
@@ -28,9 +28,6 @@
                 label="العملة"
                 :rules="[rules.required]"
                 density="comfortable"
-                :disabled="!settingsStore.showSecondaryCurrency"
-                :hint="!settingsStore.showSecondaryCurrency ? 'العملة الثانوية مخفية - يتم استخدام العملة الافتراضية فقط' : ''"
-                persistent-hint
               >
                 <template v-slot:prepend-inner>
                   <v-icon>mdi-currency-usd</v-icon>
@@ -52,11 +49,18 @@
             autofocus
             class="mb-4"
             density="comfortable"
-          />
+            aria-label="قراءة الباركود - اضغط Enter لإضافة المنتج"
+          >
+            <template #append-inner>
+              <FormFieldHelp
+                tooltip="امسح الباركود أو اكتبه واضغط Enter لإضافة المنتج تلقائياً"
+              />
+            </template>
+          </v-text-field>
 
           <v-row v-for="(item, index) in sale.items" :key="index" class="mb-3 align-center">
             <v-col cols="12" md="3">
-              <v-select
+              <v-autocomplete
                 v-model="item.productId"
                 :items="products"
                 item-title="name"
@@ -65,7 +69,22 @@
                 :rules="[rules.required]"
                 @update:model-value="updateProductDetails(item)"
                 density="comfortable"
-              />
+                :search="productSearchQueries[index]"
+                @update:search="(val) => (productSearchQueries[index] = val)"
+                autocomplete="off"
+                :custom-filter="customProductFilter"
+              >
+                <template v-slot:item="{ props, item: productItem }">
+                  <v-list-item v-bind="props">
+                    <template #title>
+                      {{ productItem.raw.name }}
+                    </template>
+                    <template #subtitle>
+                      السعر: {{ formatCurrency(productItem.raw.sellingPrice, productItem.raw.currency) }} | المخزون: {{ productItem.raw.stock }}
+                    </template>
+                  </v-list-item>
+                </template>
+              </v-autocomplete>
             </v-col>
             <v-col cols="12" md="3">
               <v-text-field
@@ -73,8 +92,17 @@
                 label="الكمية"
                 type="number"
                 min="1"
-                :rules="[rules.required]"
+                :rules="[
+                  rules.required,
+                  (v) => rules.positive(v),
+                  (v) => {
+                    if (!products.value || !Array.isArray(products.value)) return true;
+                    const product = products.value.find((p) => p.id === item.productId);
+                    return product ? rules.minStock(v, product.stock) : true;
+                  },
+                ]"
                 density="comfortable"
+                :error-messages="getQuantityError(item)"
               />
             </v-col>
             <v-col cols="12" md="3">
@@ -109,12 +137,27 @@
               />
             </v-col>
             <v-col cols="12" md="1" class="d-flex align-center">
-              <v-btn icon="mdi-delete" size="small" color="error" variant="text" @click="removeItem(index)" />
+              <v-btn
+                icon="mdi-delete"
+                size="small"
+                color="error"
+                variant="text"
+                @click="removeItem(index)"
+                :aria-label="`حذف المنتج ${index + 1}`"
+              />
             </v-col>
           </v-row>
 
-          <v-btn color="primary" prepend-icon="mdi-plus" size="default" @click="addItem" class="mb-4">
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-plus"
+            size="default"
+            @click="addItem"
+            class="mb-4"
+            aria-label="إضافة منتج جديد (F1)"
+          >
             إضافة منتج
+            <v-chip size="x-small" class="mr-2" variant="outlined">F1</v-chip>
           </v-btn>
 
           <v-divider class="my-4"></v-divider>
@@ -136,8 +179,10 @@
                 variant="tonal"
                 density="compact"
                 class="mt-2"
+                role="alert"
+                aria-live="polite"
               >
-                <v-icon size="16" class="ml-1">mdi-alert</v-icon>
+                <v-icon size="16" class="ml-1" aria-hidden="true">mdi-alert</v-icon>
                 يجب تحديد عميل للبيع بالتقسيط
               </v-alert>
             </v-col>
@@ -293,8 +338,25 @@
 
           <!-- أزرار -->
           <div class="gap-2 d-flex">
-            <v-btn color="primary" size="default" :loading="loading" @click="submitSale"> حفظ البيع </v-btn>
-            <v-btn variant="outlined" size="default" @click="handleCancel">إلغاء</v-btn>
+            <v-btn
+              color="primary"
+              size="default"
+              :loading="loading"
+              @click="submitSale"
+              aria-label="حفظ البيع (F2)"
+            >
+              حفظ البيع
+              <v-chip size="x-small" class="mr-2" variant="outlined">F2</v-chip>
+            </v-btn>
+            <v-btn
+              variant="outlined"
+              size="default"
+              @click="handleCancel"
+              aria-label="إلغاء (F3)"
+            >
+              إلغاء
+              <v-chip size="x-small" class="mr-2" variant="outlined">F3</v-chip>
+            </v-btn>
           </div>
         </v-form>
       </v-card-text>
@@ -307,6 +369,8 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router';
 import { useSaleStore, useProductStore, useNotificationStore, useSettingsStore } from '@/stores';
 import CustomerSelector from '@/components/CustomerSelector.vue';
+import { useKeyboardShortcuts, createPageShortcuts } from '@/composables/useKeyboardShortcuts';
+import FormFieldHelp from '@/components/FormFieldHelp.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -318,9 +382,16 @@ const notify = useNotificationStore();
 const form = ref(null);
 const barcode = ref('');
 const loading = ref(false);
+const productSearchQueries = ref({});
 
 const rules = {
   required: (value) => !!value || 'هذا الحقل مطلوب',
+  positive: (value) => (value && value > 0) || 'يجب أن تكون القيمة أكبر من صفر',
+  minStock: (value, maxStock) => {
+    if (!value) return 'هذا الحقل مطلوب';
+    if (value > maxStock) return `الكمية المتاحة: ${maxStock}`;
+    return true;
+  },
 };
 
 const sale = ref({
@@ -342,7 +413,6 @@ const currencySettings = ref({
   defaultCurrency: 'IQD',
   usdRate: 1500,
   iqdRate: 1,
-  showSecondaryCurrency: true,
 });
 
 // Computed property for available currencies
@@ -518,25 +588,12 @@ watch(
   }
 );
 
-// مراقبة تغيير showSecondaryCurrency وإعادة تعيين العملة للافتراضية عند الإخفاء
-watch(
-  () => settingsStore.showSecondaryCurrency,
-  (showSecondary) => {
-    if (!showSecondary) {
-      // إذا تم إخفاء العملة الثانوية، استخدم العملة الافتراضية فقط
-      const defaultCurrency = settingsStore.settings?.defaultCurrency || 'IQD';
-      if (sale.value.currency !== defaultCurrency) {
-        sale.value.currency = defaultCurrency;
-        applySaleCurrencyToItems();
-      }
-    }
-  }
-);
 
 // مراقبة تغيير الكمية للتحقق من توفرها في المخزون
 watch(
   () => sale.value.items.map((item) => ({ id: item.productId, qty: item.quantity })),
   (newItems) => {
+    if (!products.value || !Array.isArray(products.value)) return;
     newItems.forEach((item, index) => {
       if (!item.id) return;
       const product = products.value.find((p) => p.id === item.id);
@@ -623,6 +680,7 @@ const addItem = () =>
   sale.value.items.push({ productId: null, quantity: 1, unitPrice: 0, discount: 0 });
 const removeItem = (index) => sale.value.items.splice(index, 1);
 const updateProductDetails = (item) => {
+  if (!products.value || !Array.isArray(products.value)) return;
   const p = products.value.find((prod) => prod.id === item.productId);
   if (!p) return;
 
@@ -644,10 +702,35 @@ const updateProductDetails = (item) => {
   item.availableStock = p.stock;
 };
 
+/* 🔍 التحقق من الكمية */
+const getQuantityError = (item) => {
+  if (!item.productId) return [];
+  if (!products.value || !Array.isArray(products.value)) return [];
+  const product = products.value.find((p) => p.id === item.productId);
+  if (!product) return [];
+  if (item.quantity > product.stock) {
+    return [`الكمية المتاحة: ${product.stock}`];
+  }
+  return [];
+};
+
+/* 🔍 فلترة المنتجات */
+const customProductFilter = (itemText, queryText, item) => {
+  if (!queryText) return true;
+  const query = queryText.toLowerCase();
+  const name = item.raw.name?.toLowerCase() || '';
+  const sku = item.raw.sku?.toLowerCase() || '';
+  const barcode = item.raw.barcode?.toLowerCase() || '';
+  return name.includes(query) || sku.includes(query) || barcode.includes(query);
+};
+
 /* 🔍 قراءة الباركود */
 const handleBarcodeScan = () => {
   const code = barcode.value.trim();
   if (!code) return;
+  if (!products.value || !Array.isArray(products.value)) {
+    return notify.error('❌ قائمة المنتجات غير متاحة');
+  }
   const product = products.value.find((p) => p.barcode === code);
   if (!product) return notify.error('❌ المنتج غير موجود');
   if (product.stock <= 0) return notify.error('❌ المنتج غير متوفر في المخزون');
@@ -690,6 +773,10 @@ const submitSale = async () => {
   if (!sale.value.items.length) return notify.error('يجب إضافة منتج واحد على الأقل');
 
   // التحقق من توفر الكميات في المخزون
+  if (!products.value || !Array.isArray(products.value)) {
+    notify.error('❌ قائمة المنتجات غير متاحة');
+    return;
+  }
   for (const item of sale.value.items) {
     const product = products.value.find((p) => p.id === item.productId);
     if (!product) {
@@ -722,7 +809,7 @@ const submitSale = async () => {
     router.push({ name: 'SaleDetails', params: { id: saleId } });
   } catch (error) {
     notify.error('حدث خطأ أثناء حفظ البيع. يرجى المحاولة مرة أخرى.');
-    console.error(error);
+    console.error('Sale submission error:', error);
   } finally {
     loading.value = false;
   }
@@ -809,6 +896,29 @@ if (typeof window !== 'undefined') {
   });
 }
 
+// Keyboard shortcuts
+const shortcuts = createPageShortcuts({
+  create: () => addItem(),
+  save: () => submitSale(),
+  cancel: () => handleCancel(),
+});
+
+// Additional shortcuts
+shortcuts['f1'] = (e) => {
+  e.preventDefault();
+  addItem();
+};
+shortcuts['f2'] = (e) => {
+  e.preventDefault();
+  submitSale();
+};
+shortcuts['f3'] = (e) => {
+  e.preventDefault();
+  handleCancel();
+};
+
+useKeyboardShortcuts(shortcuts);
+
 /* ⚙️ تحميل البيانات */
 onMounted(async () => {
   // تحميل المنتجات
@@ -821,7 +931,6 @@ onMounted(async () => {
     if (settings) {
       currencySettings.value = {
         ...settings,
-        showSecondaryCurrency: settings.showSecondaryCurrency !== undefined ? settings.showSecondaryCurrency : true,
       };
       // استخدام العملة الافتراضية أو أول عملة متاحة
       const defaultCurrency = settings.defaultCurrency || 'IQD';
@@ -857,7 +966,9 @@ onMounted(async () => {
         // تحميل عناصر المسودة
         if (draftData.items && draftData.items.length > 0) {
           sale.value.items = draftData.items.map(item => {
-            const product = products.value.find(p => p.id === item.productId);
+            const product = products.value && Array.isArray(products.value) 
+              ? products.value.find(p => p.id === item.productId)
+              : null;
             return {
               productId: item.productId,
               quantity: item.quantity,

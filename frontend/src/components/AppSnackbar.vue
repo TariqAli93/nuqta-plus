@@ -1,19 +1,35 @@
 <template>
   <v-snackbar
     v-model="notificationStore.show"
-    :timeout="notificationStore.timeout"
+    :timeout="notificationStore.action ? 0 : notificationStore.timeout"
     :color="snackbarColor"
     location="top"
     multi-line
     @update:model-value="onClose"
+    role="alert"
+    :aria-live="notificationStore.type === 'error' ? 'assertive' : 'polite'"
   >
     <div class="d-flex align-center">
-      <v-icon :icon="snackbarIcon" class="mr-3" />
+      <v-icon :icon="snackbarIcon" class="mr-3" aria-hidden="true" />
       <span>{{ notificationStore.message }}</span>
     </div>
 
     <template #actions>
-      <v-btn variant="text" icon="mdi-close" @click="notificationStore.hide()" />
+      <v-btn
+        v-if="notificationStore.action"
+        :color="snackbarColor"
+        variant="text"
+        @click="handleAction"
+        :aria-label="notificationStore.action.label || 'تنفيذ الإجراء'"
+      >
+        {{ notificationStore.action.label || 'تنفيذ' }}
+      </v-btn>
+      <v-btn
+        variant="text"
+        icon="mdi-close"
+        @click="notificationStore.hide()"
+        aria-label="إغلاق"
+      />
     </template>
   </v-snackbar>
 </template>
@@ -43,6 +59,13 @@ const snackbarIcon = computed(() => {
   };
   return icons[notificationStore.type] || 'mdi-information';
 });
+
+const handleAction = () => {
+  if (notificationStore.action?.onClick) {
+    notificationStore.action.onClick();
+  }
+  notificationStore.hide();
+};
 
 const onClose = (value) => {
   if (!value) {

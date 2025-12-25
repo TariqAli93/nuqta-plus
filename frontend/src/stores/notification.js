@@ -9,10 +9,11 @@ export const useNotificationStore = defineStore('notification', {
     position: 'top',
     lastMessage: '',
     lastAt: 0,
+    action: null, // { label, onClick }
   }),
 
   actions: {
-    showNotification({ message, type = 'info', timeout = 4000 }) {
+    showNotification({ message, type = 'info', timeout = 4000, action = null }) {
       const now = Date.now();
       // Suppress duplicate notifications fired within 800ms
       if (message === this.lastMessage && now - this.lastAt < 800) {
@@ -21,6 +22,7 @@ export const useNotificationStore = defineStore('notification', {
       this.message = message;
       this.type = type;
       this.timeout = timeout;
+      this.action = action;
       this.show = true;
       this.lastMessage = message;
       this.lastAt = now;
@@ -44,6 +46,7 @@ export const useNotificationStore = defineStore('notification', {
 
     hide() {
       this.show = false;
+      this.action = null;
     },
   },
 });

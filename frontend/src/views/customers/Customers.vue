@@ -3,25 +3,47 @@
     <v-card class="mb-4">
       <div class="flex justify-space-between items-center pa-3">
         <div class="text-h6 font-semibold text-primary">إدارة العملاء</div>
-        <v-btn color="primary" prepend-icon="mdi-plus" size="default" to="/customers/new"> عميل جديد </v-btn>
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus"
+          size="default"
+          to="/customers/new"
+          aria-label="إضافة عميل جديد"
+        >
+          عميل جديد
+        </v-btn>
       </div>
     </v-card>
 
     <v-card>
       <div class="pa-4 flex justify-lg-space-between items-center gap-4">
-        <v-text-field
-          v-model="search"
-          prepend-inner-icon="mdi-magnify"
-          label="البحث عن عميل"
-          single-line
-          hide-details
-          @input="handleSearch"
-          density="comfortable"
-        ></v-text-field>
+          <v-text-field
+            v-model="search"
+            prepend-inner-icon="mdi-magnify"
+            label="البحث عن عميل"
+            single-line
+            hide-details
+            @input="handleSearch"
+            density="comfortable"
+            aria-label="البحث عن عميل"
+          ></v-text-field>
       </div>
     </v-card>
 
     <v-card class="mt-4">
+      <v-card-title class="d-flex justify-space-between align-center">
+        <span>قائمة العملاء</span>
+        <v-btn
+          icon="mdi-download"
+          variant="text"
+          size="small"
+          @click="handleExport"
+          :disabled="customerStore.customers.length === 0"
+          aria-label="تصدير البيانات"
+        >
+          <v-icon>mdi-download</v-icon>
+        </v-btn>
+      </v-card-title>
       <v-data-table
         :headers="headers"
         :items="customerStore.customers"
@@ -29,6 +51,25 @@
         :items-per-page="10"
         density="comfortable"
       >
+        <template v-slot:loading>
+          <TableSkeleton :rows="5" :columns="headers.length" />
+        </template>
+        <template v-slot:no-data>
+          <EmptyState
+            title="لا يوجد عملاء"
+            description="ابدأ بإضافة عميل جديد"
+            icon="mdi-account-group"
+            :actions="[
+              {
+                text: 'إضافة عميل جديد',
+                icon: 'mdi-plus',
+                to: '/customers/new',
+                color: 'primary',
+              },
+            ]"
+            compact
+          />
+        </template>
         <template v-slot:[`item.actions`]="{ item }">
           <v-btn
             icon="mdi-pencil"
@@ -36,6 +77,7 @@
             variant="text"
             :to="`/customers/${item.id}/edit`"
             title="تعديل"
+            aria-label="تعديل العميل"
           >
             <v-icon size="20">mdi-pencil</v-icon>
           </v-btn>
@@ -47,6 +89,7 @@
             color="error"
             @click="confirmDelete(item)"
             title="حذف"
+            aria-label="حذف العميل"
           >
             <v-icon size="20">mdi-delete</v-icon>
           </v-btn>
@@ -54,22 +97,18 @@
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="deleteDialog" max-width="400">
-      <v-card>
-        <v-card-title class="bg-secondary text-white">تأكيد الحذف</v-card-title>
-        <v-card-text> هل أنت متأكد من حذف العميل {{ selectedCustomer?.name }}؟ </v-card-text>
-
-        <v-divider></v-divider>
-
-        <v-card-actions>
-          <v-btn color="error" variant="elevated" size="default" @click="handleDelete" :loading="deleting"
-            >حذف</v-btn
-          >
-          <v-spacer />
-          <v-btn variant="outlined" size="default" @click="deleteDialog = false">إلغاء</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <ConfirmDialog
+      v-model="deleteDialog"
+      title="تأكيد الحذف"
+      message="هل أنت متأكد من حذف العميل؟"
+      :details="selectedCustomer ? `العميل: ${selectedCustomer.name}` : ''"
+      type="error"
+      confirm-text="حذف"
+      cancel-text="إلغاء"
+      :loading="deleting"
+      @confirm="handleDelete"
+      @cancel="deleteDialog = false"
+    />
   </div>
 </template>
 
@@ -78,6 +117,12 @@ import { ref, computed, onMounted } from 'vue';
 import { useCustomerStore } from '@/stores/customer';
 import { useAuthStore } from '@/stores/auth';
 import * as uiAccess from '@/auth/uiAccess.js';
+import EmptyState from '@/components/EmptyState.vue';
+import TableSkeleton from '@/components/TableSkeleton.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import { useExport } from '@/composables/useExport';
+import { useUndo } from '@/composables/useUndo';
+import { useNotificationStore } from '@/stores/notification';
 
 const customerStore = useCustomerStore();
 const authStore = useAuthStore();
@@ -106,12 +151,42 @@ const confirmDelete = (customer) => {
   deleteDialog.value = true;
 };
 
+const { exportToCSV } = useExport();
+const { registerUndo } = useUndo();
+const notificationStore = useNotificationStore();
+
+const handleExport = () => {
+  try {
+    const exportHeaders = headers.map((h) => ({
+      title: h.title,
+      key: h.key,
+    }));
+    exportToCSV(customerStore.customers, exportHeaders, 'customers.csv');
+    notificationStore.success('تم تصدير البيانات بنجاح');
+  } catch {
+    notificationStore.error('فشل تصدير البيانات');
+  }
+};
+
 const handleDelete = async () => {
   deleting.value = true;
+  const customerId = selectedCustomer.value.id;
+  const customerName = selectedCustomer.value.name;
+  
   try {
-    await customerStore.deleteCustomer(selectedCustomer.value.id);
+    await customerStore.deleteCustomer(customerId);
     deleteDialog.value = false;
-  } catch (error) {
+    
+    // Register undo
+    registerUndo(
+      {
+        undo: async () => {
+          notificationStore.info('لا يمكن التراجع عن حذف العميل');
+        },
+      },
+      `تم حذف العميل "${customerName}"`
+    );
+  } catch {
     // Error handled by notification
   } finally {
     deleting.value = false;

@@ -24,7 +24,7 @@
       <v-form ref="formRef" v-model="isFormValid">
         <v-row>
           <!-- Company Name -->
-          <v-col cols="12" md="6">
+          <v-col cols="12" md="4">
             <v-text-field
               v-model="companyData.name"
               label="اسم الشركة *"
@@ -37,7 +37,7 @@
           </v-col>
 
           <!-- Invoice Type -->
-          <v-col cols="12" md="6">
+          <v-col cols="12" md="4">
             <v-select
               v-model="companyData.invoiceType"
               label="نوع الفاتورة"
@@ -51,10 +51,10 @@
           </v-col>
 
           <!-- Invoice Theme -->
-          <v-col cols="12" md="6">
+          <v-col cols="12" md="4">
             <v-select
               v-model="companyData.invoiceTheme"
-              label="ثيم الفاتورة"
+              label="تصميم الفاتورة"
               :items="invoiceThemes"
               variant="outlined"
               density="comfortable"

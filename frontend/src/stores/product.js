@@ -50,53 +50,84 @@ export const useProductStore = defineStore('product', {
     },
 
     async createProduct(productData) {
-      this.loading = true;
       const notificationStore = useNotificationStore();
+      
+      // Optimistic update: Add temporary product immediately
+      const tempId = `temp-${Date.now()}`;
+      const optimisticProduct = {
+        ...productData,
+        id: tempId,
+        _optimistic: true,
+      };
+      this.products.unshift(optimisticProduct);
+      
       try {
         const response = await api.post('/products', productData);
-        this.products.unshift(response.data);
+        // Replace optimistic product with real one
+        const index = this.products.findIndex((p) => p.id === tempId);
+        if (index !== -1) {
+          this.products[index] = response.data;
+        }
         notificationStore.success('تم إضافة المنتج بنجاح');
         return response;
       } catch (error) {
+        // Rollback: Remove optimistic product on error
+        this.products = this.products.filter((p) => p.id !== tempId);
         notificationStore.error(error.response?.data?.message || 'فشل إضافة المنتج');
         throw error;
-      } finally {
-        this.loading = false;
       }
     },
 
     async updateProduct(id, productData) {
-      this.loading = true;
       const notificationStore = useNotificationStore();
+      
+      // Optimistic update: Update product immediately
+      const index = this.products.findIndex((p) => p.id === id);
+      const originalProduct = index !== -1 ? { ...this.products[index] } : null;
+      
+      if (index !== -1) {
+        this.products[index] = { ...this.products[index], ...productData, _optimistic: true };
+      }
+      
       try {
         const response = await api.put(`/products/${id}`, productData);
-        const index = this.products.findIndex((p) => p.id === id);
         if (index !== -1) {
           this.products[index] = response.data;
         }
         notificationStore.success('تم تحديث المنتج بنجاح');
         return response;
       } catch (error) {
+        // Rollback: Restore original product on error
+        if (index !== -1 && originalProduct) {
+          this.products[index] = originalProduct;
+        }
         notificationStore.error(error.response?.data?.message || 'فشل تحديث المنتج');
         throw error;
-      } finally {
-        this.loading = false;
       }
     },
 
     async deleteProduct(id) {
-      this.loading = true;
       const notificationStore = useNotificationStore();
+      
+      // Optimistic update: Remove product immediately
+      const index = this.products.findIndex((p) => p.id === id);
+      const deletedProduct = index !== -1 ? { ...this.products[index] } : null;
+      
+      if (index !== -1) {
+        this.products.splice(index, 1);
+      }
+      
       try {
         const response = await api.delete(`/products/${id}`);
-        this.products = this.products.filter((p) => p.id !== id);
         notificationStore.success('تم حذف المنتج بنجاح');
         return response;
       } catch (error) {
+        // Rollback: Restore product on error
+        if (index !== -1 && deletedProduct) {
+          this.products.splice(index, 0, deletedProduct);
+        }
         notificationStore.error(error.response?.data?.message || 'فشل حذف المنتج');
         throw error;
-      } finally {
-        this.loading = false;
       }
     },
 

@@ -125,9 +125,6 @@
                 :items="availableCurrencies"
                 label="العملة"
                 :rules="[rules.required]"
-                :disabled="!settingsStore.showSecondaryCurrency"
-                :hint="!settingsStore.showSecondaryCurrency ? 'العملة الثانوية مخفية - يتم استخدام العملة الافتراضية فقط' : ''"
-                persistent-hint
                 density="comfortable"
               >
                 <template #prepend-inner>
@@ -506,8 +503,10 @@ const verifyAdmin = async () => {
       password: adminCredentials.value.password,
     });
 
+    console.log(response.data);
+
     // Check if user is admin
-    if (response.data?.user?.role?.name === 'admin') {
+    if (response.data?.user?.role === 'admin') {
       costPriceUnlocked.value = true;
       notification.success('تم التحقق بنجاح');
       closeAdminDialog();
@@ -562,19 +561,6 @@ watch(
   }
 );
 
-// مراقبة تغيير showSecondaryCurrency وإعادة تعيين العملة للافتراضية عند الإخفاء
-watch(
-  () => settingsStore.showSecondaryCurrency,
-  (showSecondary) => {
-    if (!showSecondary) {
-      // إذا تم إخفاء العملة الثانوية، استخدم العملة الافتراضية فقط
-      const defaultCurrency = settingsStore.settings?.defaultCurrency || 'IQD';
-      if (formData.value.currency !== defaultCurrency) {
-        formData.value.currency = defaultCurrency;
-      }
-    }
-  }
-);
 
 onMounted(async () => {
   // تحميل إعدادات العملة

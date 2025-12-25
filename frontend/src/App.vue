@@ -4,7 +4,9 @@
     <UpdateNotification />
     <LoadingProgressBar />
 
-    <router-view />
+    <main id="main-content" role="main" aria-label="المحتوى الرئيسي">
+      <router-view />
+    </main>
     <AppSnackbar />
     <AppErrorDialog />
 
@@ -24,10 +26,14 @@ import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import LoadingProgressBar from '@/components/LoadingProgressBar.vue';
 import UpdateNotification from '@/components/UpdateNotification.vue';
 import CreateFirstUser from '@/components/CreateFirstUser.vue';
+import { setupSkipLink } from '@/utils/accessibility';
 
 const authStore = useAuthStore();
 
 onMounted(async () => {
+  // Setup accessibility features
+  setupSkipLink();
+  
   // Check if user is logged in
   await authStore.checkAuth();
 });

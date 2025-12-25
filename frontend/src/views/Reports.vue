@@ -89,9 +89,6 @@
             :items="currencyOptions"
             label="العملة"
             density="comfortable"
-            :disabled="!settingsStore.showSecondaryCurrency"
-            :hint="!settingsStore.showSecondaryCurrency ? 'العملة الثانوية مخفية - يتم استخدام العملة الافتراضية فقط' : ''"
-            persistent-hint
           >
             <template #prepend-inner>
               <v-icon>mdi-currency-usd</v-icon>
@@ -309,19 +306,6 @@ const selectedCurrency = computed(() => {
   return defaultCurrency.value;
 });
 
-// Watch for showSecondaryCurrency changes and reset currency if needed
-watch(
-  () => settingsStore.showSecondaryCurrency,
-  (showSecondary) => {
-    if (!showSecondary) {
-      // إذا تم إخفاء العملة الثانوية، استخدم العملة الافتراضية فقط
-      const defaultCurr = settingsStore.settings?.defaultCurrency || 'IQD';
-      if (filters.value.currency !== defaultCurr) {
-        filters.value.currency = defaultCurr;
-      }
-    }
-  }
-);
 
 const toYmd = (date) => {
   if (!date) return '';

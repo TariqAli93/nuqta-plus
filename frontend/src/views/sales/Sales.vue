@@ -3,7 +3,15 @@
     <v-card class="mb-4">
       <div class="flex justify-space-between items-center pa-3">
         <div class="text-h6 font-semibold text-primary">إدارة المبيعات</div>
-        <v-btn color="primary" prepend-icon="mdi-plus" size="default" to="/sales/new"> بيع جديد </v-btn>
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus"
+          size="default"
+          to="/sales/new"
+          aria-label="إنشاء بيع جديد"
+        >
+          بيع جديد
+        </v-btn>
       </div>
     </v-card>
 
@@ -68,6 +76,19 @@
     </v-card>
 
     <v-card class="mb-4">
+      <v-card-title class="d-flex justify-space-between align-center">
+        <span>قائمة المبيعات</span>
+        <v-btn
+          icon="mdi-download"
+          variant="text"
+          size="small"
+          @click="handleExport"
+          :disabled="saleStore.sales.length === 0"
+          aria-label="تصدير البيانات"
+        >
+          <v-icon>mdi-download</v-icon>
+        </v-btn>
+      </v-card-title>
       <v-data-table
         :headers="headers"
         :items="saleStore.sales"
@@ -76,6 +97,25 @@
         class="cursor-pointer"
         density="comfortable"
       >
+        <template v-slot:loading>
+          <TableSkeleton :rows="5" :columns="headers.length" />
+        </template>
+        <template v-slot:no-data>
+          <EmptyState
+            title="لا توجد مبيعات"
+            description="ابدأ بإنشاء بيع جديد"
+            icon="mdi-cash-register"
+            :actions="[
+              {
+                text: 'بيع جديد',
+                icon: 'mdi-plus',
+                to: '/sales/new',
+                color: 'primary',
+              },
+            ]"
+            compact
+          />
+        </template>
         <template v-slot:[`item.total`]="{ item }">
           {{ formatCurrency(item.total, item.currency) }}
         </template>
@@ -147,6 +187,32 @@
         </template>
       </v-data-table>
     </v-card>
+
+    <!-- Delete Sale Dialog -->
+    <ConfirmDialog
+      v-model="deleteSaleDialog"
+      :title="selectedSaleForDelete?.status === 'draft' ? 'حذف المسودة' : 'إلغاء البيع'"
+      :message="selectedSaleForDelete?.status === 'draft' ? 'هل أنت متأكد من حذف هذه المسودة؟' : 'هل أنت متأكد من رغبتك في إلغاء هذه المبيعات؟'"
+      :details="selectedSaleForDelete ? `الفاتورة: ${selectedSaleForDelete.invoiceNumber}` : ''"
+      type="error"
+      confirm-text="نعم، تأكيد"
+      cancel-text="إلغاء"
+      @confirm="confirmDeleteSale"
+      @cancel="deleteSaleDialog = false"
+    />
+
+    <!-- Restore Sale Dialog -->
+    <ConfirmDialog
+      v-model="restoreSaleDialog"
+      title="استعادة البيع"
+      message="هل أنت متأكد من رغبتك في استعادة هذه المبيعات؟"
+      :details="selectedSaleForRestore ? `الفاتورة: ${selectedSaleForRestore.invoiceNumber}` : ''"
+      type="info"
+      confirm-text="نعم، استعادة"
+      cancel-text="إلغاء"
+      @confirm="confirmRestoreSale"
+      @cancel="restoreSaleDialog = false"
+    />
   </div>
 </template>
 
@@ -156,6 +222,11 @@ import { useRouter } from 'vue-router';
 import { useSaleStore } from '@/stores/sale';
 import { useCustomerStore } from '@/stores/customer';
 import { useAuthStore } from '../../stores/auth';
+import EmptyState from '@/components/EmptyState.vue';
+import TableSkeleton from '@/components/TableSkeleton.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import { useExport } from '@/composables/useExport';
+import { useNotificationStore } from '@/stores/notification';
 
 const router = useRouter();
 const saleStore = useSaleStore();
@@ -172,6 +243,14 @@ const filters = ref({
 const customers = ref([]);
 const isAdmin = computed(() => authStore.hasPermission(['sales:delete', 'manage:sales']));
 const canDelete = computed(() => isAdmin.value);
+
+const deleteSaleDialog = ref(false);
+const restoreSaleDialog = ref(false);
+const selectedSaleForDelete = ref(null);
+const selectedSaleForRestore = ref(null);
+
+const { exportToCSV } = useExport();
+const notificationStore = useNotificationStore();
 
 const statusOptions = [
   { title: 'مكتمل', value: 'completed' },
@@ -234,7 +313,7 @@ const handleFilter = () => {
   saleStore.fetchSales(filters.value);
 };
 
-const viewSale = (event, { item }) => {
+const viewSale = (_event, { item }) => {
   // إذا كانت المسودة، انتقل إلى صفحة إكمال البيع
   if (item.status === 'draft') {
     router.push({ name: 'NewSale', query: { draftId: item.id } });
@@ -246,40 +325,81 @@ const viewSale = (event, { item }) => {
 
 const deleteSale = async (id) => {
   // التحقق من نوع العملية (مسودة أو بيع عادي)
-  const saleItem = saleStore.sales.find(s => s.id === id);
-  const isDraft = saleItem?.status === 'draft';
+  const sale = saleStore.sales.find(s => s.id === id);
   
-  const confirmMessage = isDraft 
-    ? 'هل أنت متأكد من حذف هذه المسودة؟'
-    : 'هل أنت متأكد من رغبتك في إلغاء هذه المبيعات؟';
+  selectedSaleForDelete.value = sale;
+  deleteSaleDialog.value = true;
+};
+
+const confirmDeleteSale = async () => {
+  const sale = selectedSaleForDelete.value;
+  if (!sale) return;
   
-  if (confirm(confirmMessage)) {
-    if (isDraft) {
-      // حذف المسودة مباشرة
-      try {
-        await saleStore.removeSale(id);
-        handleFilter();
-      } catch {
-        // Error handled by store
-      }
-    } else {
-      // إلغاء البيع العادي
-      await saleStore.cancelSale(id);
+  const isDraft = sale.status === 'draft';
+  
+  if (isDraft) {
+    // حذف المسودة مباشرة
+    try {
+      await saleStore.removeSale(sale.id);
       handleFilter();
+      deleteSaleDialog.value = false;
+    } catch {
+      // Error handled by store
+    }
+  } else {
+    // إلغاء البيع العادي
+    try {
+      await saleStore.cancelSale(sale.id);
+      handleFilter();
+      deleteSaleDialog.value = false;
+    } catch {
+      // Error handled by store
     }
   }
 };
 
 const restoreSale = async (id) => {
-  if (confirm('هل أنت متأكد من رغبتك في استعادة هذه المبيعات؟')) {
-    await saleStore.restoreSale(id);
+  const sale = saleStore.sales.find(s => s.id === id);
+  selectedSaleForRestore.value = sale;
+  restoreSaleDialog.value = true;
+};
+
+const confirmRestoreSale = async () => {
+  const sale = selectedSaleForRestore.value;
+  if (!sale) return;
+  
+  try {
+    await saleStore.restoreSale(sale.id);
     handleFilter();
+    restoreSaleDialog.value = false;
+  } catch {
+    // Error handled by store
   }
 };
 
 const completeDraft = async (id) => {
   // الانتقال إلى صفحة إكمال المسودة
   router.push({ name: 'NewSale', query: { draftId: id } });
+};
+
+const handleExport = () => {
+  try {
+    const exportHeaders = headers.map((h) => ({
+      title: h.title,
+      key: h.key,
+      value: (item) => {
+        if (h.key === 'total') return formatCurrency(item.total, item.currency);
+        if (h.key === 'status') return getStatusText(item.status);
+        if (h.key === 'paymentType') return getPaymentTypeText(item.paymentType);
+        if (h.key === 'createdAt') return toYmd(item.createdAt);
+        return item[h.key] || '';
+      },
+    }));
+    exportToCSV(saleStore.sales, exportHeaders, 'sales.csv');
+    notificationStore.success('تم تصدير البيانات بنجاح');
+  } catch {
+    notificationStore.error('فشل تصدير البيانات');
+  }
 };
 
 // دالة البحث المخصصة: البحث بالاسم أو رقم الهاتف

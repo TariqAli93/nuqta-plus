@@ -6,12 +6,14 @@ export const useErrorDialogStore = defineStore('errorDialog', {
     title: '',
     message: '',
     details: [], // array of strings
+    helpLink: null, // { url, text }
   }),
   actions: {
-    show({ title = 'حدث خطأ', message = '', details = [] } = {}) {
+    show({ title = 'حدث خطأ', message = '', details = [], helpLink = null } = {}) {
       this.title = title;
       this.message = message;
       this.details = Array.isArray(details) ? details : [];
+      this.helpLink = helpLink;
       this.open = true;
     },
     hide() {
@@ -19,6 +21,7 @@ export const useErrorDialogStore = defineStore('errorDialog', {
       this.details = [];
       this.title = '';
       this.message = '';
+      this.helpLink = null;
     },
   },
 });

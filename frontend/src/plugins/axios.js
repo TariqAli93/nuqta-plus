@@ -6,6 +6,30 @@ import router from '@/router';
 import { buildArabicErrorMessage, extractArabicDetails } from '@/utils/errorTranslator';
 import { useErrorDialogStore } from '@/stores/errorDialog';
 
+// Helper to get help link based on error type
+const getHelpLinkForError = (error) => {
+  const status = error.response?.status;
+  const errorType = error.response?.data?.error;
+
+  if (status === 401) {
+    return { url: '/auth/login', text: 'تسجيل الدخول' };
+  }
+  if (status === 403) {
+    return { url: '/profile', text: 'التحقق من الصلاحيات' };
+  }
+  if (status === 404 && error.config?.url?.includes('/products')) {
+    return { url: '/products', text: 'عرض المنتجات' };
+  }
+  if (status === 404 && error.config?.url?.includes('/customers')) {
+    return { url: '/customers', text: 'عرض العملاء' };
+  }
+  if (errorType === 'ValidationError') {
+    return { url: '/settings', text: 'التحقق من الإعدادات' };
+  }
+
+  return null;
+};
+
 const api = axios.create({
   baseURL: 'http://127.0.0.1:3050/api',
   timeout: 10000,
@@ -119,10 +143,35 @@ api.interceptors.response.use(
         title: 'خطأ في التحقق من البيانات',
         message: buildMessage(error),
         details,
+        helpLink: error.response?.status === 422
+          ? {
+              url: '/settings',
+              text: 'التحقق من الإعدادات',
+            }
+          : null,
       });
     } else {
-      // Fallback precise message
-      notificationStore.error(buildMessage(error));
+      // Fallback precise message with actionable help
+      const message = buildMessage(error);
+      const helpLink = getHelpLinkForError(error);
+      
+      if (helpLink) {
+        notificationStore.showNotification({
+          message,
+          type: 'error',
+          timeout: 6000,
+          action: {
+            label: helpLink.text,
+            onClick: () => {
+              if (helpLink.url) {
+                router.push(helpLink.url);
+              }
+            },
+          },
+        });
+      } else {
+        notificationStore.error(message);
+      }
     }
     return Promise.reject(error.response?.data || error.message);
   }

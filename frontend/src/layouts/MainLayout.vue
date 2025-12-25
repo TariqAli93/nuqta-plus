@@ -81,10 +81,50 @@
 
     <v-app-bar app elevation="0" dark class="border-b" color="background">
       <v-container class="px-10 flex align-center">
-        <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
+        <v-app-bar-nav-icon
+          @click="drawer = !drawer"
+          aria-label="إظهار/إخفاء القائمة الجانبية"
+        ></v-app-bar-nav-icon>
         <v-toolbar-title>{{ currentPageTitle }}</v-toolbar-title>
 
         <v-spacer></v-spacer>
+
+        <!-- Search Button -->
+        <!-- <v-sheet
+          class="mr-2 cursor-pointer v-field v-field--density-comfortable v-field--variant-plain h-[48px] w-[48px] flex items-center justify-between px-3"
+          color="surface"
+          elevation="0"
+          rounded="xl"
+          aria-label="بحث سريع (Ctrl+K)"
+          @click="openQuickSearch"
+        >
+          <span class="flex items-center justify-center">
+            <v-icon>mdi-magnify</v-icon>
+            <span class="text-body-2 mr-3 font-medium">بحث سريع</span>
+          </span>
+          <v-hotkey keys="ctrl+k" variant="flat" platform="pc" />
+        </v-sheet> -->
+
+        
+          <v-text-field
+          class="cursor-pointer"
+          variant="outlined"
+          hide-details
+          density="comfortable"
+          aria-label="بحث سريع (Ctrl+K)"
+          placeholder="بحث سريع"
+          @click="openQuickSearch"
+        >
+          <template #prepend-inner>
+            <v-icon>mdi-magnify</v-icon>
+          </template>
+          
+          <template #append-inner>
+            <v-locale-provider locale="en" :rtl="false">
+              <v-hotkey keys="ctrl+k" variant="flat" platform="pc" />
+            </v-locale-provider>
+          </template>
+        </v-text-field>
 
         <!-- Alerts Badge -->
         <v-badge
@@ -93,19 +133,39 @@
           color="error"
           overlap
         >
-          <v-btn icon :to="{ name: 'Notifications' }">
+          <v-btn
+            icon
+            :to="{ name: 'Notifications' }"
+            aria-label="التنبيهات"
+            :aria-describedby="alertStore.unreadCount > 0 ? 'unread-alerts-count' : undefined"
+          >
             <v-icon>mdi-bell</v-icon>
+            <span v-if="alertStore.unreadCount > 0" id="unread-alerts-count" class="sr-only">
+              {{ alertStore.unreadCount }} تنبيه غير مقروء
+            </span>
           </v-btn>
         </v-badge>
 
-        <v-btn icon @click="toggleTheme">
+        <v-btn
+          icon
+          @click="toggleTheme"
+          :aria-label="isDark ? 'التبديل إلى الوضع الفاتح' : 'التبديل إلى الوضع الداكن'"
+        >
           <v-icon>{{ isDark ? 'mdi-white-balance-sunny' : 'mdi-weather-night' }}</v-icon>
         </v-btn>
 
         <v-menu>
           <template #activator="{ props }">
-            <v-btn icon v-bind="props">
+            <v-btn
+              icon
+              v-bind="props"
+              aria-label="قائمة المستخدم"
+              :aria-describedby="`user-menu-${authStore.user?.username}`"
+            >
               <v-icon>mdi-account-circle</v-icon>
+              <span :id="`user-menu-${authStore.user?.username}`" class="sr-only">
+                {{ authStore.user?.username }} - {{ authStore.user?.role?.name }}
+              </span>
             </v-btn>
           </template>
           <v-list>
@@ -114,10 +174,18 @@
               <v-list-item-subtitle>{{ authStore.user?.role?.name }}</v-list-item-subtitle>
             </v-list-item>
             <v-divider></v-divider>
-            <v-list-item prepend-icon="mdi-account-circle" to="/profile">
+            <v-list-item
+              prepend-icon="mdi-account-circle"
+              to="/profile"
+              aria-label="الملف الشخصي"
+            >
               <v-list-item-title>الملف الشخصي</v-list-item-title>
             </v-list-item>
-            <v-list-item prepend-icon="mdi-logout" @click="handleLogout">
+            <v-list-item
+              prepend-icon="mdi-logout"
+              @click="handleLogout"
+              aria-label="تسجيل خروج"
+            >
               <v-list-item-title>تسجيل خروج</v-list-item-title>
             </v-list-item>
           </v-list>
@@ -143,6 +211,9 @@
         </v-row>
       </v-container>
     </v-footer>
+
+    <!-- Quick Search -->
+    <QuickSearch />
   </v-app>
 </template>
 
@@ -153,6 +224,8 @@ import { useTheme } from 'vuetify';
 import { useAuthStore } from '@/stores/auth';
 import { useAlertStore } from '@/stores/alert';
 import * as uiAccess from '@/auth/uiAccess.js';
+import QuickSearch from '@/components/QuickSearch.vue';
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
 
 const router = useRouter();
 const route = useRoute();
@@ -164,6 +237,11 @@ const drawer = ref(true);
 const isDark = computed(() => theme.global.current.value.dark);
 
 const navigationDrawerSubItemsOpen = ref(['/users']);
+
+// Quick Search - use event to open search dialog
+const openQuickSearch = () => {
+  window.dispatchEvent(new CustomEvent('open-quick-search'));
+};
 
 // حفظ واستعادة تفضيل الثيم من localStorage
 const savedTheme = localStorage.getItem('theme') || 'light';
@@ -281,6 +359,9 @@ const handleLogout = () => {
   router.push({ name: 'Login' });
 };
 
+// Keyboard shortcuts
+useKeyboardShortcuts();
+
 // Start polling for alerts when component mounts
 onMounted(() => {
   if (authStore.isAuthenticated) {
@@ -299,5 +380,17 @@ onUnmounted(() => {
   max-width: 100px;
   height: 56px;
   object-fit: contain;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 </style>

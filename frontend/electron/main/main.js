@@ -15,7 +15,7 @@ import { getMachineId, saveLicenseString, verifyLicense } from '../scripts/licen
 import { setupAutoUpdater, checkForUpdates, startDownload } from '../scripts/autoUpdater.js';
 import { autoUpdater } from 'electron-updater';
 import { createLockFile } from '../scripts/firstRun.js';
-import { generateReceiptHtml, generateReceiptBodyHtml, getReceiptStyles } from '../scripts/receiptBuilder.js';
+import { generateReceiptHtml } from '../scripts/receiptBuilder.js';
 
 // --- المتغيرات العامة ---
 const isDev = !app.isPackaged;
@@ -53,7 +53,6 @@ function createWindow() {
     height: 900,
     minWidth: 600,
     minHeight: 700,
-    autoHideMenuBar: true,
     show: false,
     icon: isDev ? join(__dirname, '../../build/icon.png') : join(__dirname, '../build/icon.png'),
     webPreferences: {
@@ -71,6 +70,8 @@ function createWindow() {
     mainWindow.__readyToShow = true;
     tryToShowMainWindowAfterSplash();
   });
+
+  mainWindow.removeMenu();
 
   // Add error handlers for debugging
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
@@ -441,7 +442,6 @@ function createActivationWindow() {
     resizable: false,
     fullscreen: false,
     fullscreenable: false,
-    skipTaskbar: true,
     icon: path.join(__dirname, '../build/icon.png'),
     webPreferences: {
       devTools: false, // ← أهم شيء
@@ -543,7 +543,6 @@ function createSplashWindow() {
     center: true,
     transparent: true,
     show: false,
-    skipTaskbar: true,
     icon: isDev ? join(__dirname, '../../build/icon.png') : join(__dirname, '../build/icon.png'),
     webPreferences: {
       devTools: false, // ← أهم شيء
@@ -648,6 +647,7 @@ function tryToShowMainWindowAfterSplash() {
     }
     if (mainWindow) {
       mainWindow.show();
+      mainWindow.focus();
     }
   };
 

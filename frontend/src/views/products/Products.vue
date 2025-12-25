@@ -9,6 +9,7 @@
           prepend-icon="mdi-plus"
           size="default"
           to="/products/new"
+          aria-label="إضافة منتج جديد"
         >
           منتج جديد
         </v-btn>
@@ -27,6 +28,7 @@
               hide-details
               density="comfortable"
               @input="handleSearch"
+              aria-label="البحث عن منتج"
             ></v-text-field>
           </v-col>
           <v-col cols="12" md="4">
@@ -47,6 +49,19 @@
     </v-card>
 
     <v-card class="mt-4">
+      <v-card-title class="d-flex justify-space-between align-center">
+        <span>قائمة المنتجات</span>
+        <v-btn
+          icon="mdi-download"
+          variant="text"
+          size="small"
+          @click="handleExport"
+          :disabled="productStore.products.length === 0"
+          aria-label="تصدير البيانات"
+        >
+          <v-icon>mdi-download</v-icon>
+        </v-btn>
+      </v-card-title>
       <v-data-table
         :headers="headers"
         :items="productStore.products"
@@ -59,6 +74,25 @@
         server-items-length
         density="comfortable"
       >
+        <template v-slot:loading>
+          <TableSkeleton :rows="5" :columns="headers.length" />
+        </template>
+        <template v-slot:no-data>
+          <EmptyState
+            title="لا توجد منتجات"
+            description="ابدأ بإضافة منتج جديد لبناء مخزونك"
+            icon="mdi-package-variant"
+            :actions="[
+              {
+                text: 'إضافة منتج جديد',
+                icon: 'mdi-plus',
+                to: '/products/new',
+                color: 'primary',
+              },
+            ]"
+            compact
+          />
+        </template>
         <template v-slot:[`item.stock`]="{ item }">
           <v-chip :color="item.stock <= item.minStock ? 'error' : 'success'" size="small">
             {{ item.stock }}
@@ -79,6 +113,7 @@
             variant="text"
             :to="`/products/${item.id}/edit`"
             title="تعديل"
+            aria-label="تعديل المنتج"
           >
             <v-icon size="20">mdi-pencil</v-icon>
           </v-btn>
@@ -90,6 +125,7 @@
             color="error"
             @click="confirmDelete(item)"
             title="حذف"
+            aria-label="حذف المنتج"
           >
             <v-icon size="20">mdi-delete</v-icon>
           </v-btn>
@@ -97,20 +133,17 @@
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="deleteDialog" max-width="400">
-      <v-card>
-        <v-card-title class="text-white bg-secondary">تأكيد الحذف</v-card-title>
-        <v-card-text> هل أنت متأكد من حذف المنتج {{ selectedProduct?.name }}؟ </v-card-text>
-
-        <v-divider></v-divider>
-
-        <v-card-actions>
-          <v-btn color="error" variant="elevated" size="default" @click="handleDelete">حذف</v-btn>
-          <v-spacer />
-          <v-btn variant="outlined" size="default" @click="deleteDialog = false">إلغاء</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <ConfirmDialog
+      v-model="deleteDialog"
+      title="تأكيد الحذف"
+      message="هل أنت متأكد من حذف المنتج؟"
+      :details="selectedProduct ? `المنتج: ${selectedProduct.name}` : ''"
+      type="error"
+      confirm-text="حذف"
+      cancel-text="إلغاء"
+      @confirm="handleDelete"
+      @cancel="deleteDialog = false"
+    />
   </div>
 </template>
 
@@ -120,6 +153,12 @@ import { useProductStore } from '@/stores/product';
 import { useCategoryStore } from '@/stores/category';
 import { useAuthStore } from '@/stores/auth';
 import * as uiAccess from '@/auth/uiAccess.js';
+import EmptyState from '@/components/EmptyState.vue';
+import TableSkeleton from '@/components/TableSkeleton.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import { useExport } from '@/composables/useExport';
+import { useUndo } from '@/composables/useUndo';
+import { useNotificationStore } from '@/stores/notification';
 
 const productStore = useProductStore();
 const categoryStore = useCategoryStore();
@@ -217,11 +256,48 @@ const confirmDelete = (product) => {
   deleteDialog.value = true;
 };
 
-const handleDelete = async () => {
+const { exportToCSV } = useExport();
+const { registerUndo } = useUndo();
+const notificationStore = useNotificationStore();
+
+const handleExport = () => {
   try {
-    await productStore.deleteProduct(selectedProduct.value.id);
+    const exportHeaders = headers.map((h) => ({
+      title: h.title,
+      key: h.key,
+      value: (item) => {
+        if (h.key === 'stock') return item.stock;
+        if (h.key === 'sellingPrice') return `${item.sellingPrice} ${item.currency}`;
+        if (h.key === 'status') return getStatusText(item.status);
+        return item[h.key] || '';
+      },
+    }));
+    exportToCSV(productStore.products, exportHeaders, 'products.csv');
+    notificationStore.success('تم تصدير البيانات بنجاح');
+  } catch {
+    notificationStore.error('فشل تصدير البيانات');
+  }
+};
+
+const handleDelete = async () => {
+  const productId = selectedProduct.value.id;
+  const productName = selectedProduct.value.name;
+  
+  try {
+    await productStore.deleteProduct(productId);
     deleteDialog.value = false;
-  } catch (error) {
+    
+    // Register undo
+    registerUndo(
+      {
+        undo: async () => {
+          // Note: This would require a restore endpoint
+          notificationStore.info('لا يمكن التراجع عن حذف المنتج');
+        },
+      },
+      `تم حذف المنتج "${productName}"`
+    );
+  } catch {
     // Error handled by notification
   }
 };

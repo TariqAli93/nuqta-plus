@@ -28,7 +28,7 @@
         <v-form ref="formRef" v-model="isFormValid">
           <v-row>
             <!-- Default Currency -->
-            <v-col cols="12" md="6">
+            <v-col cols="12" md="12">
               <v-select
                 v-model="currencyData.defaultCurrency"
                 label="العملة الافتراضية *"
@@ -58,25 +58,6 @@
               </v-select>
             </v-col>
 
-            <!-- Show Secondary Currency Toggle -->
-            <v-col cols="12" md="6">
-              <v-card variant="tonal" color="primary" class="pa-4 h-100 d-flex align-center">
-                <v-switch
-                  v-model="currencyData.showSecondaryCurrency"
-                  label="إظهار العملة الثانوية"
-                  color="primary"
-                  hide-details
-                  class="ma-0"
-                >
-                  <template v-slot:label>
-                    <div class="d-flex align-center">
-                      <v-icon size="20" class="me-2">mdi-eye</v-icon>
-                      <span class="font-weight-medium">إظهار العملة الثانوية</span>
-                    </div>
-                  </template>
-                </v-switch>
-              </v-card>
-            </v-col>
 
             <!-- Exchange Rates Section -->
             <v-col cols="12">
@@ -90,7 +71,7 @@
             <!-- USD Exchange Rate -->
             <v-col 
               cols="12" 
-              :md="currencyData.showSecondaryCurrency ? 6 : 12"
+              md="6"
               :class="{ 'transition-all': true }"
             >
               <v-text-field
@@ -110,7 +91,6 @@
 
             <!-- IQD Exchange Rate -->
             <v-col 
-              v-show="currencyData.showSecondaryCurrency"
               cols="12" 
               md="6"
               :class="{ 'transition-all': true }"
@@ -118,7 +98,7 @@
               <v-text-field
                 v-model.number="currencyData.iqdRate"
                 label="سعر صرف الدينار (IQD) *"
-                :rules="currencyData.showSecondaryCurrency ? [rules.required, rules.positiveNumber] : []"
+                :rules="[rules.required, rules.positiveNumber]"
                 variant="outlined"
                 density="comfortable"
                 type="number"
@@ -126,7 +106,7 @@
                 disabled
                 hint="القيمة الافتراضية للدينار العراقي"
                 persistent-hint
-                :required="currencyData.showSecondaryCurrency"
+                required
               />
             </v-col>
 
@@ -141,9 +121,6 @@
                       <li>العملة الافتراضية ستستخدم في جميع عمليات البيع الجديدة</li>
                       <li>يمكنك تغيير أسعار الصرف في أي وقت</li>
                       <li>التغييرات ستؤثر على العمليات الجديدة فقط</li>
-                      <li v-if="!currencyData.showSecondaryCurrency" class="text-medium-emphasis">
-                        تم إخفاء العملة الثانوية - سيتم عرض العملة الافتراضية فقط
-                      </li>
                     </ul>
                   </div>
                 </div>
@@ -190,7 +167,6 @@ const currencyData = ref({
   defaultCurrency: 'IQD',
   usdRate: 1500,
   iqdRate: 1,
-  showSecondaryCurrency: true,
 });
 
 // Validation rules
@@ -221,7 +197,6 @@ onMounted(async () => {
         defaultCurrency: settings.defaultCurrency || 'IQD',
         usdRate: settings.usdRate || 1500,
         iqdRate: settings.iqdRate || 1,
-        showSecondaryCurrency: settings.showSecondaryCurrency !== undefined ? settings.showSecondaryCurrency : true,
       };
     }
   } catch {

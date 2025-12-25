@@ -48,53 +48,80 @@ export const useCustomerStore = defineStore('customer', {
     },
 
     async createCustomer(customerData) {
-      this.loading = true;
       const notificationStore = useNotificationStore();
+      
+      // Optimistic update
+      const tempId = `temp-${Date.now()}`;
+      const optimisticCustomer = {
+        ...customerData,
+        id: tempId,
+        _optimistic: true,
+      };
+      this.customers.unshift(optimisticCustomer);
+      
       try {
         const response = await api.post('/customers', customerData);
-        this.customers.unshift(response.data);
+        const index = this.customers.findIndex((c) => c.id === tempId);
+        if (index !== -1) {
+          this.customers[index] = response.data;
+        }
         notificationStore.success('تم إضافة العميل بنجاح');
         return response;
       } catch (error) {
+        this.customers = this.customers.filter((c) => c.id !== tempId);
         notificationStore.error(error.response?.data?.message || 'فشل إضافة العميل');
         throw error;
-      } finally {
-        this.loading = false;
       }
     },
 
     async updateCustomer(id, customerData) {
-      this.loading = true;
       const notificationStore = useNotificationStore();
+      
+      // Optimistic update
+      const index = this.customers.findIndex((c) => c.id === id);
+      const originalCustomer = index !== -1 ? { ...this.customers[index] } : null;
+      
+      if (index !== -1) {
+        this.customers[index] = { ...this.customers[index], ...customerData, _optimistic: true };
+      }
+      
       try {
         const response = await api.put(`/customers/${id}`, customerData);
-        const index = this.customers.findIndex((c) => c.id === id);
         if (index !== -1) {
           this.customers[index] = response.data;
         }
         notificationStore.success('تم تحديث العميل بنجاح');
         return response;
       } catch (error) {
+        if (index !== -1 && originalCustomer) {
+          this.customers[index] = originalCustomer;
+        }
         notificationStore.error(error.response?.data?.message || 'فشل تحديث العميل');
         throw error;
-      } finally {
-        this.loading = false;
       }
     },
 
     async deleteCustomer(id) {
-      this.loading = true;
       const notificationStore = useNotificationStore();
+      
+      // Optimistic update
+      const index = this.customers.findIndex((c) => c.id === id);
+      const deletedCustomer = index !== -1 ? { ...this.customers[index] } : null;
+      
+      if (index !== -1) {
+        this.customers.splice(index, 1);
+      }
+      
       try {
         const response = await api.delete(`/customers/${id}`);
-        this.customers = this.customers.filter((c) => c.id !== id);
         notificationStore.success('تم حذف العميل بنجاح');
         return response;
       } catch (error) {
+        if (index !== -1 && deletedCustomer) {
+          this.customers.splice(index, 0, deletedCustomer);
+        }
         notificationStore.error(error.response?.data?.message || 'فشل حذف العميل');
         throw error;
-      } finally {
-        this.loading = false;
       }
     },
 

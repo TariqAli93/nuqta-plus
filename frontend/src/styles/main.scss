@@ -84,10 +84,55 @@
   border: 0;
 }
 
+// Skip link for keyboard navigation
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: rgb(var(--v-theme-primary));
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  z-index: 10000;
+  border-radius: 4px;
+  transition: top 0.2s;
+
+  &:focus {
+    top: 0;
+    outline: 2px solid rgb(var(--v-theme-primary));
+    outline-offset: 2px;
+  }
+}
+
 // Focus Styles
 *:focus-visible {
   outline: 2px solid var(--v-theme-primary);
   outline-offset: 2px;
+  border-radius: 4px;
+}
+
+// Ensure minimum touch target size
+button,
+a,
+.v-btn,
+.v-list-item {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+// RTL Support
+[dir='rtl'] {
+  .v-data-table {
+    direction: rtl;
+  }
+
+  .v-list {
+    direction: rtl;
+  }
+
+  .v-menu {
+    direction: rtl;
+  }
 }
 
 // ============================================

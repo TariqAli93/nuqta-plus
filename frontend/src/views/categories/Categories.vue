@@ -56,26 +56,24 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="deleteDialog" max-width="400">
-      <v-card>
-        <v-card-title class="text-white bg-secondary">تأكيد الحذف</v-card-title>
-        <v-card-text> هل أنت متأكد من حذف التصنيف {{ selectedCategory?.name }}؟ </v-card-text>
-
-        <v-divider></v-divider>
-
-        <v-card-actions>
-          <v-btn variant="elevated" color="error" @click="handleDelete">حذف</v-btn>
-          <v-spacer />
-          <v-btn @click="deleteDialog = false">إلغاء</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <ConfirmDialog
+      v-model="deleteDialog"
+      title="تأكيد الحذف"
+      message="هل أنت متأكد من حذف التصنيف؟"
+      :details="selectedCategory ? `التصنيف: ${selectedCategory.name}` : ''"
+      type="error"
+      confirm-text="حذف"
+      cancel-text="إلغاء"
+      @confirm="handleDelete"
+      @cancel="deleteDialog = false"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useCategoryStore } from '@/stores/category';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
 const categoryStore = useCategoryStore();
 
