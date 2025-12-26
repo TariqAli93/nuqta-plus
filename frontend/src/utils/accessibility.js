@@ -143,4 +143,3 @@ export function isVisibleToScreenReader(element) {
     element.getAttribute('aria-hidden') !== 'true'
   );
 }
-

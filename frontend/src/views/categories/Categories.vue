@@ -15,7 +15,7 @@
         :items="categoryStore.categories"
         :loading="categoryStore.loading"
       >
-        <template v-slot:[`item.actions`]="{ item }">
+        <template #[`item.actions`]="{ item }">
           <v-btn icon="mdi-pencil" size="small" variant="text" @click="openDialog(item)"></v-btn>
           <v-btn
             icon="mdi-delete"
@@ -122,7 +122,7 @@ const handleSubmit = async () => {
       await categoryStore.createCategory(formData.value);
     }
     dialog.value = false;
-  } catch (error) {
+  } catch {
     // Error handled by notification
   } finally {
     saving.value = false;
@@ -138,7 +138,7 @@ const handleDelete = async () => {
   try {
     await categoryStore.deleteCategory(selectedCategory.value.id);
     deleteDialog.value = false;
-  } catch (error) {
+  } catch {
     // Error handled by notification
   }
 };

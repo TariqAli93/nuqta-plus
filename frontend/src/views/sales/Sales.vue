@@ -116,23 +116,23 @@
             compact
           />
         </template>
-        <template v-slot:[`item.total`]="{ item }">
+        <template #[`item.total`]="{ item }">
           {{ formatCurrency(item.total, item.currency) }}
         </template>
-        <template v-slot:[`item.status`]="{ item }">
+        <template #[`item.status`]="{ item }">
           <v-chip :color="getStatusColor(item.status)" size="small">
             {{ getStatusText(item.status) }}
           </v-chip>
         </template>
-        <template v-slot:[`item.createdAt`]="{ item }">
+        <template #[`item.createdAt`]="{ item }">
           {{ toYmd(item.createdAt) }}
         </template>
 
-        <template v-slot:[`item.paymentType`]="{ item }">
+        <template #[`item.paymentType`]="{ item }">
           {{ getPaymentTypeText(item.paymentType) }}
         </template>
 
-        <template v-slot:[`item.actions`]="{ item }">
+        <template #[`item.actions`]="{ item }">
           <!-- أزرار المسودات -->
           <template v-if="item.status === 'draft'">
             <v-btn
@@ -192,7 +192,11 @@
     <ConfirmDialog
       v-model="deleteSaleDialog"
       :title="selectedSaleForDelete?.status === 'draft' ? 'حذف المسودة' : 'إلغاء البيع'"
-      :message="selectedSaleForDelete?.status === 'draft' ? 'هل أنت متأكد من حذف هذه المسودة؟' : 'هل أنت متأكد من رغبتك في إلغاء هذه المبيعات؟'"
+      :message="
+        selectedSaleForDelete?.status === 'draft'
+          ? 'هل أنت متأكد من حذف هذه المسودة؟'
+          : 'هل أنت متأكد من رغبتك في إلغاء هذه المبيعات؟'
+      "
       :details="selectedSaleForDelete ? `الفاتورة: ${selectedSaleForDelete.invoiceNumber}` : ''"
       type="error"
       confirm-text="نعم، تأكيد"
@@ -325,8 +329,8 @@ const viewSale = (_event, { item }) => {
 
 const deleteSale = async (id) => {
   // التحقق من نوع العملية (مسودة أو بيع عادي)
-  const sale = saleStore.sales.find(s => s.id === id);
-  
+  const sale = saleStore.sales.find((s) => s.id === id);
+
   selectedSaleForDelete.value = sale;
   deleteSaleDialog.value = true;
 };
@@ -334,9 +338,9 @@ const deleteSale = async (id) => {
 const confirmDeleteSale = async () => {
   const sale = selectedSaleForDelete.value;
   if (!sale) return;
-  
+
   const isDraft = sale.status === 'draft';
-  
+
   if (isDraft) {
     // حذف المسودة مباشرة
     try {
@@ -359,7 +363,7 @@ const confirmDeleteSale = async () => {
 };
 
 const restoreSale = async (id) => {
-  const sale = saleStore.sales.find(s => s.id === id);
+  const sale = saleStore.sales.find((s) => s.id === id);
   selectedSaleForRestore.value = sale;
   restoreSaleDialog.value = true;
 };
@@ -367,7 +371,7 @@ const restoreSale = async (id) => {
 const confirmRestoreSale = async () => {
   const sale = selectedSaleForRestore.value;
   if (!sale) return;
-  
+
   try {
     await saleStore.restoreSale(sale.id);
     handleFilter();

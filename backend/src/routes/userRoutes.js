@@ -14,7 +14,7 @@ export default async function userRoutes(fastify) {
 
   // All user management routes - admin only
   fastify.addHook('onRequest', fastify.authenticate);
-  
+
   fastify.get('/', {
     onRequest: [fastify.authorize('users:read')],
     handler: userController.list.bind(userController),

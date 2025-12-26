@@ -79,7 +79,6 @@ function translateFieldName(field = '') {
     fullName: 'الاسم الكامل',
     phone: 'رقم الهاتف',
     role: 'الدور',
-    role: 'الدور',
     permissions: 'الصلاحيات',
 
     // category: handled once above if needed

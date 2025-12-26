@@ -8,12 +8,7 @@
 
         <v-spacer />
 
-        <v-btn
-          color="primary"
-          prepend-icon="mdi-printer"
-          @click="handlePrint"
-          :loading="printing"
-        >
+        <v-btn color="primary" prepend-icon="mdi-printer" @click="handlePrint" :loading="printing">
           طباعة
         </v-btn>
 
@@ -174,7 +169,12 @@
               </div>
               <div class="mt-1 text-caption text-grey">
                 {{ sale.installments.length }} أقساط ×
-                {{ formatCurrency(sale.installments.length > 0 ? sale.total / sale.installments.length : 0, sale.currency) }}
+                {{
+                  formatCurrency(
+                    sale.installments.length > 0 ? sale.total / sale.installments.length : 0,
+                    sale.currency
+                  )
+                }}
               </div>
             </div>
           </v-col>
@@ -442,7 +442,6 @@ const { params } = useRoute();
 const saleStore = useSaleStore();
 const settingsStore = useSettingsStore();
 const notificationStore = useNotificationStore();
-
 
 const printing = ref(false);
 const settings = ref(null);

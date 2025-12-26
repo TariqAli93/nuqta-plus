@@ -6,7 +6,7 @@ import path from 'path';
 const getUserDataDir = () => {
   const platform = process.platform;
   const homeDir = os.homedir();
-  
+
   if (platform === 'win32') {
     // Windows: %APPDATA%\@nuqtaplus
     return path.join(homeDir, 'AppData', 'Roaming', '@nuqtaplus');

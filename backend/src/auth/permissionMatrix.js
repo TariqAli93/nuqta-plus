@@ -141,4 +141,3 @@ export function matchesPermissionPattern(permission, pattern) {
 }
 
 export default PERMISSION_MATRIX;
-

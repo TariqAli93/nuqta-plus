@@ -82,7 +82,7 @@
               <div class="result-section-title">منتجات</div>
               <v-list density="compact">
                 <v-list-item
-                  v-for="(item, index) in searchResults.products"
+                  v-for="item in searchResults.products"
                   :key="`product-${item.id}`"
                   :class="{ 'bg-primary-lighten-5': selectedIndex === `product-${item.id}` }"
                   @click="selectResult(item)"
@@ -101,7 +101,7 @@
               <div class="result-section-title">عملاء</div>
               <v-list density="compact">
                 <v-list-item
-                  v-for="(item, index) in searchResults.customers"
+                  v-for="item in searchResults.customers"
                   :key="`customer-${item.id}`"
                   :class="{ 'bg-primary-lighten-5': selectedIndex === `customer-${item.id}` }"
                   @click="selectResult(item)"
@@ -120,7 +120,7 @@
               <div class="result-section-title">مبيعات</div>
               <v-list density="compact">
                 <v-list-item
-                  v-for="(item, index) in searchResults.sales"
+                  v-for="item in searchResults.sales"
                   :key="`sale-${item.id}`"
                   :class="{ 'bg-primary-lighten-5': selectedIndex === `sale-${item.id}` }"
                   @click="selectResult(item)"
@@ -146,7 +146,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useQuickSearch } from '@/composables/useQuickSearch';
 
 const { query, isOpen, isLoading, searchResults, performSearch, open, close, selectResult } =
@@ -263,4 +263,3 @@ onUnmounted(() => {
   gap: 0.5rem;
 }
 </style>
-

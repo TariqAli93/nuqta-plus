@@ -14,7 +14,7 @@
 </template>
 
 <script setup>
-const props = defineProps({
+defineProps({
   rows: {
     type: Number,
     default: 5,
@@ -51,4 +51,3 @@ const props = defineProps({
   height: 20px;
 }
 </style>
-

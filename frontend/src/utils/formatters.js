@@ -9,7 +9,7 @@
  */
 export function formatDate(date, options = {}) {
   if (!date) return '';
-  
+
   const dateObj = date instanceof Date ? date : new Date(date);
   if (isNaN(dateObj.getTime())) return '';
 
@@ -45,7 +45,7 @@ export function formatDateTime(date) {
  */
 export function formatNumber(number, decimals = 2) {
   if (number === null || number === undefined || isNaN(number)) return '0';
-  
+
   return new Intl.NumberFormat('ar', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
@@ -61,9 +61,9 @@ export function formatNumber(number, decimals = 2) {
  */
 export function formatCurrency(amount, currency = 'IQD', decimals = 2) {
   if (amount === null || amount === undefined || isNaN(amount)) return '0';
-  
+
   const symbol = currency === 'USD' ? '$' : 'د.ع';
-  
+
   return `${symbol} ${formatNumber(amount, decimals)}`;
 }
 
@@ -73,7 +73,7 @@ export function formatCurrency(amount, currency = 'IQD', decimals = 2) {
  */
 export function formatRelativeTime(date) {
   if (!date) return '';
-  
+
   const dateObj = date instanceof Date ? date : new Date(date);
   if (isNaN(dateObj.getTime())) return '';
 
@@ -88,7 +88,7 @@ export function formatRelativeTime(date) {
   if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
   if (diffHours < 24) return `منذ ${diffHours} ساعة`;
   if (diffDays < 7) return `منذ ${diffDays} يوم`;
-  
+
   return formatDate(dateObj);
 }
 
@@ -98,8 +98,9 @@ export function formatRelativeTime(date) {
  */
 export function parseNumber(value) {
   if (!value) return 0;
-  const numStr = String(value).replace(/,/g, '').replace(/[^\d.-]/g, '');
+  const numStr = String(value)
+    .replace(/,/g, '')
+    .replace(/[^\d.-]/g, '');
   const num = parseFloat(numStr);
   return isNaN(num) ? 0 : num;
 }
-

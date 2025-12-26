@@ -146,7 +146,7 @@ const handleLogin = async () => {
     console.error('Form reference is not available');
     return;
   }
-  
+
   const { valid } = await loginForm.value.validate();
   if (!valid) return;
   loading.value = true;

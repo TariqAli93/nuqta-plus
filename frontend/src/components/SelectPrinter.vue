@@ -22,7 +22,10 @@
               :value="printer"
             >
               <template v-if="printer.isDefault" #label>
-                <span>{{ printer.displayName || printer.name }} <v-chip size="x-small" color="primary">افتراضي</v-chip></span>
+                <span
+                  >{{ printer.displayName || printer.name }}
+                  <v-chip size="x-small" color="primary">افتراضي</v-chip></span
+                >
               </template>
             </v-radio>
           </v-radio-group>
@@ -54,7 +57,9 @@ const dialog = ref(false);
 const confirmSelection = () => {
   if (selectedPrinter.value) {
     setPrinter(selectedPrinter.value);
-    success(`تم اختيار الطابعة: ${selectedPrinter.value.displayName || selectedPrinter.value.name}`);
+    success(
+      `تم اختيار الطابعة: ${selectedPrinter.value.displayName || selectedPrinter.value.name}`
+    );
     dialog.value = false;
   } else {
     error('يرجى اختيار طابعة قبل التأكيد');
@@ -64,13 +69,13 @@ const confirmSelection = () => {
 const refreshPrinters = async () => {
   try {
     const printers = await window.electronAPI.getPrinters();
-    
+
     if (!printers || printers.length === 0) {
       availablePrinters.value = [];
       error('لم يتم العثور على أي طابعات');
       return;
     }
-    
+
     availablePrinters.value = printers;
     success(`تم جلب ${printers.length} طابعة بنجاح`);
   } catch (err) {
@@ -82,13 +87,13 @@ const refreshPrinters = async () => {
 onMounted(async () => {
   try {
     const printers = await window.electronAPI.getPrinters();
-    
+
     if (!printers || printers.length === 0) {
       availablePrinters.value = [];
       error('لم يتم العثور على أي طابعات. يرجى التأكد من توصيل الطابعة وإعدادات النظام.');
       return;
     }
-    
+
     availablePrinters.value = printers;
     success(`تم جلب ${printers.length} طابعة بنجاح`);
   } catch (err) {

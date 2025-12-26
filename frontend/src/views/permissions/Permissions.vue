@@ -42,25 +42,25 @@
         </template>
 
         <!-- 🔸 عمود الإجراء -->
-        <template #item.action="{ item }">
+        <template #[`item.action`]="{ item }">
           <v-chip color="primary" variant="flat" size="small">
             {{ translateAction(item.action) }}
           </v-chip>
         </template>
 
         <!-- 🔸 عمود الوصف -->
-        <template #item.description="{ item }">
+        <template #[`item.description`]="{ item }">
           <span class="text-gray-600 dark:text-gray-300 text-sm">
             {{ item.description || '—' }}
           </span>
         </template>
 
-        <template #item.name="{ item }">
+        <template #[`item.name`]="{ item }">
           <span>{{ translatePermission(item.name) }}</span>
         </template>
 
         <!-- 🔸 عمود العمليات -->
-        <template #item.actions="{ item }">
+        <template #[`item.actions`]="{ item }">
           <div class="flex justify-center gap-2">
             <v-btn icon size="small" variant="text" color="primary" @click="openForm(item)">
               <v-icon>mdi-pencil</v-icon>
@@ -148,8 +148,6 @@ const notification = useNotificationStore();
 const showForm = ref(false);
 const formRef = ref(null);
 const search = ref('');
-
-const snackbar = reactive({ show: false, text: '', color: 'success' });
 
 function translatePermission(name) {
   if (!name) return '—';

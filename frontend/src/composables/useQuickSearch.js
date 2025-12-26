@@ -29,7 +29,6 @@ export function useQuickSearch() {
       };
     }
 
-    const q = query.value.toLowerCase();
     return {
       pages: results.value.filter((r) => r.type === 'page'),
       products: results.value.filter((r) => r.type === 'product'),
@@ -131,4 +130,3 @@ export function useQuickSearch() {
     selectResult,
   };
 }
-

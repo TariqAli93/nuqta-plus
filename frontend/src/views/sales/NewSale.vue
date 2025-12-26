@@ -52,9 +52,7 @@
             aria-label="قراءة الباركود - اضغط Enter لإضافة المنتج"
           >
             <template #append-inner>
-              <FormFieldHelp
-                tooltip="امسح الباركود أو اكتبه واضغط Enter لإضافة المنتج تلقائياً"
-              />
+              <FormFieldHelp tooltip="امسح الباركود أو اكتبه واضغط Enter لإضافة المنتج تلقائياً" />
             </template>
           </v-text-field>
 
@@ -80,7 +78,9 @@
                       {{ productItem.raw.name }}
                     </template>
                     <template #subtitle>
-                      السعر: {{ formatCurrency(productItem.raw.sellingPrice, productItem.raw.currency) }} | المخزون: {{ productItem.raw.stock }}
+                      السعر:
+                      {{ formatCurrency(productItem.raw.sellingPrice, productItem.raw.currency) }} |
+                      المخزون: {{ productItem.raw.stock }}
                     </template>
                   </v-list-item>
                 </template>
@@ -127,7 +127,11 @@
             </v-col>
             <v-col cols="12" md="12">
               <v-text-field
-                :model-value="formatCurrency(item.quantity * item.unitPrice - ((item.discount || 0) * item.quantity))"
+                :model-value="
+                  formatCurrency(
+                    item.quantity * item.unitPrice - (item.discount || 0) * item.quantity
+                  )
+                "
                 :suffix="sale.currency"
                 label="صافي السعر"
                 readonly
@@ -264,9 +268,7 @@
                 </div>
                 <div class="py-2 border-b d-flex justify-space-between">
                   <span>النسبة الفعلية:</span>
-                  <span class="font-weight-bold">
-                    {{ actualInterestRate.toFixed(2) }}%
-                  </span>
+                  <span class="font-weight-bold"> {{ actualInterestRate.toFixed(2) }}% </span>
                 </div>
                 <div class="mt-2 d-flex justify-space-between">
                   <span>المبلغ المتبقي:</span>
@@ -292,10 +294,10 @@
                       <td>{{ installment.number }}</td>
                       <td class="font-weight-bold">{{ formatCurrency(installment.amount) }}</td>
                       <td>
-                        <span 
+                        <span
                           :class="{
                             'text-success font-weight-bold': installment.remaining === 0,
-                            'text-grey': installment.remaining > 0
+                            'text-grey': installment.remaining > 0,
                           }"
                         >
                           {{ formatCurrency(installment.remaining) }}
@@ -334,7 +336,14 @@
           </v-card>
 
           <!-- 📝 ملاحظات -->
-          <v-textarea v-model="sale.notes" label="ملاحظات" rows="3" auto-grow class="mb-4" density="comfortable" />
+          <v-textarea
+            v-model="sale.notes"
+            label="ملاحظات"
+            rows="3"
+            auto-grow
+            class="mb-4"
+            density="comfortable"
+          />
 
           <!-- أزرار -->
           <div class="gap-2 d-flex">
@@ -348,12 +357,7 @@
               حفظ البيع
               <v-chip size="x-small" class="mr-2" variant="outlined">F2</v-chip>
             </v-btn>
-            <v-btn
-              variant="outlined"
-              size="default"
-              @click="handleCancel"
-              aria-label="إلغاء (F3)"
-            >
+            <v-btn variant="outlined" size="default" @click="handleCancel" aria-label="إلغاء (F3)">
               إلغاء
               <v-chip size="x-small" class="mr-2" variant="outlined">F3</v-chip>
             </v-btn>
@@ -463,14 +467,14 @@ const total = computed(() => {
 // ✅ حساب الفائدة بشكل بسيط
 const interestValue = computed(() => {
   if (sale.value.paymentType !== 'installment') return 0;
-  
+
   const baseAmount = total.value;
-  
+
   // إذا كان الإدخال عن طريق المبلغ، استخدم المبلغ مباشرة
   if (sale.value.interestInputType === 'amount') {
     return Math.max(0, sale.value.interestAmount || 0);
   }
-  
+
   // فائدة بسيطة: الفائدة = المبلغ × النسبة
   const rate = sale.value.interestRate || 0;
   return baseAmount * (rate / 100);
@@ -485,45 +489,44 @@ const totalWithInterest = computed(() => {
 // ✅ حساب قيمة القسط الواحد بشكل دقيق
 const installmentAmount = computed(() => {
   if (sale.value.installmentCount <= 0) return 0;
-  
+
   const amount = totalWithInterest.value / sale.value.installmentCount;
-  
+
   // تقريب إلى رقمين عشريين
   return Math.round(amount * 100) / 100;
 });
 
 // ✅ حساب المبلغ المتبقي بدقة
 const remainingAmount = computed(() => {
-  const finalTotal = sale.value.paymentType === 'installment' 
-    ? totalWithInterest.value 
-    : total.value;
-  
+  const finalTotal =
+    sale.value.paymentType === 'installment' ? totalWithInterest.value : total.value;
+
   const paid = sale.value.paidAmount || 0;
   const remaining = finalTotal - paid;
-  
+
   return Math.max(0, Math.round(remaining * 100) / 100);
 });
 
 // ✅ جدول الأقساط التفصيلي (مصحح ومحسّن)
 const installmentSchedule = computed(() => {
   if (sale.value.paymentType !== 'installment') return [];
-  
+
   const schedule = [];
   const totalAmount = totalWithInterest.value;
   const paidAmount = sale.value.paidAmount || 0;
   let remaining = Math.round((totalAmount - paidAmount) * 100) / 100;
-  
+
   if (remaining <= 0 || sale.value.installmentCount <= 0) return [];
-  
+
   // حساب قيمة القسط الواحد (بدون تقريب)
   const baseInstallment = remaining / sale.value.installmentCount;
-  
+
   // مجموع الأقساط المقرّبة (للتأكد من عدم وجود فارق)
   let totalDistributed = 0;
-  
+
   for (let i = 1; i <= sale.value.installmentCount; i++) {
     const isLast = i === sale.value.installmentCount;
-    
+
     let installment;
     if (isLast) {
       // آخر قسط = المتبقي بالضبط (لضمان عدم وجود فارق)
@@ -542,28 +545,28 @@ const installmentSchedule = computed(() => {
       }
       totalDistributed += installment;
     }
-    
+
     // تحديث المتبقي قبل إضافة القسط
     remaining = Math.round((remaining - installment) * 100) / 100;
-    
+
     schedule.push({
       number: i,
       amount: installment,
       remaining: Math.max(0, remaining),
     });
   }
-  
+
   return schedule;
 });
 
 // ✅ إجمالي الفائدة الفعلية (للعرض)
 const actualInterestRate = computed(() => {
   if (sale.value.paymentType !== 'installment' || total.value === 0) return 0;
-  
+
   if (sale.value.interestInputType === 'amount') {
     return (interestValue.value / total.value) * 100;
   }
-  
+
   return sale.value.interestRate || 0;
 });
 
@@ -587,7 +590,6 @@ watch(
     applySaleCurrencyToItems();
   }
 );
-
 
 // مراقبة تغيير الكمية للتحقق من توفرها في المخزون
 watch(
@@ -624,9 +626,11 @@ watch(
 watch(
   () => [total.value, sale.value.interestRate],
   () => {
-    if (sale.value.paymentType === 'installment' && 
-        sale.value.interestInputType === 'rate' && 
-        total.value > 0) {
+    if (
+      sale.value.paymentType === 'installment' &&
+      sale.value.interestInputType === 'rate' &&
+      total.value > 0
+    ) {
       // فائدة بسيطة: الفائدة = المبلغ × النسبة
       const rate = sale.value.interestRate || 0;
       const calculatedInterest = total.value * (rate / 100);
@@ -639,9 +643,11 @@ watch(
 watch(
   () => [total.value, sale.value.interestAmount],
   () => {
-    if (sale.value.paymentType === 'installment' && 
-        sale.value.interestInputType === 'amount' && 
-        total.value > 0) {
+    if (
+      sale.value.paymentType === 'installment' &&
+      sale.value.interestInputType === 'amount' &&
+      total.value > 0
+    ) {
       // فائدة بسيطة: النسبة = (الفائدة / المبلغ) × 100
       const interest = sale.value.interestAmount || 0;
       const calculatedRate = (interest / total.value) * 100;
@@ -654,8 +660,8 @@ watch(
 const itemsTotal = computed(() =>
   sale.value.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0)
 );
-const itemsDiscount = computed(() => 
-  sale.value.items.reduce((s, i) => s + (i.discount || 0) * i.quantity, 0) // Multiply by quantity
+const itemsDiscount = computed(
+  () => sale.value.items.reduce((s, i) => s + (i.discount || 0) * i.quantity, 0) // Multiply by quantity
 );
 
 const saleSummary = computed(() => [
@@ -794,14 +800,14 @@ const submitSale = async () => {
   loading.value = true;
   try {
     let saleResponse;
-    
+
     // إذا كانت هناك مسودة، أكملها بدلاً من إنشاء بيع جديد
     if (currentDraftId.value) {
       saleResponse = await saleStore.completeDraft(currentDraftId.value, sale.value);
     } else {
       saleResponse = await saleStore.createSale(sale.value);
     }
-    
+
     saleCompleted.value = true; // تم حفظ البيع بنجاح
     notify.success('تم حفظ البيع بنجاح ✅');
 
@@ -824,7 +830,7 @@ const currentDraftId = ref(null);
 // دالة للإلغاء مع حذف المسودة إن وجدت
 const handleCancel = async () => {
   isCancelled.value = true;
-  
+
   // إذا كانت هناك مسودة محفوظة، احذفها
   if (currentDraftId.value) {
     try {
@@ -833,7 +839,7 @@ const handleCancel = async () => {
       console.error('Failed to delete draft:', error);
     }
   }
-  
+
   router.back();
 };
 
@@ -848,7 +854,14 @@ const saveDraft = async () => {
   // 3. لا توجد منتجات في القائمة
   // 4. تم حفظ المسودة بالفعل
   // 5. جاري حفظ المسودة حالياً
-  if (saleCompleted.value || isCancelled.value || !sale.value.items || sale.value.items.length === 0 || draftSaved.value || isSavingDraft.value) {
+  if (
+    saleCompleted.value ||
+    isCancelled.value ||
+    !sale.value.items ||
+    sale.value.items.length === 0 ||
+    draftSaved.value ||
+    isSavingDraft.value
+  ) {
     return;
   }
 
@@ -859,7 +872,7 @@ const saveDraft = async () => {
       ...sale.value,
       customerId: sale.value.customerId || null,
     };
-    
+
     const response = await saleStore.createDraft(draftData);
     if (response?.data?.data?.id) {
       currentDraftId.value = response.data.data.id;
@@ -934,8 +947,8 @@ onMounted(async () => {
       };
       // استخدام العملة الافتراضية أو أول عملة متاحة
       const defaultCurrency = settings.defaultCurrency || 'IQD';
-      sale.value.currency = availableCurrencies.value.includes(defaultCurrency) 
-        ? defaultCurrency 
+      sale.value.currency = availableCurrencies.value.includes(defaultCurrency)
+        ? defaultCurrency
         : availableCurrencies.value[0] || defaultCurrency;
     }
   } catch {
@@ -950,11 +963,11 @@ onMounted(async () => {
       loading.value = true;
       const draftResponse = await saleStore.fetchSale(Number(draftId));
       const draftData = draftResponse.data?.data || draftResponse.data;
-      
+
       if (draftData && draftData.status === 'draft') {
         currentDraftId.value = draftData.id;
         draftSaved.value = true;
-        
+
         // ملء النموذج ببيانات المسودة
         sale.value.customerId = draftData.customerId || null;
         sale.value.currency = draftData.currency || 'IQD';
@@ -962,13 +975,14 @@ onMounted(async () => {
         sale.value.discount = draftData.discount || 0;
         sale.value.tax = draftData.tax || 0;
         sale.value.notes = draftData.notes || '';
-        
+
         // تحميل عناصر المسودة
         if (draftData.items && draftData.items.length > 0) {
-          sale.value.items = draftData.items.map(item => {
-            const product = products.value && Array.isArray(products.value) 
-              ? products.value.find(p => p.id === item.productId)
-              : null;
+          sale.value.items = draftData.items.map((item) => {
+            const product =
+              products.value && Array.isArray(products.value)
+                ? products.value.find((p) => p.id === item.productId)
+                : null;
             return {
               productId: item.productId,
               quantity: item.quantity,
@@ -980,7 +994,7 @@ onMounted(async () => {
             };
           });
         }
-        
+
         notify.info('تم تحميل المسودة');
       }
     } catch (error) {
@@ -1059,5 +1073,4 @@ const handleInterestAmountChange = (value) => {
     sale.value.interestRate = (num / total.value) * 100;
   }
 };
-
 </script>

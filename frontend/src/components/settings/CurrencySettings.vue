@@ -58,7 +58,6 @@
               </v-select>
             </v-col>
 
-
             <!-- Exchange Rates Section -->
             <v-col cols="12">
               <v-divider class="my-4" />
@@ -69,11 +68,7 @@
             </v-col>
 
             <!-- USD Exchange Rate -->
-            <v-col 
-              cols="12" 
-              md="6"
-              :class="{ 'transition-all': true }"
-            >
+            <v-col cols="12" md="6" :class="{ 'transition-all': true }">
               <v-text-field
                 v-model.number="currencyData.usdRate"
                 label="سعر صرف الدولار (USD) *"
@@ -90,11 +85,7 @@
             </v-col>
 
             <!-- IQD Exchange Rate -->
-            <v-col 
-              cols="12" 
-              md="6"
-              :class="{ 'transition-all': true }"
-            >
+            <v-col cols="12" md="6" :class="{ 'transition-all': true }">
               <v-text-field
                 v-model.number="currencyData.iqdRate"
                 label="سعر صرف الدينار (IQD) *"
@@ -117,7 +108,7 @@
                   <v-icon size="24" class="me-3 mt-1">mdi-information</v-icon>
                   <div>
                     <h4 class="text-subtitle-1 font-weight-bold mb-2">معلومات مهمة</h4>
-                    <ul class="text-body-2 mb-0 pl-4" style="list-style-type: disc;">
+                    <ul class="text-body-2 mb-0 pl-4" style="list-style-type: disc">
                       <li>العملة الافتراضية ستستخدم في جميع عمليات البيع الجديدة</li>
                       <li>يمكنك تغيير أسعار الصرف في أي وقت</li>
                       <li>التغييرات ستؤثر على العمليات الجديدة فقط</li>
@@ -126,8 +117,8 @@
                 </div>
               </v-card>
             </v-col>
-        </v-row>
-      </v-form>
+          </v-row>
+        </v-form>
       </v-card-text>
     </v-card>
   </div>
@@ -216,7 +207,9 @@ onMounted(async () => {
 
 /* Smooth transitions for showing/hiding elements */
 .v-col {
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
 }
 
 /* Improve card spacing */

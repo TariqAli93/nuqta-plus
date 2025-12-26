@@ -35,10 +35,14 @@ async function initDB() {
   // Check if migrations table exists
   const checkMigrationsTable = () => {
     try {
-      const result = sqlite.prepare(`
+      const result = sqlite
+        .prepare(
+          `
         SELECT name FROM sqlite_master 
         WHERE type='table' AND name='__drizzle_migrations'
-      `).all();
+      `
+        )
+        .all();
       return result.length > 0;
     } catch {
       return false;
@@ -59,10 +63,14 @@ async function initDB() {
       console.log('✅ Database migrations applied successfully');
     } else {
       // Check if all tables exist
-      const result = sqlite.prepare(`
+      const result = sqlite
+        .prepare(
+          `
         SELECT name FROM sqlite_master 
         WHERE type='table' AND name='users'
-      `).all();
+      `
+        )
+        .all();
       const tablesExist = result.length > 0;
 
       if (!tablesExist) {

@@ -10,7 +10,7 @@ export class AlertService {
   async getOverdueInstallments() {
     const db = await getDb();
     const today = new Date().toISOString().split('T')[0];
-    
+
     const overdue = await db
       .select({
         id: installments.id,
@@ -30,12 +30,7 @@ export class AlertService {
       .from(installments)
       .leftJoin(customers, eq(installments.customerId, customers.id))
       .leftJoin(sales, eq(installments.saleId, sales.id))
-      .where(
-        and(
-          eq(installments.status, 'pending'),
-          lte(installments.dueDate, today)
-        )
-      )
+      .where(and(eq(installments.status, 'pending'), lte(installments.dueDate, today)))
       .orderBy(installments.dueDate);
 
     return overdue;
@@ -71,12 +66,7 @@ export class AlertService {
     const outOfStock = await db
       .select()
       .from(products)
-      .where(
-        and(
-          eq(products.stock, 0),
-          eq(products.isActive, true)
-        )
-      )
+      .where(and(eq(products.stock, 0), eq(products.isActive, true)))
       .orderBy(products.name);
 
     return outOfStock;
@@ -97,7 +87,10 @@ export class AlertService {
       overdueInstallments: {
         items: overdueInstallments,
         count: overdueInstallments.length,
-        totalAmount: overdueInstallments.reduce((sum, inst) => sum + (inst.remainingAmount || 0), 0),
+        totalAmount: overdueInstallments.reduce(
+          (sum, inst) => sum + (inst.remainingAmount || 0),
+          0
+        ),
       },
       lowStockProducts: {
         items: lowStockProducts,
@@ -113,4 +106,3 @@ export class AlertService {
 }
 
 export default new AlertService();
-

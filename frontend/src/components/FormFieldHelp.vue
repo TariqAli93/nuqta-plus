@@ -39,7 +39,9 @@ const props = defineProps({
 });
 
 const helpId = computed(() => {
-  return props.fieldId ? `${props.fieldId}-help` : `help-${Math.random().toString(36).substr(2, 9)}`;
+  return props.fieldId
+    ? `${props.fieldId}-help`
+    : `help-${Math.random().toString(36).substr(2, 9)}`;
 });
 </script>
 
@@ -64,4 +66,3 @@ const helpId = computed(() => {
   flex-shrink: 0;
 }
 </style>
-

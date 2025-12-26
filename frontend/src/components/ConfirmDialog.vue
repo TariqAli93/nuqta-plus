@@ -40,12 +40,7 @@
       <v-divider></v-divider>
 
       <v-card-actions class="justify-end gap-2 pa-3">
-        <v-btn
-          variant="outlined"
-          size="default"
-          @click="handleCancel"
-          :aria-label="cancelLabel"
-        >
+        <v-btn variant="outlined" size="default" @click="handleCancel" :aria-label="cancelLabel">
           {{ cancelText }}
         </v-btn>
         <v-btn
@@ -65,7 +60,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { computed, watch, onMounted, onUnmounted } from 'vue';
 import { focusFirstElement, trapFocus } from '@/utils/accessibility';
 
 const props = defineProps({
@@ -228,4 +223,3 @@ watch(dialog, (isOpen) => {
   padding: 1rem 1.5rem;
 }
 </style>
-

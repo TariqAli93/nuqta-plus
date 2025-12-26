@@ -11,9 +11,17 @@
 const formatCurrency = (amount, currency = 'IQD') => {
   const num = Number(amount) || 0;
   if (currency === 'USD') {
-    return num.toLocaleString('en-US', { style: 'currency', currency: 'USD', numberingSystem: 'latn' });
+    return num.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      numberingSystem: 'latn',
+    });
   }
-  return Math.round(num).toLocaleString('ar-IQ', { style: 'currency', currency: 'IQD', numberingSystem: 'latn' });
+  return Math.round(num).toLocaleString('ar-IQ', {
+    style: 'currency',
+    currency: 'IQD',
+    numberingSystem: 'latn',
+  });
 };
 
 /**
@@ -226,13 +234,18 @@ export const formatReceiptData = (sale, company) => {
       invoiceDiscount: invoiceDiscount > 0 ? formatCurrency(invoiceDiscount, currency) : null,
       totalDiscount: totalDiscount > 0 ? formatCurrency(totalDiscount, currency) : null,
       // Interest amount only for installment sales
-      interestAmount: isInstallment && sale.interestAmount > 0 ? formatCurrency(sale.interestAmount, currency) : null,
+      interestAmount:
+        isInstallment && sale.interestAmount > 0
+          ? formatCurrency(sale.interestAmount, currency)
+          : null,
       grandTotal: formatCurrency(sale.total, currency),
     },
     payment: {
       paidAmount: formatCurrency(sale.paidAmount || 0, currency),
-      remainingAmount: sale.remainingAmount > 0 ? formatCurrency(sale.remainingAmount, currency) : null,
-      installmentsCount: isInstallment && sale.installments?.length > 0 ? sale.installments.length : null,
+      remainingAmount:
+        sale.remainingAmount > 0 ? formatCurrency(sale.remainingAmount, currency) : null,
+      installmentsCount:
+        isInstallment && sale.installments?.length > 0 ? sale.installments.length : null,
     },
     installments: installmentsData,
     printDate: formatDate12Hour(new Date()),
@@ -246,20 +259,32 @@ export const formatReceiptData = (sale, company) => {
  * @returns {string} HTML string
  */
 export const generateReceiptHtml = (receiptData) => {
-  const { config, isInstallment, company, invoice, customer, items, totals, payment, installments, printDate } = receiptData;
+  const {
+    config,
+    isInstallment,
+    company,
+    invoice,
+    customer,
+    items,
+    totals,
+    payment,
+    installments,
+    printDate,
+  } = receiptData;
   const isSmallReceipt = config.isSmallReceipt;
-  
+
   // Check if paper width is greater than 88mm to show notes
   // Extract numeric width from config.width (e.g., "88mm" -> 88, "210mm" -> 210)
   const paperWidth = parseInt(config.width) || 80;
   const shouldShowNotes = paperWidth > 88;
 
   // Build items rows - different layout for small receipts
-  const itemsRows = items.map(item => {
-    if (isSmallReceipt) {
-      // Small receipt: Item & Qty & Price & Total, discount as hint under name
-      // Show description and notes only if paper width > 88mm
-      return `
+  const itemsRows = items
+    .map((item) => {
+      if (isSmallReceipt) {
+        // Small receipt: Item & Qty & Price & Total, discount as hint under name
+        // Show description and notes only if paper width > 88mm
+        return `
         <tr>
           <td class="item-name">
             <div>${item.name}</div>
@@ -272,9 +297,9 @@ export const generateReceiptHtml = (receiptData) => {
           <td class="item-total">${item.subtotal}</td>
         </tr>
       `;
-    } else {
-      // Large receipt: full layout with description and notes
-      return `
+      } else {
+        // Large receipt: full layout with description and notes
+        return `
         <tr>
           <td class="item-name">
             <div>${item.name}</div>
@@ -287,16 +312,17 @@ export const generateReceiptHtml = (receiptData) => {
           <td class="item-total">${item.subtotal}</td>
         </tr>
       `;
-    }
-  }).join('');
+      }
+    })
+    .join('');
 
   // Build totals rows
   let totalsHtml = '';
-  
+
   if (totals.itemsDiscount) {
     totalsHtml += `<div><span>خصم المنتجات:</span><span class="discount">-${totals.itemsDiscount}</span></div>`;
   }
-  
+
   if (totals.invoiceDiscount) {
     totalsHtml += `<div><span>خصم الفاتورة:</span><span class="discount">-${totals.invoiceDiscount}</span></div>`;
   }
@@ -321,14 +347,18 @@ export const generateReceiptHtml = (receiptData) => {
   // Build installments table for installment sales
   let installmentsHtml = '';
   if (isInstallment && installments && installments.length > 0) {
-    const installmentRows = installments.map(inst => `
+    const installmentRows = installments
+      .map(
+        (inst) => `
       <tr class="${inst.isPaid ? 'paid-row' : ''}">
         <td class="inst-num">${inst.number}</td>
         <td class="inst-date">${inst.dueDate}</td>
         <td class="inst-amount">${inst.dueAmount}</td>
         <td class="inst-status">${inst.status}</td>
       </tr>
-    `).join('');
+    `
+      )
+      .join('');
 
     installmentsHtml = `
       <div class="divider"></div>

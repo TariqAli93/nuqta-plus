@@ -64,7 +64,7 @@ export class UserService {
     return user;
   }
 
-  async create(data, actorId) {
+  async create(data, _actorId) {
     const db = await getDb();
     const [existing] = await db
       .select()
@@ -91,15 +91,15 @@ export class UserService {
     return this.getById(user.id);
   }
 
-  async update(id, data, actorId) {
+  async update(id, data, _actorId) {
     const db = await getDb();
     await this.getById(id);
-    
+
     // Build update object with only provided fields
     const updateData = {
       updatedAt: new Date().toISOString(),
     };
-    
+
     if (data.fullName !== undefined) {
       updateData.fullName = data.fullName;
     }
@@ -112,18 +112,15 @@ export class UserService {
     if (data.isActive !== undefined) {
       updateData.isActive = data.isActive;
     }
-    
-    await db
-      .update(users)
-      .set(updateData)
-      .where(eq(users.id, id));
+
+    await db.update(users).set(updateData).where(eq(users.id, id));
 
     saveDatabase();
 
     return this.getById(id);
   }
 
-  async resetPassword(id, newPassword, actorId) {
+  async resetPassword(id, newPassword, _actorId) {
     const db = await getDb();
     await this.getById(id);
     const hashed = await hashPassword(newPassword);
@@ -138,14 +135,14 @@ export class UserService {
 
   async remove(id, actorId) {
     const db = await getDb();
-    
+
     // Prevent users from deleting themselves
     if (Number(id) === Number(actorId)) {
       throw new ConflictError('Cannot deactivate your own account');
     }
 
     const userToDelete = await this.getById(id);
-    
+
     // Prevent deleting the last admin user
     if (userToDelete.role === 'admin' && userToDelete.isActive) {
       const adminCount = await db
@@ -153,7 +150,7 @@ export class UserService {
         .from(users)
         .where(and(eq(users.role, 'admin'), eq(users.isActive, true)))
         .get();
-      
+
       const totalAdmins = Number(adminCount?.count || 0);
       if (totalAdmins <= 1) {
         throw new ConflictError('Cannot deactivate the last admin user');

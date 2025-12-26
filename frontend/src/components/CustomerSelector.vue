@@ -240,7 +240,7 @@ const onSearchInput = async (query) => {
     try {
       const response = await customerStore.fetchCustomers({ limit: 50 });
       searchResults.value = response.data || [];
-    } catch (error) {
+    } catch {
       // Error handled by notification
     }
     return;
@@ -253,7 +253,7 @@ const onSearchInput = async (query) => {
       limit: 20,
     });
     searchResults.value = response.data || [];
-  } catch (error) {
+  } catch {
     searchResults.value = [];
   } finally {
     searchLoading.value = false;
@@ -413,7 +413,7 @@ const loadCustomerById = async (customerId) => {
     const customer = await customerStore.fetchCustomer(customerId);
     selectedCustomer.value = customer;
     showSelector.value = false;
-  } catch (error) {
+  } catch {
     // Error handled by notification
   }
 };
@@ -428,7 +428,7 @@ onMounted(async () => {
   try {
     const response = await customerStore.fetchCustomers({ limit: 50 });
     searchResults.value = response.data || [];
-  } catch (error) {
+  } catch {
     // Error handled by notification
   }
 });

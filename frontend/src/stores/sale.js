@@ -297,7 +297,7 @@ export const useSaleStore = defineStore('sale', {
         const draftData = {
           currency: saleData.currency || 'USD',
           paymentType: saleData.paymentType || 'cash',
-          items: (saleData.items || []).map(item => ({
+          items: (saleData.items || []).map((item) => ({
             productId: item.productId,
             productName: item.productName || '',
             quantity: item.quantity || 1,

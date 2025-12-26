@@ -33,7 +33,7 @@ const authStore = useAuthStore();
 onMounted(async () => {
   // Setup accessibility features
   setupSkipLink();
-  
+
   // Check if user is logged in
   await authStore.checkAuth();
 });

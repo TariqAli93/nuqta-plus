@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import api from '@/plugins/axios';
 import { useNotificationStore } from '@/stores/notification';
-import { hasPermission, getRolePermissions, matchesPermissionPattern } from '@/auth/permissionMatrix.js';
+import { hasPermission, matchesPermissionPattern } from '@/auth/permissionMatrix.js';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -200,20 +200,16 @@ export const useAuthStore = defineStore('auth', {
           return response.data;
         }
         return { isFirstRun: false };
-      } catch (error) {
+      } catch {
         return { isFirstRun: false };
       }
     },
     async createFirstUser(userData) {
-      try {
-        const response = await api.post('/auth/first-user', userData);
-        if (response.data) {
-          return response.data;
-        }
-        throw new Error('Invalid response from server');
-      } catch (error) {
-        throw error;
+      const response = await api.post('/auth/first-user', userData);
+      if (response.data) {
+        return response.data;
       }
+      throw new Error('Invalid response from server');
     },
   },
 });

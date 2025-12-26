@@ -27,8 +27,14 @@ async function authPlugin(fastify) {
       }
 
       request.user = user;
+      reply.status(200).send({ message: 'Authentication successful' });
     } catch (error) {
-      throw new AuthenticationError('Invalid or expired token');
+      console.error(error);
+      if (error.message.includes('No token provided')) {
+        throw new AuthenticationError('Token is required');
+      } else {
+        throw new AuthenticationError('Invalid or expired token');
+      }
     }
   });
 

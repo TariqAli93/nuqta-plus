@@ -267,7 +267,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useSaleStore } from '@/stores/sale';
 import { useNotificationStore } from '@/stores/notification';
 import { useSettingsStore } from '@/stores/settings';
@@ -290,7 +290,7 @@ const filters = ref({
 // Computed property for available currencies based on settings
 const currencyOptions = computed(() => {
   const available = settingsStore.availableCurrencies || ['USD', 'IQD'];
-  return available.map(currency => ({
+  return available.map((currency) => ({
     title: currency === 'USD' ? 'دولار (USD)' : 'دينار عراقي (IQD)',
     value: currency,
   }));
@@ -305,7 +305,6 @@ const selectedCurrency = computed(() => {
   }
   return defaultCurrency.value;
 });
-
 
 const toYmd = (date) => {
   if (!date) return '';
@@ -564,7 +563,7 @@ onMounted(() => {
   const load = async () => {
     try {
       await settingsStore.fetchCurrencySettings();
-    } catch (e) {
+    } catch {
       // Error handled silently
     }
 

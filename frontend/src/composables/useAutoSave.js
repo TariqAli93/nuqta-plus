@@ -1,4 +1,4 @@
-import { ref, watch, onBeforeUnmount } from 'vue';
+import { ref, onBeforeUnmount } from 'vue';
 
 /**
  * Composable for auto-save functionality
@@ -34,12 +34,12 @@ export function useAutoSave(saveFunction, interval = 30000, enabled = true) {
 
   const markAsChanged = () => {
     hasUnsavedChanges.value = true;
-    
+
     // Debounce auto-save
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
-    
+
     debounceTimer = setTimeout(() => {
       if (hasUnsavedChanges.value) {
         save();
@@ -49,7 +49,7 @@ export function useAutoSave(saveFunction, interval = 30000, enabled = true) {
 
   const startAutoSave = () => {
     if (!enabled) return;
-    
+
     stopAutoSave();
     saveTimer = setInterval(() => {
       if (hasUnsavedChanges.value && !isSaving.value) {
@@ -84,4 +84,3 @@ export function useAutoSave(saveFunction, interval = 30000, enabled = true) {
     stopAutoSave,
   };
 }
-

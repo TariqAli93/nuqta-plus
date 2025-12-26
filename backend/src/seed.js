@@ -1,6 +1,6 @@
 import { getDb, saveDatabase } from './db.js';
 import { customers, settings } from './models/index.js';
-import { sql, eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 
 async function seed() {
   console.log('🌱 Starting database seeding...\n');

@@ -51,13 +51,16 @@ export class SettingsService {
       throw new ConflictError(`Setting with key '${key}' already exists.`);
     }
     const now = new Date().toISOString();
-    const [newSetting] = await db.insert(settings).values({
-      key,
-      value: String(value),
-      description,
-      updatedAt: now,
-      createdAt: now,
-    }).returning();
+    const [newSetting] = await db
+      .insert(settings)
+      .values({
+        key,
+        value: String(value),
+        description,
+        updatedAt: now,
+        createdAt: now,
+      })
+      .returning();
     await saveDatabase();
     return newSetting;
   }
@@ -77,7 +80,8 @@ export class SettingsService {
     if (value !== undefined) updateData.value = String(value);
     if (description !== undefined) updateData.description = description;
 
-    const [updated] = await db.update(settings)
+    const [updated] = await db
+      .update(settings)
       .set(updateData)
       .where(eq(settings.key, key))
       .returning();
@@ -128,16 +132,14 @@ export class SettingsService {
    */
   async getCompanyInfo() {
     const db = await getDb();
-    const companySettings = await db.select()
-      .from(settings)
-      .where(like(settings.key, 'company.%'));
+    const companySettings = await db.select().from(settings).where(like(settings.key, 'company.%'));
 
     const companyInfo = {};
     companySettings.forEach(({ key, value }) => {
       const field = key.replace('company.', '');
       companyInfo[field] = value;
     });
-    
+
     // Return with default values
     return {
       name: companyInfo.name || '',
@@ -203,7 +205,11 @@ export class SettingsService {
     // Removed console.log - use logger in controller if detailed logging needed
     const updates = [];
     if (defaultCurrency) {
-      updates.push({ key: 'defaultCurrency', value: String(defaultCurrency), description: 'Default currency' });
+      updates.push({
+        key: 'defaultCurrency',
+        value: String(defaultCurrency),
+        description: 'Default currency',
+      });
     }
     if (usdRate !== undefined) {
       updates.push({ key: 'usdRate', value: String(usdRate), description: 'USD exchange rate' });
@@ -212,7 +218,11 @@ export class SettingsService {
       updates.push({ key: 'iqdRate', value: String(iqdRate), description: 'IQD exchange rate' });
     }
     if (showSecondaryCurrency !== undefined) {
-      updates.push({ key: 'showSecondaryCurrency', value: String(showSecondaryCurrency), description: 'Show secondary currency' });
+      updates.push({
+        key: 'showSecondaryCurrency',
+        value: String(showSecondaryCurrency),
+        description: 'Show secondary currency',
+      });
     }
     await this.bulkUpsert(updates);
     return this.getCurrencySettings();

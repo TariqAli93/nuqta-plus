@@ -51,7 +51,7 @@ export const useProductStore = defineStore('product', {
 
     async createProduct(productData) {
       const notificationStore = useNotificationStore();
-      
+
       // Optimistic update: Add temporary product immediately
       const tempId = `temp-${Date.now()}`;
       const optimisticProduct = {
@@ -60,7 +60,7 @@ export const useProductStore = defineStore('product', {
         _optimistic: true,
       };
       this.products.unshift(optimisticProduct);
-      
+
       try {
         const response = await api.post('/products', productData);
         // Replace optimistic product with real one
@@ -80,15 +80,15 @@ export const useProductStore = defineStore('product', {
 
     async updateProduct(id, productData) {
       const notificationStore = useNotificationStore();
-      
+
       // Optimistic update: Update product immediately
       const index = this.products.findIndex((p) => p.id === id);
       const originalProduct = index !== -1 ? { ...this.products[index] } : null;
-      
+
       if (index !== -1) {
         this.products[index] = { ...this.products[index], ...productData, _optimistic: true };
       }
-      
+
       try {
         const response = await api.put(`/products/${id}`, productData);
         if (index !== -1) {
@@ -108,15 +108,15 @@ export const useProductStore = defineStore('product', {
 
     async deleteProduct(id) {
       const notificationStore = useNotificationStore();
-      
+
       // Optimistic update: Remove product immediately
       const index = this.products.findIndex((p) => p.id === id);
       const deletedProduct = index !== -1 ? { ...this.products[index] } : null;
-      
+
       if (index !== -1) {
         this.products.splice(index, 1);
       }
-      
+
       try {
         const response = await api.delete(`/products/${id}`);
         notificationStore.success('تم حذف المنتج بنجاح');

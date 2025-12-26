@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 
 /**
  * Composable for managing table column visibility and order
@@ -85,4 +85,3 @@ export function useTableColumns(tableId, defaultColumns = []) {
     resetColumns,
   };
 }
-

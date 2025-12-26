@@ -17,7 +17,7 @@ const createBackup = async () => {
     await api.post('/settings/backups', {});
     notification.success('تم إنشاء النسخة الاحتياطية بنجاح');
     await load();
-  } catch (error) {
+  } catch {
     notification.error('فشل في إنشاء النسخة الاحتياطية');
   } finally {
     stopLoading();
@@ -29,7 +29,7 @@ const load = async () => {
   try {
     const response = await api.get('/settings/backups');
     backups.value = response.data;
-  } catch (error) {
+  } catch {
     notification.error('فشل في تحميل قائمة النسخ الاحتياطية');
   } finally {
     stopLoading();
@@ -42,7 +42,7 @@ const deleteBackup = async (filename) => {
     await api.delete(`/settings/backups/${filename}`);
     notification.success('تم حذف النسخة الاحتياطية بنجاح');
     await load();
-  } catch (error) {
+  } catch {
     notification.error('فشل في حذف النسخة الاحتياطية');
   } finally {
     stopLoading();
@@ -62,7 +62,7 @@ const restoreBackup = async (id) => {
       window.location.reload();
       router.push('/');
     }, 2000);
-  } catch (error) {
+  } catch {
     notification.error('فشل في استعادة النسخة الاحتياطية');
   } finally {
     stopLoading();
@@ -113,11 +113,11 @@ onMounted(async () => {
       </v-alert>
 
       <v-data-table v-else :headers="headers" :items="backups">
-        <template #item.createdAt="{ item }">
+        <template #[`item.createdAt`]="{ item }">
           {{ toYmd(item.createdAt) }}
         </template>
 
-        <template #item.actions="{ item }">
+        <template #[`item.actions`]="{ item }">
           <v-btn icon small color="error" variant="text" @click="deleteBackup(item.filename)">
             <v-icon>mdi-delete</v-icon>
           </v-btn>

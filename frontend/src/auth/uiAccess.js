@@ -1,14 +1,14 @@
 /**
  * UI Access Control Helper
- * 
+ *
  * This module provides role-based UI access control functions.
  * Since backend no longer enforces authorization, all access control
  * is handled here in the frontend via UI hiding.
- * 
+ *
  * WARNING: This is frontend-only security. Anyone with a valid token
  * can call any backend endpoint directly. This approach is suitable
  * only for single-machine offline usage or trusted environments.
- * 
+ *
  * Roles:
  * - admin: Full access to everything
  * - manager: Can manage sales/products/customers/categories, but not users/settings
@@ -162,4 +162,3 @@ export default {
   canDelete,
   getAllowedActions,
 };
-

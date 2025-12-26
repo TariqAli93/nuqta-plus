@@ -50,7 +50,7 @@ const loadFont = (family, weight, style = 'normal') => {
 
   const fontString = `${style} ${weight} 1rem ${family}`;
 
-  return document.fonts.load(fontString).catch((error) => {
+  return document.fonts.load(fontString).catch(() => {
     return Promise.resolve(); // عدم إيقاف التطبيق في حالة الفشل
   });
 };
@@ -122,7 +122,7 @@ const checkCachedFonts = () => {
     const now = Date.now();
 
     return now - cachedTime < CACHE_DURATION;
-  } catch (e) {
+  } catch {
     return false;
   }
 };

@@ -45,8 +45,13 @@
                 @update:model-value="handleCategorySelect"
               >
                 <template #no-data>
-                  <v-list-item 
-                    v-if="categorySearch && categorySearch.trim() && !creatingCategory && !isSearchValueInList"
+                  <v-list-item
+                    v-if="
+                      categorySearch &&
+                      categorySearch.trim() &&
+                      !creatingCategory &&
+                      !isSearchValueInList
+                    "
                     class="cursor-pointer"
                     :class="{ 'bg-primary-lighten-5': true }"
                     @click="handleCategoryEnter"
@@ -394,9 +399,7 @@ const customCategoryFilter = (item, queryText) => {
 const isSearchValueInList = computed(() => {
   if (!categorySearch.value || !categorySearch.value.trim()) return false;
   const searchValue = categorySearch.value.trim().toLowerCase();
-  return categories.value.some(
-    (cat) => cat.name.toLowerCase() === searchValue
-  );
+  return categories.value.some((cat) => cat.name.toLowerCase() === searchValue);
 });
 
 // معالجة اختيار التصنيف من القائمة
@@ -407,7 +410,7 @@ const handleCategorySelect = (value) => {
     categorySearch.value = value.name;
   } else if (value && typeof value === 'number') {
     // إذا كان value رقم (ID)
-    const selectedCategory = categories.value.find(cat => cat.id === value);
+    const selectedCategory = categories.value.find((cat) => cat.id === value);
     if (selectedCategory) {
       categorySearch.value = selectedCategory.name;
     }
@@ -420,7 +423,7 @@ const handleCategorySelect = (value) => {
 // معالجة الضغط على المفاتيح في حقل التصنيف
 const handleCategoryKeydown = async (event) => {
   if (event.key !== 'Enter') return;
-  
+
   const searchValue = categorySearch.value?.trim();
   if (!searchValue) return;
 
@@ -454,28 +457,26 @@ const handleCategoryKeydown = async (event) => {
     const createResponse = await categoryStore.createCategory({ name: searchValue });
     // استخراج بيانات التصنيف من الاستجابة
     const newCategory = createResponse.data?.data || createResponse.data;
-    
+
     if (!newCategory || !newCategory.id) {
       throw new Error('فشل إنشاء التصنيف');
     }
-    
+
     // إعادة تحميل قائمة التصنيفات بالكامل من الـ store
     await categoryStore.fetchCategories();
-    
+
     // تحديث القائمة المحلية من الـ store
-    categories.value = Array.isArray(categoryStore.categories) 
-      ? [...categoryStore.categories] 
-      : [];
-    
+    categories.value = Array.isArray(categoryStore.categories) ? [...categoryStore.categories] : [];
+
     // تحديد التصنيف الجديد
     formData.value.categoryId = newCategory.id;
-    
+
     // عرض اسم التصنيف في حقل البحث بدلاً من مسحه
     categorySearch.value = newCategory.name;
-    
+
     // استخدام nextTick لضمان تحديث المكون بشكل صحيح
     await nextTick();
-    
+
     // التأكد من أن القيمة محددة بشكل صحيح
     if (formData.value.categoryId !== newCategory.id) {
       formData.value.categoryId = newCategory.id;
@@ -514,8 +515,7 @@ const verifyAdmin = async () => {
     }
   } catch (err) {
     adminVerifyError.value = true;
-    adminVerifyErrorMessage.value =
-      err.response?.data?.message || 'بيانات تسجيل الدخول غير صحيحة';
+    adminVerifyErrorMessage.value = err.response?.data?.message || 'بيانات تسجيل الدخول غير صحيحة';
   } finally {
     adminVerifyLoading.value = false;
   }
@@ -548,7 +548,7 @@ watch(
   () => formData.value.categoryId,
   (newCategoryId) => {
     if (newCategoryId) {
-      const selectedCategory = categories.value.find(cat => cat.id === newCategoryId);
+      const selectedCategory = categories.value.find((cat) => cat.id === newCategoryId);
       if (selectedCategory && categorySearch.value !== selectedCategory.name) {
         categorySearch.value = selectedCategory.name;
       }
@@ -559,7 +559,6 @@ watch(
   }
 );
 
-
 onMounted(async () => {
   // تحميل إعدادات العملة
   try {
@@ -567,8 +566,8 @@ onMounted(async () => {
     // تعيين العملة الافتراضية إذا لم تكن موجودة
     if (!formData.value.currency || !availableCurrencies.value.includes(formData.value.currency)) {
       const defaultCurrency = settingsStore.settings?.defaultCurrency || 'IQD';
-      formData.value.currency = availableCurrencies.value.includes(defaultCurrency) 
-        ? defaultCurrency 
+      formData.value.currency = availableCurrencies.value.includes(defaultCurrency)
+        ? defaultCurrency
         : availableCurrencies.value[0] || defaultCurrency;
     }
   } catch {
@@ -577,30 +576,28 @@ onMounted(async () => {
 
   await categoryStore.fetchCategories();
   // تحديث القائمة المحلية من الـ store
-  categories.value = Array.isArray(categoryStore.categories) 
-    ? [...categoryStore.categories] 
-    : [];
+  categories.value = Array.isArray(categoryStore.categories) ? [...categoryStore.categories] : [];
 
   if (isEdit.value) {
     loading.value = true;
     try {
       await productStore.fetchProduct(route.params.id);
       formData.value = { ...productStore.currentProduct };
-      
+
       // التأكد من أن العملة المحددة متاحة
       if (!availableCurrencies.value.includes(formData.value.currency)) {
         const defaultCurrency = settingsStore.settings?.defaultCurrency || 'IQD';
-        formData.value.currency = availableCurrencies.value.includes(defaultCurrency) 
-          ? defaultCurrency 
+        formData.value.currency = availableCurrencies.value.includes(defaultCurrency)
+          ? defaultCurrency
           : availableCurrencies.value[0] || defaultCurrency;
       }
-      
+
       // عند التعديل، عرض اسم التصنيف في حقل البحث
       if (formData.value.categoryId) {
         // استخدام nextTick لضمان تحميل categories أولاً
         await nextTick();
         const selectedCategory = categories.value.find(
-          cat => cat.id === formData.value.categoryId
+          (cat) => cat.id === formData.value.categoryId
         );
         if (selectedCategory) {
           categorySearch.value = selectedCategory.name;

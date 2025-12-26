@@ -22,7 +22,7 @@
           <v-skeleton-loader type="table"></v-skeleton-loader>
         </template>
 
-        <template #item.actions="{ item }">
+        <template #[`item.actions`]="{ item }">
           <div class="flex gap-2">
             <v-btn
               icon="mdi-pencil"

@@ -333,9 +333,7 @@ async function seed() {
 
       // Inventory transactions removed - stock is managed directly in products table
 
-      console.log(
-        '✓ Demo sales, items, payments, and installments inserted'
-      );
+      console.log('✓ Demo sales, items, payments, and installments inserted');
     } else {
       console.log('↩️ Sales already exist, skipping demo sales');
     }

@@ -24,12 +24,7 @@
       >
         {{ notificationStore.action.label || 'تنفيذ' }}
       </v-btn>
-      <v-btn
-        variant="text"
-        icon="mdi-close"
-        @click="notificationStore.hide()"
-        aria-label="إغلاق"
-      />
+      <v-btn variant="text" icon="mdi-close" @click="notificationStore.hide()" aria-label="إغلاق" />
     </template>
   </v-snackbar>
 </template>

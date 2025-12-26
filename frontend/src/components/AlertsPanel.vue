@@ -47,7 +47,12 @@
     </v-card>
 
     <!-- Out of Stock Products -->
-    <v-card v-if="alertStore.outOfStockCount > 0" class="mb-4" color="red-lighten-1" variant="tonal">
+    <v-card
+      v-if="alertStore.outOfStockCount > 0"
+      class="mb-4"
+      color="red-lighten-1"
+      variant="tonal"
+    >
       <v-card-title class="d-flex align-center">
         <v-icon class="ml-2" color="red">mdi-package-variant-remove</v-icon>
         <span>منتجات منعدمة المخزون ({{ alertStore.outOfStockCount }})</span>
@@ -155,4 +160,3 @@ const formatDate = (dateString) => {
   width: 100%;
 }
 </style>
-

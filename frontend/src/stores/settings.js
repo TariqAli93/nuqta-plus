@@ -57,7 +57,12 @@ export const useSettingsStore = defineStore('settings', () => {
   };
 
   const mergeCompanyFromSettings = (payload) => {
-    if (payload && typeof payload === 'object' && payload.company && typeof payload.company === 'object') {
+    if (
+      payload &&
+      typeof payload === 'object' &&
+      payload.company &&
+      typeof payload.company === 'object'
+    ) {
       companyInfo.value = {
         ...companyInfo.value,
         ...payload.company,
@@ -220,7 +225,8 @@ export const useSettingsStore = defineStore('settings', () => {
       // Apply updates locally:
       if (Array.isArray(settingsData)) {
         settingsData.forEach((entry) => {
-          if (entry && typeof entry.key === 'string') setByPath(settings.value, entry.key, entry.value);
+          if (entry && typeof entry.key === 'string')
+            setByPath(settings.value, entry.key, entry.value);
         });
       } else if (settingsData && typeof settingsData === 'object') {
         Object.entries(settingsData).forEach(([k, v]) => setByPath(settings.value, k, v));

@@ -143,18 +143,19 @@ api.interceptors.response.use(
         title: 'خطأ في التحقق من البيانات',
         message: buildMessage(error),
         details,
-        helpLink: error.response?.status === 422
-          ? {
-              url: '/settings',
-              text: 'التحقق من الإعدادات',
-            }
-          : null,
+        helpLink:
+          error.response?.status === 422
+            ? {
+                url: '/settings',
+                text: 'التحقق من الإعدادات',
+              }
+            : null,
       });
     } else {
       // Fallback precise message with actionable help
       const message = buildMessage(error);
       const helpLink = getHelpLinkForError(error);
-      
+
       if (helpLink) {
         notificationStore.showNotification({
           message,

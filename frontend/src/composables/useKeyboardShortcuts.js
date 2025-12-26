@@ -1,5 +1,4 @@
 import { onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
 
 /**
  * Composable for handling keyboard shortcuts
@@ -7,15 +6,13 @@ import { useRouter } from 'vue-router';
  * @param {Boolean} enabled - Whether shortcuts are enabled
  */
 export function useKeyboardShortcuts(shortcuts = {}, enabled = true) {
-  const router = useRouter();
-
   const defaultShortcuts = {
     'ctrl+k': (e) => {
       e.preventDefault();
       // Will be handled by QuickSearch component
       window.dispatchEvent(new CustomEvent('open-quick-search'));
     },
-    'escape': (e) => {
+    escape: (_e) => {
       // Close modals/dialogs
       const dialogs = document.querySelectorAll('.v-dialog--active');
       if (dialogs.length > 0) {
@@ -29,11 +26,7 @@ export function useKeyboardShortcuts(shortcuts = {}, enabled = true) {
   const allShortcuts = { ...defaultShortcuts, ...shortcuts };
 
   const normalizeKey = (key) => {
-    return key
-      .toLowerCase()
-      .replace(/\s+/g, '')
-      .replace('command', 'ctrl')
-      .replace('cmd', 'ctrl');
+    return key.toLowerCase().replace(/\s+/g, '').replace('command', 'ctrl').replace('cmd', 'ctrl');
   };
 
   // Helper to get key code from event (works with any keyboard layout)
@@ -55,20 +48,20 @@ export function useKeyboardShortcuts(shortcuts = {}, enabled = true) {
       }
       // Special keys
       const specialKeys = {
-        'Escape': 'escape',
-        'Enter': 'enter',
-        'Space': 'space',
-        'Tab': 'tab',
-        'Backspace': 'backspace',
-        'Delete': 'delete',
-        'ArrowUp': 'arrowup',
-        'ArrowDown': 'arrowdown',
-        'ArrowLeft': 'arrowleft',
-        'ArrowRight': 'arrowright',
-        'Home': 'home',
-        'End': 'end',
-        'PageUp': 'pageup',
-        'PageDown': 'pagedown',
+        Escape: 'escape',
+        Enter: 'enter',
+        Space: 'space',
+        Tab: 'tab',
+        Backspace: 'backspace',
+        Delete: 'delete',
+        ArrowUp: 'arrowup',
+        ArrowDown: 'arrowdown',
+        ArrowLeft: 'arrowleft',
+        ArrowRight: 'arrowright',
+        Home: 'home',
+        End: 'end',
+        PageUp: 'pageup',
+        PageDown: 'pagedown',
       };
       if (specialKeys[code]) {
         return specialKeys[code];
@@ -84,11 +77,7 @@ export function useKeyboardShortcuts(shortcuts = {}, enabled = true) {
 
     // Don't trigger shortcuts when typing in inputs
     const target = event.target;
-    if (
-      target.tagName === 'INPUT' ||
-      target.tagName === 'TEXTAREA' ||
-      target.isContentEditable
-    ) {
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
       // Allow Escape and Ctrl+K even in inputs
       const key = getKeyFromEvent(event);
       if (key !== 'escape' && !(event.ctrlKey && key === 'k')) {
@@ -102,9 +91,7 @@ export function useKeyboardShortcuts(shortcuts = {}, enabled = true) {
     if (event.altKey) modifiers.push('alt');
 
     const key = getKeyFromEvent(event);
-    const keyCombo = modifiers.length
-      ? `${modifiers.join('+')}+${key}`
-      : key;
+    const keyCombo = modifiers.length ? `${modifiers.join('+')}+${key}` : key;
 
     const normalizedCombo = normalizeKey(keyCombo);
 
@@ -152,7 +139,7 @@ export function createPageShortcuts(config) {
   }
 
   if (config.cancel) {
-    shortcuts['escape'] = (e) => {
+    shortcuts['escape'] = (_e) => {
       if (!document.querySelector('.v-dialog--active')) {
         config.cancel();
       }
@@ -161,4 +148,3 @@ export function createPageShortcuts(config) {
 
   return shortcuts;
 }
-

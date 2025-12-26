@@ -244,7 +244,7 @@ onMounted(async () => {
         if (response.username) username.value = response.username;
         if (response.password) password.value = response.password;
       }
-    } catch (error) {
+    } catch {
       isFirstRunDialog.value = false;
     }
   }
@@ -289,7 +289,7 @@ const handleCreateUser = async () => {
       tempToken.value = response.token;
     }
     step.value = 2;
-  } catch (error) {
+  } catch {
     alert('تعذر إنشاء المستخدم. يرجى المحاولة مرة أخرى.');
   } finally {
     loadingUser.value = false;

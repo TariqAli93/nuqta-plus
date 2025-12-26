@@ -49,7 +49,7 @@ export const useCustomerStore = defineStore('customer', {
 
     async createCustomer(customerData) {
       const notificationStore = useNotificationStore();
-      
+
       // Optimistic update
       const tempId = `temp-${Date.now()}`;
       const optimisticCustomer = {
@@ -58,7 +58,7 @@ export const useCustomerStore = defineStore('customer', {
         _optimistic: true,
       };
       this.customers.unshift(optimisticCustomer);
-      
+
       try {
         const response = await api.post('/customers', customerData);
         const index = this.customers.findIndex((c) => c.id === tempId);
@@ -76,15 +76,15 @@ export const useCustomerStore = defineStore('customer', {
 
     async updateCustomer(id, customerData) {
       const notificationStore = useNotificationStore();
-      
+
       // Optimistic update
       const index = this.customers.findIndex((c) => c.id === id);
       const originalCustomer = index !== -1 ? { ...this.customers[index] } : null;
-      
+
       if (index !== -1) {
         this.customers[index] = { ...this.customers[index], ...customerData, _optimistic: true };
       }
-      
+
       try {
         const response = await api.put(`/customers/${id}`, customerData);
         if (index !== -1) {
@@ -103,15 +103,15 @@ export const useCustomerStore = defineStore('customer', {
 
     async deleteCustomer(id) {
       const notificationStore = useNotificationStore();
-      
+
       // Optimistic update
       const index = this.customers.findIndex((c) => c.id === id);
       const deletedCustomer = index !== -1 ? { ...this.customers[index] } : null;
-      
+
       if (index !== -1) {
         this.customers.splice(index, 1);
       }
-      
+
       try {
         const response = await api.delete(`/customers/${id}`);
         notificationStore.success('تم حذف العميل بنجاح');

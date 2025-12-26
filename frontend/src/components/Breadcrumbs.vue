@@ -147,4 +147,3 @@ const crumbs = computed(() => {
   margin: 0;
 }
 </style>
-

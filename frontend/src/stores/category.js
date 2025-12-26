@@ -54,7 +54,7 @@ export const useCategoryStore = defineStore('category', {
         const response = await api.post('/categories', categoryData);
         // استخراج بيانات التصنيف من الاستجابة
         const newCategory = response.data?.data || response.data;
-        if (newCategory && !this.categories.find(c => c.id === newCategory.id)) {
+        if (newCategory && !this.categories.find((c) => c.id === newCategory.id)) {
           this.categories.unshift(newCategory);
         }
         notificationStore.success('تم إضافة الفئة بنجاح');

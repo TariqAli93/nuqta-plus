@@ -93,20 +93,20 @@
             compact
           />
         </template>
-        <template v-slot:[`item.stock`]="{ item }">
+        <template #[`item.stock`]="{ item }">
           <v-chip :color="item.stock <= item.minStock ? 'error' : 'success'" size="small">
             {{ item.stock }}
           </v-chip>
         </template>
-        <template v-slot:[`item.sellingPrice`]="{ item }">
+        <template #[`item.sellingPrice`]="{ item }">
           {{ formatNumber(item.sellingPrice) }} {{ item.currency }}
         </template>
-        <template v-slot:[`item.status`]="{ item }">
+        <template #[`item.status`]="{ item }">
           <v-chip :color="getStatusColor(item.status)" size="small">
             {{ getStatusText(item.status) }}
           </v-chip>
         </template>
-        <template v-slot:[`item.actions`]="{ item }">
+        <template #[`item.actions`]="{ item }">
           <v-btn
             icon="mdi-pencil"
             size="small"
@@ -165,8 +165,12 @@ const categoryStore = useCategoryStore();
 const authStore = useAuthStore();
 
 const userRole = computed(() => authStore.user?.role);
-const canManageProducts = computed(() => userRole.value ? uiAccess.canManageProducts(userRole.value) : false);
-const canDeleteProducts = computed(() => userRole.value ? uiAccess.canManageProducts(userRole.value) : false);
+const canManageProducts = computed(() =>
+  userRole.value ? uiAccess.canManageProducts(userRole.value) : false
+);
+const canDeleteProducts = computed(() =>
+  userRole.value ? uiAccess.canManageProducts(userRole.value) : false
+);
 
 const search = ref('');
 const selectedCategory = ref(null);
@@ -282,11 +286,11 @@ const handleExport = () => {
 const handleDelete = async () => {
   const productId = selectedProduct.value.id;
   const productName = selectedProduct.value.name;
-  
+
   try {
     await productStore.deleteProduct(productId);
     deleteDialog.value = false;
-    
+
     // Register undo
     registerUndo(
       {

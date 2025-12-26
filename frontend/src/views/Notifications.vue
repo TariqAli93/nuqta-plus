@@ -72,7 +72,11 @@
                 </v-icon>
               </template>
               <v-list-item-title>
-                <span :class="{ 'text-decoration-line-through': isRead(`installment-${installment.id}`) }">
+                <span
+                  :class="{
+                    'text-decoration-line-through': isRead(`installment-${installment.id}`),
+                  }"
+                >
                   {{ installment.customerName || 'عميل غير محدد' }}
                 </span>
               </v-list-item-title>
@@ -123,7 +127,9 @@
                 </v-icon>
               </template>
               <v-list-item-title>
-                <span :class="{ 'text-decoration-line-through': isRead(`outofstock-${product.id}`) }">
+                <span
+                  :class="{ 'text-decoration-line-through': isRead(`outofstock-${product.id}`) }"
+                >
                   {{ product.name }}
                 </span>
               </v-list-item-title>
@@ -206,28 +212,28 @@ const notificationStore = useNotificationStore();
 
 const hasUnreadAlerts = computed(() => {
   let hasUnread = false;
-  
+
   // Check overdue installments
   alertStore.overdueInstallments.forEach((inst) => {
     if (!alertStore.isRead(`installment-${inst.id}`)) {
       hasUnread = true;
     }
   });
-  
+
   // Check out of stock
   alertStore.outOfStockProducts.forEach((prod) => {
     if (!alertStore.isRead(`outofstock-${prod.id}`)) {
       hasUnread = true;
     }
   });
-  
+
   // Check low stock
   alertStore.lowStockProducts.forEach((prod) => {
     if (!alertStore.isRead(`lowstock-${prod.id}`)) {
       hasUnread = true;
     }
   });
-  
+
   return hasUnread;
 });
 
@@ -241,19 +247,19 @@ const toggleRead = (alertId) => {
 
 const markAllAsRead = () => {
   const allIds = [];
-  
+
   alertStore.overdueInstallments.forEach((inst) => {
     allIds.push(`installment-${inst.id}`);
   });
-  
+
   alertStore.outOfStockProducts.forEach((prod) => {
     allIds.push(`outofstock-${prod.id}`);
   });
-  
+
   alertStore.lowStockProducts.forEach((prod) => {
     allIds.push(`lowstock-${prod.id}`);
   });
-  
+
   alertStore.markAsRead(allIds);
   notificationStore.success('تم تحديد جميع التنبيهات كمقروءة');
 };
@@ -294,4 +300,3 @@ onMounted(() => {
   text-decoration: line-through;
 }
 </style>
-

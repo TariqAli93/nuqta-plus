@@ -6,11 +6,10 @@ export class AlertController {
    */
   async getAlerts(request, reply) {
     const alerts = await alertService.getAllAlerts();
-    
+
     return reply.send({
       success: true,
       data: alerts,
     });
   }
 }
-

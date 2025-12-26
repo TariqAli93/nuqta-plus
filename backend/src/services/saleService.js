@@ -75,7 +75,7 @@ export class SaleService {
     // Calculate remaining amount
     const paidAmount = roundByCurrency(parseFloat(saleData.paidAmount) || 0, currency);
     let remainingAmount = Math.max(0, finalTotal - paidAmount);
-    
+
     // Round remainingAmount based on currency
     // If remainingAmount is less than threshold, consider it as 0
     const threshold = currency === 'IQD' ? 250 : 0.01;
@@ -191,28 +191,31 @@ export class SaleService {
 
       // Round remainingAmount based on currency before dividing
       const roundedRemainingAmount = roundByCurrency(remainingAmount, currency);
-      
+
       // Calculate base installment amount (rounded up based on currency)
-      const baseInstallmentAmount = roundByCurrency(roundedRemainingAmount / installmentCount, currency);
-      
+      const baseInstallmentAmount = roundByCurrency(
+        roundedRemainingAmount / installmentCount,
+        currency
+      );
+
       // Calculate total if all installments use base amount
       const totalWithBaseAmount = baseInstallmentAmount * installmentCount;
-      
+
       // Adjust last installment if there's a difference due to rounding
       const adjustment = totalWithBaseAmount - roundedRemainingAmount;
-      
+
       const currentDate = new Date();
 
       for (let i = 0; i < installmentCount; i++) {
         const dueDate = new Date(currentDate);
         dueDate.setMonth(dueDate.getMonth() + i + 1);
-        
+
         // Last installment gets adjusted amount to ensure total equals remainingAmount
         const isLastInstallment = i === installmentCount - 1;
-        const installmentAmount = isLastInstallment 
-          ? baseInstallmentAmount - adjustment 
+        const installmentAmount = isLastInstallment
+          ? baseInstallmentAmount - adjustment
           : baseInstallmentAmount;
-        
+
         // Round based on currency to ensure proper denomination
         const roundedAmount = roundByCurrency(installmentAmount, currency);
 
@@ -228,7 +231,7 @@ export class SaleService {
           status: 'pending',
         });
       }
-      
+
       // Update remainingAmount to match the rounded total
       remainingAmount = roundedRemainingAmount;
     }
@@ -298,9 +301,7 @@ export class SaleService {
     // Note: We count from sales table only (no joins needed) since all filter conditions
     // reference only the sales table, and joins would cause incorrect counts if there are
     // multiple related rows (e.g., multiple saleItems per sale)
-    let countQuery = db
-      .select({ count: sql`count(*)` })
-      .from(sales);
+    let countQuery = db.select({ count: sql`count(*)` }).from(sales);
 
     if (conditions.length > 0) {
       countQuery = countQuery.where(and(...conditions));
@@ -461,7 +462,10 @@ export class SaleService {
     // Round amounts based on currency to avoid decimal fractions
     const roundedPaymentAmount = roundByCurrency(paymentAmount, currency);
     const newPaidAmount = roundByCurrency(sale.paidAmount + roundedPaymentAmount, currency);
-    const newRemainingAmount = Math.max(0, roundByCurrency(sale.remainingAmount - roundedPaymentAmount, currency));
+    const newRemainingAmount = Math.max(
+      0,
+      roundByCurrency(sale.remainingAmount - roundedPaymentAmount, currency)
+    );
     const newStatus = newRemainingAmount <= 0 ? 'completed' : 'pending';
 
     await db
@@ -928,17 +932,14 @@ export class SaleService {
       draftValues.customerId = saleData.customerId;
     }
 
-    const [newDraft] = await db
-      .insert(sales)
-      .values(draftValues)
-      .returning();
+    const [newDraft] = await db.insert(sales).values(draftValues).returning();
 
     // Create sale items if they exist (without updating stock)
     if (saleData.items && saleData.items.length > 0) {
       const itemsToInsert = [];
       for (const item of saleData.items) {
         let productName = item.productName || 'Unknown Product';
-        
+
         // Try to get product name from database if productId exists
         if (item.productId) {
           const [product] = await db
@@ -983,7 +984,7 @@ export class SaleService {
     // Calculate one day ago in local time (matching database datetime format)
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    
+
     // Format as local time string (YYYY-MM-DD HH:MM:SS) to match SQLite datetime('now','localtime')
     // SQLite stores timestamps in local time format: YYYY-MM-DD HH:MM:SS
     const year = oneDayAgo.getFullYear();
@@ -1013,7 +1014,7 @@ export class SaleService {
    */
   async completeDraft(draftId, saleData, userId) {
     const db = await getDb();
-    
+
     // Get the draft sale
     const draft = await this.getById(draftId);
     if (draft.status !== 'draft') {
@@ -1045,7 +1046,7 @@ export class SaleService {
 
     // Get currency settings
     const currencySettings = await settingsService.getCurrencySettings();
-    
+
     // Use currency from saleData or draft
     const currency = saleData.currency || draft.currency || currencySettings.defaultCurrency;
 
@@ -1055,7 +1056,7 @@ export class SaleService {
     // Calculate remaining amount
     const paidAmount = roundByCurrency(parseFloat(saleData.paidAmount) || 0, currency);
     let remainingAmount = Math.max(0, finalTotal - paidAmount);
-    
+
     // Round remainingAmount based on currency
     // If remainingAmount is less than threshold, consider it as 0
     const threshold = currency === 'IQD' ? 250 : 0.01;
@@ -1063,8 +1064,9 @@ export class SaleService {
 
     // Update draft to completed sale
     // Use exchangeRate from saleData if provided, otherwise use draft values
-    const exchangeRate = saleData.exchangeRate !== undefined ? saleData.exchangeRate : draft.exchangeRate;
-    
+    const exchangeRate =
+      saleData.exchangeRate !== undefined ? saleData.exchangeRate : draft.exchangeRate;
+
     const [updatedSale] = await db
       .update(sales)
       .set({
@@ -1160,7 +1162,7 @@ export class SaleService {
       for (const installment of saleData.installments) {
         // Round installment amount based on currency to avoid decimal fractions
         const roundedAmount = roundByCurrency(installment.amount, currency);
-        
+
         await db.insert(installments).values({
           saleId: updatedSale.id,
           customerId: customerId,

@@ -5,7 +5,7 @@ import config from '../config.js';
 /**
  * Migration script to convert roleId to role enum
  * This handles existing databases that have roleId column
- * 
+ *
  * Strategy:
  * 1. Check if roleId column exists
  * 2. If it exists, try to map roleId to role string based on roles table
@@ -41,9 +41,13 @@ async function migrateRoleIdToRole(sqliteInstance = null) {
     }
 
     // First, check if users table exists
-    const usersTableCheck = sqlite.prepare(`
+    const usersTableCheck = sqlite
+      .prepare(
+        `
       SELECT name FROM sqlite_master WHERE type='table' AND name='users'
-    `).all();
+    `
+      )
+      .all();
     if (!usersTableCheck.length) {
       console.log('✓ Users table does not exist yet - migration will run when table is created');
       if (shouldClose) sqlite.close();
@@ -51,9 +55,13 @@ async function migrateRoleIdToRole(sqliteInstance = null) {
     }
 
     // Check if role column exists - ALWAYS ensure it exists
-    const roleCheck = sqlite.prepare(`
+    const roleCheck = sqlite
+      .prepare(
+        `
       SELECT COUNT(*) as count FROM pragma_table_info('users') WHERE name='role'
-    `).get();
+    `
+      )
+      .get();
     const hasRole = roleCheck && roleCheck.count > 0;
 
     // Add role column if it doesn't exist (CRITICAL - always do this)
@@ -66,9 +74,13 @@ async function migrateRoleIdToRole(sqliteInstance = null) {
     }
 
     // Now check if roleId column exists (for migration from old schema)
-    const roleIdCheck = sqlite.prepare(`
+    const roleIdCheck = sqlite
+      .prepare(
+        `
       SELECT COUNT(*) as count FROM pragma_table_info('users') WHERE name='role_id'
-    `).get();
+    `
+      )
+      .get();
     const hasRoleId = roleIdCheck && roleIdCheck.count > 0;
 
     if (!hasRoleId) {
@@ -92,14 +104,18 @@ async function migrateRoleIdToRole(sqliteInstance = null) {
     // Try to get role mapping from roles table if it exists
     let roleMapping = {};
     try {
-      const rolesTableCheck = sqlite.prepare(`
+      const rolesTableCheck = sqlite
+        .prepare(
+          `
         SELECT name FROM sqlite_master WHERE type='table' AND name='roles'
-      `).all();
-      
+      `
+        )
+        .all();
+
       if (rolesTableCheck.length > 0) {
         console.log('→ Found roles table, attempting to map roleId to role...');
         const rolesData = sqlite.prepare(`SELECT id, name FROM roles`).all();
-        
+
         if (rolesData.length > 0) {
           for (const row of rolesData) {
             roleMapping[row.id] = row.name;
@@ -109,20 +125,25 @@ async function migrateRoleIdToRole(sqliteInstance = null) {
       }
     } catch (error) {
       console.log('⚠️  Could not read roles table (may not exist), using safe defaults');
+      console.error(error);
     }
 
     // Get all users with roleId
-    const usersWithRoleId = sqlite.prepare(`
+    const usersWithRoleId = sqlite
+      .prepare(
+        `
       SELECT id, role_id FROM users WHERE role_id IS NOT NULL
-    `).all();
-    
+    `
+      )
+      .all();
+
     if (!usersWithRoleId.length) {
       console.log('→ No users with roleId found');
     } else {
       console.log(`→ Found ${usersWithRoleId.length} users with roleId, updating...`);
 
       // Find the first user (lowest ID) - will be admin
-      const firstUserId = Math.min(...usersWithRoleId.map(u => u.id));
+      const firstUserId = Math.min(...usersWithRoleId.map((u) => u.id));
 
       const updateStmt = sqlite.prepare(`UPDATE users SET role = ? WHERE id = ?`);
 
@@ -146,13 +167,23 @@ async function migrateRoleIdToRole(sqliteInstance = null) {
     }
 
     // Update users without roleId to default 'cashier'
-    const usersWithoutRoleId = sqlite.prepare(`
+    const usersWithoutRoleId = sqlite
+      .prepare(
+        `
       SELECT id FROM users WHERE (role_id IS NULL OR role_id = '') AND (role IS NULL OR role = '')
-    `).all();
+    `
+      )
+      .all();
 
     if (usersWithoutRoleId.length > 0) {
-      console.log(`→ Setting default role 'cashier' for ${usersWithoutRoleId.length} users without roleId...`);
-      sqlite.prepare(`UPDATE users SET role = 'cashier' WHERE (role_id IS NULL OR role_id = '') AND (role IS NULL OR role = '')`).run();
+      console.log(
+        `→ Setting default role 'cashier' for ${usersWithoutRoleId.length} users without roleId...`
+      );
+      sqlite
+        .prepare(
+          `UPDATE users SET role = 'cashier' WHERE (role_id IS NULL OR role_id = '') AND (role IS NULL OR role = '')`
+        )
+        .run();
       console.log('✓ Default role set');
     }
 

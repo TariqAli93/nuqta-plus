@@ -67,11 +67,13 @@ export class SettingsController {
    */
   async update(request, reply) {
     const { key } = request.params;
-    const parsed = z.object({
-      value: z.string().optional(),
-      description: z.string().optional(),
-    }).safeParse(request.body);
-    
+    const parsed = z
+      .object({
+        value: z.string().optional(),
+        description: z.string().optional(),
+      })
+      .safeParse(request.body);
+
     if (!parsed.success) {
       return reply.status(400).send({ success: false, errors: parsed.error.errors });
     }
@@ -147,9 +149,10 @@ export class SettingsController {
     if (data.usdRate) data.usdRate = Number(data.usdRate);
     if (data.iqdRate) data.iqdRate = Number(data.iqdRate);
     if (data.showSecondaryCurrency !== undefined) {
-      data.showSecondaryCurrency = data.showSecondaryCurrency === true || data.showSecondaryCurrency === 'true';
+      data.showSecondaryCurrency =
+        data.showSecondaryCurrency === true || data.showSecondaryCurrency === 'true';
     }
-    
+
     const currencySettings = await settingsService.saveCurrencySettings(data);
     return reply.send({ success: true, data: currencySettings });
   }

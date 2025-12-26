@@ -85,7 +85,7 @@ const handleSubmit = async () => {
       await customerStore.createCustomer(formData.value);
     }
     router.push({ name: 'Customers' });
-  } catch (error) {
+  } catch {
     // Error handled by notification
   } finally {
     loading.value = false;
@@ -107,7 +107,7 @@ onMounted(async () => {
         address: currentCustomer?.address,
         notes: currentCustomer?.notes,
       };
-    } catch (error) {
+    } catch {
       // Error handled by notification
     } finally {
       loading.value = false;

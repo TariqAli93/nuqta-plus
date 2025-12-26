@@ -106,7 +106,7 @@ const handleClick = async (event) => {
             emit('error', error);
           },
         });
-      } catch (error) {
+      } catch {
         // الخطأ تم التعامل معه في withLoading
       } finally {
         localLoading.value = false;

@@ -87,11 +87,8 @@ export class CustomerService {
     // Get sale items for each sale
     const salesWithItems = await Promise.all(
       salesData.map(async (sale) => {
-        const items = await db
-          .select()
-          .from(saleItems)
-          .where(eq(saleItems.saleId, sale.id));
-        
+        const items = await db.select().from(saleItems).where(eq(saleItems.saleId, sale.id));
+
         return {
           ...sale,
           items,

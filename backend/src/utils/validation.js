@@ -127,7 +127,6 @@ export const installmentSchema = z.object({
   notes: z.string().optional(),
 });
 
-
 // Query schemas
 export const paginationSchema = z.object({
   page: z.number().int().positive().default(1),

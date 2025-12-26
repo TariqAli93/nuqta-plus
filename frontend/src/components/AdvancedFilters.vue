@@ -5,24 +5,14 @@
         <div class="d-flex align-center gap-2">
           <v-icon>mdi-filter</v-icon>
           <span>فلترة متقدمة</span>
-          <v-chip
-            v-if="activeFiltersCount > 0"
-            size="small"
-            color="primary"
-            class="mr-2"
-          >
+          <v-chip v-if="activeFiltersCount > 0" size="small" color="primary" class="mr-2">
             {{ activeFiltersCount }}
           </v-chip>
         </div>
       </v-expansion-panel-title>
       <v-expansion-panel-text>
         <v-row>
-          <v-col
-            v-for="(filter, index) in filters"
-            :key="index"
-            :cols="12"
-            :md="filter.cols || 6"
-          >
+          <v-col v-for="(filter, index) in filters" :key="index" :cols="12" :md="filter.cols || 6">
             <component
               :is="filter.component"
               v-model="filterValues[filter.key]"
@@ -82,7 +72,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['update:modelValue', 'filter-change']);
+const emit = defineEmits(['update:modelValue', 'filter-change', 'filter-saved']);
 
 const panel = ref([]);
 const filterValues = ref({ ...props.modelValue });
@@ -114,7 +104,7 @@ const resetFilters = () => {
   filterValues.value = {};
   emit('update:modelValue', {});
   emit('filter-change', {});
-  
+
   if (props.storageKey) {
     localStorage.removeItem(`filters-${props.storageKey}`);
   }
@@ -122,7 +112,7 @@ const resetFilters = () => {
 
 const saveFilters = () => {
   if (!props.storageKey) return;
-  
+
   try {
     localStorage.setItem(`filters-${props.storageKey}`, JSON.stringify(filterValues.value));
     // Show success notification
@@ -147,4 +137,3 @@ watch(
   font-weight: 500;
 }
 </style>
-

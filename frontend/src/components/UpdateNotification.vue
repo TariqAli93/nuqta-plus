@@ -63,17 +63,10 @@
       <!-- Actions -->
       <footer class="justify-end d-flex ga-2">
         <!-- Later -->
-        <v-btn v-if="stage === 'available'" variant="text" @click="closeDialog">
-          لاحقاً
-        </v-btn>
+        <v-btn v-if="stage === 'available'" variant="text" @click="closeDialog"> لاحقاً </v-btn>
 
         <!-- Download -->
-        <v-btn
-          v-if="stage === 'available'"
-          color="primary"
-          variant="flat"
-          @click="startDownload"
-        >
+        <v-btn v-if="stage === 'available'" color="primary" variant="flat" @click="startDownload">
           تنزيل الآن
         </v-btn>
 

@@ -17,7 +17,7 @@ export const useAlertStore = defineStore('alert', {
       try {
         const stored = localStorage.getItem('readAlerts');
         return stored ? JSON.parse(stored) : [];
-      } catch (error) {
+      } catch {
         return [];
       }
     })(),
@@ -50,10 +50,10 @@ export const useAlertStore = defineStore('alert', {
     async fetchAlerts() {
       this.loading = true;
       const notificationStore = useNotificationStore();
-      
+
       try {
         const response = await api.get('/alerts');
-        
+
         if (response.success && response.data) {
           this.overdueInstallments = response.data.overdueInstallments?.items || [];
           this.lowStockProducts = response.data.lowStockProducts?.items || [];
@@ -62,7 +62,7 @@ export const useAlertStore = defineStore('alert', {
           this.totalOverdueAmount = response.data.overdueInstallments?.totalAmount || 0;
           this.lastUpdated = new Date();
         }
-        
+
         return response.data;
       } catch (error) {
         const errorMessage = error.response?.data?.message || 'فشل تحميل التنبيهات';
@@ -83,10 +83,10 @@ export const useAlertStore = defineStore('alert', {
     startPolling() {
       // Clear any existing polling
       this.stopPolling();
-      
+
       // Fetch immediately
       this.fetchAlerts();
-      
+
       // Set up interval for polling every 60 seconds
       this.pollingInterval = setInterval(() => {
         this.fetchAlerts();
@@ -173,4 +173,3 @@ export const useAlertStore = defineStore('alert', {
     },
   },
 });
-

@@ -105,8 +105,7 @@
           <v-hotkey keys="ctrl+k" variant="flat" platform="pc" />
         </v-sheet> -->
 
-        
-          <v-text-field
+        <v-text-field
           class="cursor-pointer"
           variant="outlined"
           hide-details
@@ -118,7 +117,7 @@
           <template #prepend-inner>
             <v-icon>mdi-magnify</v-icon>
           </template>
-          
+
           <template #append-inner>
             <v-locale-provider locale="en" :rtl="false">
               <v-hotkey keys="ctrl+k" variant="flat" platform="pc" />
@@ -174,18 +173,10 @@
               <v-list-item-subtitle>{{ authStore.user?.role?.name }}</v-list-item-subtitle>
             </v-list-item>
             <v-divider></v-divider>
-            <v-list-item
-              prepend-icon="mdi-account-circle"
-              to="/profile"
-              aria-label="الملف الشخصي"
-            >
+            <v-list-item prepend-icon="mdi-account-circle" to="/profile" aria-label="الملف الشخصي">
               <v-list-item-title>الملف الشخصي</v-list-item-title>
             </v-list-item>
-            <v-list-item
-              prepend-icon="mdi-logout"
-              @click="handleLogout"
-              aria-label="تسجيل خروج"
-            >
+            <v-list-item prepend-icon="mdi-logout" @click="handleLogout" aria-label="تسجيل خروج">
               <v-list-item-title>تسجيل خروج</v-list-item-title>
             </v-list-item>
           </v-list>

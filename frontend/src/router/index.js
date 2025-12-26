@@ -126,7 +126,7 @@ router.beforeEach(async (to, from, next) => {
   if (authStore.isAuthenticated && !authStore.user) {
     try {
       await authStore.getProfile();
-    } catch (e) {
+    } catch {
       // Silently handle profile fetch failure
     }
   }

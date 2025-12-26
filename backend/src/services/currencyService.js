@@ -37,7 +37,7 @@ export async function getByCode(currencyCode) {
 /**
  * Update exchange rate
  */
-export async function updateExchangeRate(currencyCode, newRate, userId) {
+export async function updateExchangeRate(currencyCode, newRate, _userId) {
   const db = await getDb();
   const currency = await db
     .select()
@@ -72,7 +72,7 @@ export async function updateExchangeRate(currencyCode, newRate, userId) {
 /**
  * Update currency settings
  */
-export async function update(currencyCode, data, userId) {
+export async function update(currencyCode, data, _userId) {
   const db = await getDb();
   const currency = await db
     .select()

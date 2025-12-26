@@ -66,10 +66,10 @@ export function exportToExcel(data, headers, filename = 'export.xlsx') {
  * @param {HTMLElement} tableElement - Table element to export
  * @param {String} filename - Output filename
  */
-export function exportToPDF(tableElement, filename = 'export.pdf') {
+export function exportToPDF(tableElement, _filename = 'export.pdf') {
   // This is a placeholder - in production, use a library like jsPDF
   console.warn('PDF export requires a library like jsPDF. Exporting as HTML for now.');
-  
+
   const htmlContent = tableElement.outerHTML;
   const blob = new Blob([htmlContent], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
@@ -86,4 +86,3 @@ export function useExport() {
     exportToPDF,
   };
 }
-

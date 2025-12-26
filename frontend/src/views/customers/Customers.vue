@@ -17,16 +17,16 @@
 
     <v-card>
       <div class="pa-4 flex justify-lg-space-between items-center gap-4">
-          <v-text-field
-            v-model="search"
-            prepend-inner-icon="mdi-magnify"
-            label="البحث عن عميل"
-            single-line
-            hide-details
-            @input="handleSearch"
-            density="comfortable"
-            aria-label="البحث عن عميل"
-          ></v-text-field>
+        <v-text-field
+          v-model="search"
+          prepend-inner-icon="mdi-magnify"
+          label="البحث عن عميل"
+          single-line
+          hide-details
+          @input="handleSearch"
+          density="comfortable"
+          aria-label="البحث عن عميل"
+        ></v-text-field>
       </div>
     </v-card>
 
@@ -70,7 +70,7 @@
             compact
           />
         </template>
-        <template v-slot:[`item.actions`]="{ item }">
+        <template #[`item.actions`]="{ item }">
           <v-btn
             icon="mdi-pencil"
             size="small"
@@ -128,7 +128,9 @@ const customerStore = useCustomerStore();
 const authStore = useAuthStore();
 
 const userRole = computed(() => authStore.user?.role);
-const canDeleteCustomers = computed(() => userRole.value ? uiAccess.canDeleteCustomers(userRole.value) : false);
+const canDeleteCustomers = computed(() =>
+  userRole.value ? uiAccess.canDeleteCustomers(userRole.value) : false
+);
 
 const search = ref('');
 const deleteDialog = ref(false);
@@ -172,11 +174,11 @@ const handleDelete = async () => {
   deleting.value = true;
   const customerId = selectedCustomer.value.id;
   const customerName = selectedCustomer.value.name;
-  
+
   try {
     await customerStore.deleteCustomer(customerId);
     deleteDialog.value = false;
-    
+
     // Register undo
     registerUndo(
       {
