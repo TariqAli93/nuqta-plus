@@ -94,10 +94,10 @@
               <v-text-field
                 v-if="!isEdit || isAdmin || costPriceUnlocked"
                 :model-value="formatNumber(formData.costPrice)"
-                @update:model-value="handleCostPriceInput"
-                label="سعر التكلفة"
                 :suffix="formData.currency"
+                label="سعر التكلفة"
                 :rules="[rules.required]"
+                @update:model-value="handleCostPriceInput"
               ></v-text-field>
               <v-text-field
                 v-else
@@ -253,12 +253,12 @@ const formData = ref({
   barcode: '',
   categoryId: null,
   description: '',
-  costPrice: 0,
-  sellingPrice: 0,
-  currency: 'USD',
-  stock: 0,
-  minStock: 0,
-  status: 'available',
+  costPrice: settingsStore.settings?.defaultCostPrice || 0,
+  sellingPrice: settingsStore.settings?.defaultSellingPrice || 0,
+  currency: settingsStore.settings?.defaultCurrency || 'IQD',
+  stock: settingsStore.settings?.defaultStock || 0,
+  minStock: settingsStore.settings?.defaultMinStock || 0,
+  status: settingsStore.settings?.defaultStatus || 'available',
 });
 
 // Admin verification state
@@ -279,7 +279,7 @@ const statusOptions = [
 ];
 
 const isEdit = computed(() => !!route.params.id);
-const isAdmin = computed(() => authStore.user?.role?.name === 'admin');
+const isAdmin = computed(() => authStore.user?.role === 'admin');
 
 // Computed property for available currencies
 const availableCurrencies = computed(() => settingsStore.availableCurrencies);
@@ -502,8 +502,6 @@ const verifyAdmin = async () => {
       username: adminCredentials.value.username,
       password: adminCredentials.value.password,
     });
-
-    console.log(response.data);
 
     // Check if user is admin
     if (response.data?.user?.role === 'admin') {

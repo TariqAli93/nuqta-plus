@@ -6,23 +6,15 @@
       <header class="mb-3 d-flex align-center justify-space-between">
         <div class="text-h6 font-weight-bold">
           <span>
-            <template v-if="isDowngrade"> لا يوجد تحديث متاح </template>
-            <template v-else-if="stage === 'checking'">جارٍ التحقق من وجود تحديثات…</template>
+            <template v-if="stage === 'checking'">جارٍ التحقق من وجود تحديثات…</template>
             <template v-else-if="stage === 'noupdate'">لا يوجد تحديث متاح.</template>
           </span>
         </div>
         <v-btn icon="mdi-close" variant="text" @click="closeDialog" />
       </header>
 
-      <section v-if="isDowngrade" class="mt-3 downgrade-notice">
-        <v-alert variant="tonal" color="warning" class="pa-3">
-          <div class="font-weight-bold">تنبيه — إصدار أقدم</div>
-          <div class="text-caption">الإصدار المتاح أقل من الإصدار الحالي</div>
-        </v-alert>
-      </section>
-
       <!-- Version Info -->
-      <section v-else-if="stage === 'available'" class="mb-4">
+      <section v-if="stage === 'available'" class="mb-4">
         <div class="text-subtitle-2 opacity-80">
           الإصدار الجديد: <strong>{{ version }}</strong>
         </div>
@@ -71,14 +63,13 @@
       <!-- Actions -->
       <footer class="justify-end d-flex ga-2">
         <!-- Later -->
-        <v-btn v-if="stage === 'available' && !isDowngrade" variant="text" @click="closeDialog">
-          <span v-if="!isDowngrade">لاحقاً</span>
-          <span v-else>إلغاء</span>
+        <v-btn v-if="stage === 'available'" variant="text" @click="closeDialog">
+          لاحقاً
         </v-btn>
 
         <!-- Download -->
         <v-btn
-          v-if="stage === 'available' && !isDowngrade"
+          v-if="stage === 'available'"
           color="primary"
           variant="flat"
           @click="startDownload"
@@ -96,7 +87,6 @@
           تثبيت الآن
         </v-btn>
       </footer>
-      <!-- Downgrade warning -->
     </v-card>
   </v-dialog>
 </template>
@@ -110,7 +100,6 @@ const message = ref('');
 
 const version = ref('');
 const changelog = ref('');
-const isDowngrade = ref(false);
 
 const progress = ref(0);
 const transferred = ref(0);
@@ -185,12 +174,12 @@ onMounted(() => {
 
   // 🔵 3. وجد تحديث
   window.electronAPI.on('update-available', (data) => {
-    const payload = data.payload || {};
+    const payload = data.payload || data || {};
     if (!payload.manual) return;
 
     stage.value = 'available';
-    version.value = payload.version;
-    changelog.value = payload.releaseNotes;
+    version.value = payload.version || '';
+    changelog.value = payload.releaseNotes || '';
   });
 
   // 🔵 4. بدأ التحميل
@@ -201,10 +190,10 @@ onMounted(() => {
 
   // 🔵 5. تقدم التحميل
   window.electronAPI.on('update-progress', (data) => {
-    const p = data.payload;
-    progress.value = p.percent;
-    transferred.value = p.transferred;
-    total.value = p.total;
+    const p = data.payload || data || {};
+    progress.value = p.percent || 0;
+    transferred.value = p.transferred || 0;
+    total.value = p.total || 0;
   });
 
   // 🔵 6. اكتمل التحميل
@@ -214,8 +203,11 @@ onMounted(() => {
 
   // 🔵 7. خطأ
   window.electronAPI.on('update-error', (data) => {
+    const payload = data.payload || {};
+    if (!payload.manual) return; // ⛔ تجاهل الأخطاء التلقائية
+
     stage.value = 'error';
-    errorMessage.value = data.payload.error;
+    errorMessage.value = payload.error || data.payload?.error || 'حدث خطأ غير معروف';
   });
 });
 

@@ -1,7 +1,6 @@
 // autoUpdater.js
 import { autoUpdater } from 'electron-updater';
 import { app } from 'electron';
-import semver from 'semver';
 
 autoUpdater.autoDownload = false;
 autoUpdater.autoInstallOnAppQuit = true;
@@ -63,12 +62,9 @@ function setupListeners() {
 
   // يوجد تحديث
   autoUpdater.on('update-available', (info) => {
-    const current = app.getVersion();
-    const isDowngrade = semver.lt(info.version, current);
     mainWindow?.webContents.send('update-available', {
       version: info.version,
       releaseNotes: info.releaseNotes || '',
-      isDowngrade,
     });
   });
 

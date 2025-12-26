@@ -99,5 +99,8 @@ export default defineConfig({
     strictPort: true,
     host: true,
   },
+  define: {
+    'process.env.EDITOR': JSON.stringify('cursor')
+  },
   base: './',
 });
