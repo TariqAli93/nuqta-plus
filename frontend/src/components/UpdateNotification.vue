@@ -96,7 +96,6 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 
 const show = ref(false);
 const stage = ref('idle');
-const message = ref('');
 
 const version = ref('');
 const changelog = ref('');

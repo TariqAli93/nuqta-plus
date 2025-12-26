@@ -33,23 +33,23 @@
             <v-col cols="12" md="6">
               <v-autocomplete
                 v-model="formData.categoryId"
+                v-model:search="categorySearch"
                 :items="categories"
                 item-title="name"
                 item-value="id"
                 label="التصنيف"
-                v-model:search="categorySearch"
                 :custom-filter="customCategoryFilter"
                 clearable
                 autocomplete="off"
                 @keydown="handleCategoryKeydown"
                 @update:model-value="handleCategorySelect"
               >
-                <template v-slot:no-data>
+                <template #no-data>
                   <v-list-item 
                     v-if="categorySearch && categorySearch.trim() && !creatingCategory && !isSearchValueInList"
-                    @click="handleCategoryEnter"
                     class="cursor-pointer"
                     :class="{ 'bg-primary-lighten-5': true }"
+                    @click="handleCategoryEnter"
                   >
                     <v-list-item-prepend>
                       <v-icon color="primary">mdi-plus-circle</v-icon>
@@ -105,18 +105,18 @@
                 label="سعر التكلفة"
                 readonly
                 append-inner-icon="mdi-lock"
-                @click:append-inner="showAdminVerifyDialog = true"
                 hint="يتطلب صلاحيات الأدمن للعرض"
                 persistent-hint
+                @click:append-inner="showAdminVerifyDialog = true"
               ></v-text-field>
             </v-col>
             <v-col cols="12" md="6">
               <v-text-field
                 :model-value="formatNumber(formData.sellingPrice)"
-                @update:model-value="handleSellingPriceInput"
                 label="سعر البيع"
                 :suffix="formData.currency"
                 :rules="[rules.required]"
+                @update:model-value="handleSellingPriceInput"
               ></v-text-field>
             </v-col>
             <v-col cols="12" md="3">
@@ -206,14 +206,14 @@
 
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="closeAdminDialog" :disabled="adminVerifyLoading">
+          <v-btn variant="text" :disabled="adminVerifyLoading" @click="closeAdminDialog">
             إلغاء
           </v-btn>
           <v-btn
             color="primary"
-            @click="verifyAdmin"
             :loading="adminVerifyLoading"
             prepend-icon="mdi-check"
+            @click="verifyAdmin"
           >
             تحقق
           </v-btn>
