@@ -21,11 +21,14 @@ export const useCustomerStore = defineStore('customer', {
       const notificationStore = useNotificationStore();
       try {
         const response = await api.get('/customers', { params });
-        this.customers = response.data;
-        this.pagination = response.meta;
+        this.customers = response?.data || [];
+        this.pagination = response?.meta || this.pagination;
+
+        console.log(response)
         return response;
       } catch (error) {
         notificationStore.error(error.response?.data?.message || 'فشل تحميل العملاء');
+        this.customers = [];
         throw error;
       } finally {
         this.loading = false;
@@ -37,10 +40,11 @@ export const useCustomerStore = defineStore('customer', {
       const notificationStore = useNotificationStore();
       try {
         const response = await api.get(`/customers/${id}`);
-        this.currentCustomer = response.data;
+        this.currentCustomer = response?.data || null;
         return response;
       } catch (error) {
         notificationStore.error(error.response?.data?.message || 'فشل تحميل بيانات العميل');
+        this.currentCustomer = null;
         throw error;
       } finally {
         this.loading = false;

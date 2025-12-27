@@ -27,7 +27,6 @@ async function authPlugin(fastify) {
       }
 
       request.user = user;
-      reply.status(200).send({ message: 'Authentication successful' });
     } catch (error) {
       console.error(error);
       if (error.message.includes('No token provided')) {

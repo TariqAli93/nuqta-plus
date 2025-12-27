@@ -38,7 +38,7 @@
           variant="text"
           size="small"
           @click="handleExport"
-          :disabled="customerStore.customers.length === 0"
+          :disabled="!customerStore.customers || customerStore.customers.length === 0"
           aria-label="تصدير البيانات"
         >
           <v-icon>mdi-download</v-icon>

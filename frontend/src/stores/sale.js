@@ -26,28 +26,25 @@ export const useSaleStore = defineStore('sale', {
      * Fetch all sales with optional filters
      * @param {Object} params - Query parameters for filtering
      */
-    async fetchSales(params = {}) {
-      this.loading = true;
-      const notificationStore = useNotificationStore();
-      try {
-        const response = await api.get('/sales', { params });
+     async fetchSales(params = {}) {
+       this.loading = true;
+       const notificationStore = useNotificationStore();
+       try {
+         const response = await api.get('/sales', { params });
 
-        if (!response.data) {
-          throw new Error('Invalid response from server');
-        }
+         this.sales = response?.data || [];
+         this.pagination = response?.meta || this.pagination;
 
-        this.sales = response.data;
-        this.pagination = response.meta || this.pagination;
-
-        return response;
-      } catch (error) {
-        const errorMessage = error.response?.data?.message || 'فشل تحميل المبيعات';
-        notificationStore.error(errorMessage);
-        throw error;
-      } finally {
-        this.loading = false;
-      }
-    },
+         return response;
+       } catch (error) {
+         const errorMessage = error.response?.data?.message || 'فشل تحميل المبيعات';
+         notificationStore.error(errorMessage);
+         this.sales = [];
+         throw error;
+       } finally {
+         this.loading = false;
+       }
+     },
 
     /**
      * Fetch single sale by ID
@@ -61,14 +58,10 @@ export const useSaleStore = defineStore('sale', {
           throw new Error('Sale ID is required');
         }
 
-        const response = await api.get(`/sales/${id}`);
+         const response = await api.get(`/sales/${id}`);
 
-        if (!response.data) {
-          throw new Error('Invalid response from server');
-        }
-
-        this.currentSale = response.data;
-        return response;
+         this.currentSale = response?.data || null;
+         return response;
       } catch (error) {
         const errorMessage = error.response?.data?.message || 'فشل تحميل بيانات المبيعة';
         notificationStore.error(errorMessage);
@@ -91,14 +84,14 @@ export const useSaleStore = defineStore('sale', {
           throw new Error('Sale must have at least one item');
         }
 
-        const response = await api.post('/sales', saleData);
+         const response = await api.post('/sales', saleData);
 
-        if (response.data?.data) {
-          this.sales.unshift(response.data.data);
-        }
+         if (response?.data) {
+           this.sales.unshift(response.data);
+         }
 
-        notificationStore.success('تم إضافة المبيعة بنجاح');
-        return response;
+         notificationStore.success('تم إضافة المبيعة بنجاح');
+         return response;
       } catch (error) {
         const errorMessage = error.response?.data?.message || 'فشل إضافة المبيعة';
         notificationStore.error(errorMessage);
@@ -183,15 +176,11 @@ export const useSaleStore = defineStore('sale', {
       this.loading = true;
       const notificationStore = useNotificationStore();
       try {
-        const response = await api.get('/sales/report', { params: queryParams });
+         const response = await api.get('/sales/report', { params: queryParams });
 
-        if (!response.data) {
-          throw new Error('Invalid response from server');
-        }
-
-        // Backend returns { success: true, data: report }
-        // Extract the actual report data
-        return response.data.data || response.data;
+         // Backend returns { success: true, data: report }
+         // Axios interceptor already extracts response.data, so response is {success, data, ...}
+         return response?.data || response;
       } catch (error) {
         const errorMessage = error.response?.data?.message || 'فشل تحميل تقرير المبيعات';
         notificationStore.error(errorMessage);
@@ -209,11 +198,11 @@ export const useSaleStore = defineStore('sale', {
       this.loading = true;
       const notificationStore = useNotificationStore();
       try {
-        const response = await api.post(`/sales/${this.currentSale.id}/payment`, paymentData);
-        // Update the current sale with the new payment
-        this.currentSale = response.data;
-        notificationStore.success('تم إضافة الدفعة بنجاح');
-        return response;
+         const response = await api.post(`/sales/${this.currentSale.id}/payment`, paymentData);
+         // Update the current sale with the new payment
+         this.currentSale = response?.data || this.currentSale;
+         notificationStore.success('تم إضافة الدفعة بنجاح');
+         return response;
       } catch (error) {
         notificationStore.error(error.response?.data?.message || 'فشل إضافة الدفعة');
         throw error;
@@ -332,15 +321,11 @@ export const useSaleStore = defineStore('sale', {
       this.loading = true;
       const notificationStore = useNotificationStore();
       try {
-        const response = await api.post(`/sales/draft/${draftId}/complete`, saleData);
+         const response = await api.post(`/sales/draft/${draftId}/complete`, saleData);
 
-        if (!response.data) {
-          throw new Error('Invalid response from server');
-        }
-
-        this.currentSale = response.data?.data || response.data;
-        notificationStore.success('تم إكمال البيع بنجاح');
-        return response;
+         this.currentSale = response?.data || null;
+         notificationStore.success('تم إكمال البيع بنجاح');
+         return response;
       } catch (error) {
         const errorMessage = error.response?.data?.message || 'فشل إكمال البيع';
         notificationStore.error(errorMessage);

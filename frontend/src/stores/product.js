@@ -21,12 +21,13 @@ export const useProductStore = defineStore('product', {
       const notificationStore = useNotificationStore();
       try {
         const response = await api.get('/products', { params });
-        this.products = response.data;
-        this.pagination = response.meta;
+        this.products = response?.data || [];
+        this.pagination = response?.meta || this.pagination;
 
         return response;
       } catch (error) {
         notificationStore.error(error.response?.data?.message || 'فشل تحميل المنتجات');
+        this.products = [];
         throw error;
       } finally {
         this.loading = false;
@@ -39,10 +40,11 @@ export const useProductStore = defineStore('product', {
       try {
         const response = await api.get(`/products/${id}`);
 
-        this.currentProduct = response.data;
+        this.currentProduct = response?.data || null;
         return response;
       } catch (error) {
         notificationStore.error(error.response?.data?.message || 'فشل تحميل بيانات المنتج');
+        this.currentProduct = null;
         throw error;
       } finally {
         this.loading = false;
