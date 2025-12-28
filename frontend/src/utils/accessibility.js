@@ -91,38 +91,7 @@ export function trapFocus(container) {
   };
 }
 
-/**
- * Skip to main content link (for keyboard navigation)
- */
-export function setupSkipLink() {
-  const skipLink = document.createElement('a');
-  skipLink.href = '#main-content';
-  skipLink.textContent = 'تخطي إلى المحتوى الرئيسي';
-  skipLink.className = 'skip-link';
-  skipLink.setAttribute('aria-label', 'تخطي إلى المحتوى الرئيسي');
 
-  skipLink.style.cssText = `
-    position: absolute;
-    top: -40px;
-    left: 0;
-    background: var(--v-theme-primary);
-    color: white;
-    padding: 8px 16px;
-    text-decoration: none;
-    z-index: 10000;
-    border-radius: 4px;
-  `;
-
-  skipLink.addEventListener('focus', () => {
-    skipLink.style.top = '0';
-  });
-
-  skipLink.addEventListener('blur', () => {
-    skipLink.style.top = '-40px';
-  });
-
-  document.body.insertBefore(skipLink, document.body.firstChild);
-}
 
 /**
  * Check if element is visible to screen readers

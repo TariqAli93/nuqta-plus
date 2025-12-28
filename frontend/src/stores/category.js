@@ -7,6 +7,12 @@ export const useCategoryStore = defineStore('category', {
     categories: [],
     currentCategory: null,
     loading: false,
+    pagination: {
+      page: 1,
+      limit: 50,
+      total: 0,
+      totalPages: 0,
+    },
   }),
 
   actions: {
@@ -23,6 +29,17 @@ export const useCategoryStore = defineStore('category', {
         } else {
           this.categories = [];
         }
+        
+        // Ensure pagination values are numbers
+        if (response?.data?.meta) {
+          this.pagination = {
+            page: Number(response.data.meta.page) || this.pagination.page,
+            limit: Number(response.data.meta.limit) || this.pagination.limit,
+            total: Number(response.data.meta.total) || this.pagination.total,
+            totalPages: Number(response.data.meta.totalPages) || this.pagination.totalPages,
+          };
+        }
+        
         return response;
       } catch (error) {
         notificationStore.error(error.response?.data?.message || 'فشل تحميل الفئات');

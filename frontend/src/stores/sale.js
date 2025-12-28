@@ -18,7 +18,12 @@ export const useSaleStore = defineStore('sale', {
         return null;
       }
     })(),
-    pagination: {},
+    pagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 0,
+    },
   }),
 
   actions: {
@@ -33,7 +38,16 @@ export const useSaleStore = defineStore('sale', {
          const response = await api.get('/sales', { params });
 
          this.sales = response?.data || [];
-         this.pagination = response?.meta || this.pagination;
+         
+         // Ensure pagination values are numbers
+         if (response?.meta) {
+           this.pagination = {
+             page: Number(response.meta.page) || this.pagination.page,
+             limit: Number(response.meta.limit) || this.pagination.limit,
+             total: Number(response.meta.total) || this.pagination.total,
+             totalPages: Number(response.meta.totalPages) || this.pagination.totalPages,
+           };
+         }
 
          return response;
        } catch (error) {

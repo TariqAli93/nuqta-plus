@@ -2,10 +2,10 @@
   <v-dialog
     v-model="isOpen"
     max-width="700"
-    @update:model-value="onDialogUpdate"
-    @keydown.escape="close"
     role="dialog"
     aria-labelledby="quick-search-title"
+    @update:model-value="onDialogUpdate"
+    @keydown.escape="close"
   >
     <v-card>
       <v-card-title id="quick-search-title" class="d-flex align-center gap-2">
@@ -26,12 +26,12 @@
           flat
           hide-details
           autofocus
+          class="search-input"
+          :aria-label="'بحث سريع'"
           @input="handleSearch"
           @keydown.down.prevent="navigateResults(1)"
           @keydown.up.prevent="navigateResults(-1)"
           @keydown.enter.prevent="selectCurrent"
-          class="search-input"
-          :aria-label="'بحث سريع'"
         />
 
         <v-divider />

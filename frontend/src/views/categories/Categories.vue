@@ -14,6 +14,13 @@
         :headers="headers"
         :items="categoryStore.categories"
         :loading="categoryStore.loading"
+        :items-per-page="categoryStore.pagination.limit"
+        :page="categoryStore.pagination.page"
+        :items-length="categoryStore.pagination.total"
+        server-items-length
+        density="comfortable"
+        hide-default-footer
+        @update:items-per-page="changeItemsPerPage"
       >
         <template #[`item.actions`]="{ item }">
           <v-btn icon="mdi-pencil" size="small" variant="text" @click="openDialog(item)"></v-btn>
@@ -26,6 +33,12 @@
           ></v-btn>
         </template>
       </v-data-table>
+      
+      <PaginationControls
+        :pagination="categoryStore.pagination"
+        @update:page="changePage"
+        @update:items-per-page="changeItemsPerPage"
+      />
     </v-card>
 
     <v-dialog v-model="dialog" max-width="500">
@@ -47,7 +60,7 @@
         <v-divider></v-divider>
 
         <v-card-actions>
-          <v-btn color="primary" variant="elevated" @click="handleSubmit" :loading="saving"
+          <v-btn color="primary" variant="elevated" :loading="saving" @click="handleSubmit"
             >حفظ</v-btn
           >
           <v-spacer />
@@ -74,6 +87,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useCategoryStore } from '@/stores/category';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import PaginationControls from '@/components/PaginationControls.vue';
 
 const categoryStore = useCategoryStore();
 
@@ -143,7 +157,31 @@ const handleDelete = async () => {
   }
 };
 
+const changePage = (page) => {
+  const pageNum = Number(page);
+  if (isNaN(pageNum) || pageNum < 1) return;
+  if (pageNum === categoryStore.pagination.page) return;
+  categoryStore.pagination.page = pageNum;
+  categoryStore.fetchCategories({
+    page: pageNum,
+    limit: categoryStore.pagination.limit,
+  });
+};
+
+const changeItemsPerPage = (limit) => {
+  const limitNum = Number(limit);
+  categoryStore.pagination.limit = limitNum;
+  categoryStore.pagination.page = 1;
+  categoryStore.fetchCategories({
+    page: 1,
+    limit: limitNum,
+  });
+};
+
 onMounted(() => {
-  categoryStore.fetchCategories();
+  categoryStore.fetchCategories({
+    page: 1,
+    limit: categoryStore.pagination.limit,
+  });
 });
 </script>

@@ -6,6 +6,7 @@ import * as directives from 'vuetify/directives';
 import { ar } from 'vuetify/locale';
 import '@mdi/font/css/materialdesignicons.css';
 import { md3 } from 'vuetify/blueprints';
+import { fluentBlueprint } from '@/blueprints/fluentBlueprint';
 
 const lightTheme = {
   dark: false,
@@ -46,7 +47,7 @@ const darkTheme = {
 export default createVuetify({
   components,
   directives,
-  blueprint: md3,
+  blueprint: fluentBlueprint,
   locale: {
     locale: 'ar',
     fallback: 'ar',

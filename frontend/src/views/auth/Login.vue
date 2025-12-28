@@ -71,7 +71,7 @@
       <v-divider />
 
       <v-card-text class="px-6 py-8">
-        <v-form @submit.prevent="handleLogin" ref="loginForm" lazy-validation>
+        <v-form ref="loginForm" lazy-validation @submit.prevent="handleLogin">
           <v-text-field
             v-model="credentials.username"
             label="اسم المستخدم"
@@ -88,12 +88,12 @@
             prepend-inner-icon="mdi-lock-outline"
             :type="showPassword ? 'text' : 'password'"
             :append-inner-icon="showPassword ? 'mdi-eye-off-outline' : 'mdi-eye-outline'"
-            @click:append-inner="showPassword = !showPassword"
             :rules="[rules.required]"
             variant="outlined"
             color="primary"
             density="comfortable"
             class="mb-4"
+            @click:append-inner="showPassword = !showPassword"
           />
 
           <v-alert v-if="error" type="error" border="start" density="compact" class="mb-4">

@@ -1,259 +1,187 @@
 <template>
-  <div>
-    <h1 class="mb-6 text-h4 font-weight-bold">لوحة التحكم</h1>
-
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 gap-6 mb-6 sm:grid-cols-2 lg:grid-cols-4">
-      <!-- Total Sales Card -->
-      <div
-        class="p-6 text-white transition-all transform shadow-lg bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl hover:scale-105 hover:shadow-xl"
-      >
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="mb-1 text-sm font-medium opacity-90">إجمالي المبيعات</p>
-            <h3 class="text-4xl font-bold">{{ countSales }}</h3>
-          </div>
-          <div class="p-4 bg-white rounded-full bg-opacity-20">
-            <v-icon size="40" color="blue">mdi-cash-multiple</v-icon>
-          </div>
-        </div>
-      </div>
-
-      <!-- Total Customers Card -->
-      <div
-        class="p-6 text-white transition-all transform shadow-lg bg-gradient-to-br from-green-600 to-green-800 rounded-xl hover:scale-105 hover:shadow-xl"
-      >
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="mb-1 text-sm font-medium opacity-90">العملاء</p>
-            <h3 class="text-4xl font-bold">{{ stats.totalCustomers }}</h3>
-          </div>
-          <div class="p-4 bg-white rounded-full bg-opacity-20">
-            <v-icon size="40" color="green">mdi-account-group</v-icon>
-          </div>
-        </div>
-      </div>
-
-      <!-- Total Products Card -->
-      <div
-        class="p-6 text-white transition-all transform shadow-lg bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl hover:scale-105 hover:shadow-xl"
-      >
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="mb-1 text-sm font-medium opacity-90">المنتجات</p>
-            <h3 class="text-4xl font-bold">{{ stats.totalProducts }}</h3>
-          </div>
-          <div class="p-4 bg-white rounded-full bg-opacity-20">
-            <v-icon size="40" color="purple">mdi-package-variant</v-icon>
-          </div>
-        </div>
-      </div>
-
-      <!-- Low Stock Card -->
-      <div
-        class="p-6 text-white transition-all transform shadow-lg bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl hover:scale-105 hover:shadow-xl"
-      >
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="mb-1 text-sm font-medium opacity-90">منتجات قليلة المخزون</p>
-            <h3 class="text-4xl font-bold">{{ stats.lowStock }}</h3>
-          </div>
-          <div class="p-4 bg-white rounded-full bg-opacity-20">
-            <v-icon size="40" color="orange">mdi-alert-circle</v-icon>
-          </div>
-        </div>
-      </div>
+  <v-container fluid>
+    <div class="d-flex align-center justify-space-between mb-4">
+      <h1 class="text-h4">لوحة التحكم</h1>
     </div>
 
-    <!-- Charts and Quick Actions -->
-    <div v-if="filteredQuickActions.length > 0">
-      <div class="flex items-center justify-between mb-2">
-        <h2 class="text-xl font-bold">إجراءات سريعة</h2>
-      </div>
-
-      <div
-        :class="{
-          'grid gap-4': true,
-          'grid-cols-1': filteredQuickActions.length === 1,
-          'grid-cols-1 sm:grid-cols-2': filteredQuickActions.length === 2,
-          'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3': filteredQuickActions.length === 3,
-          'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4': filteredQuickActions.length >= 4,
-        }"
-      >
-        <v-card
-          v-for="(action, idx) in filteredQuickActions"
-          :key="action.title"
-          :to="action.to"
-          color="sureface"
-          class="relative block p-5 overflow-hidden transition-all border border-gray-200 group rounded-2xl translate hover:scale-102 hover:shadow-2xl dark:border-gray-700"
-        >
-          <!-- Animated background gradient -->
-          <div
-            class="absolute inset-0 transition-opacity duration-500 opacity-0 pointer-events-none group-hover:opacity-10"
-          ></div>
-
-          <!-- Animated glow effect -->
-          <div
-            :class="[
-              'pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full blur-3xl transition-all duration-700 group-hover:opacity-100 group-hover:scale-150 opacity-0',
-              idx % 6 === 0 && 'bg-sky-500/20',
-              idx % 6 === 1 && 'bg-emerald-500/20',
-              idx % 6 === 2 && 'bg-indigo-500/20',
-              idx % 6 === 3 && 'bg-rose-500/20',
-              idx % 6 === 4 && 'bg-amber-500/20',
-              idx % 6 === 5 && 'bg-fuchsia-500/20',
-            ]"
-          ></div>
-          <div
-            :class="[
-              'pointer-events-none absolute -left-10 -bottom-10 h-32 w-32 rounded-full blur-3xl transition-all duration-700 delay-100 group-hover:opacity-100 group-hover:scale-150 opacity-0',
-              idx % 6 === 0 && 'bg-cyan-500/20',
-              idx % 6 === 1 && 'bg-lime-500/20',
-              idx % 6 === 2 && 'bg-violet-500/20',
-              idx % 6 === 3 && 'bg-pink-500/20',
-              idx % 6 === 4 && 'bg-orange-500/20',
-              idx % 6 === 5 && 'bg-purple-500/20',
-            ]"
-          ></div>
-
-          <div class="relative z-10 flex items-center gap-4">
-            <div
-              :class="[
-                'rounded-xl p-3 text-white shadow-md bg-gradient-to-br transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl',
-                idx % 6 === 0 && 'from-sky-500 to-sky-700',
-                idx % 6 === 1 && 'from-emerald-500 to-emerald-700',
-                idx % 6 === 2 && 'from-indigo-500 to-indigo-700',
-                idx % 6 === 3 && 'from-rose-500 to-rose-700',
-                idx % 6 === 4 && 'from-amber-500 to-amber-700',
-                idx % 6 === 5 && 'from-fuchsia-500 to-fuchsia-700',
-              ]"
-            >
-              <v-icon
-                size="28"
-                color="white"
-                class="transition-transform duration-300 group-hover:scale-110"
-              >
-                {{ action.icon }}
-              </v-icon>
+    <v-row>
+      <v-col cols="12" md="4" class="sticky-sidebar">
+        <v-row>
+          <v-col cols="12">
+            <div v-if="filteredQuickActions.length > 0">
+              <v-row dense>
+                <v-col v-for="action in filteredQuickActions" :key="action.title" cols="6">
+                  <v-card
+                    :to="action.to"
+                    class="d-flex flex-column align-center justify-center pa-4 h-100 text-center"
+                    link
+                  >
+                    <v-icon size="32" class="mb-2" color="primary">{{ action.icon }}</v-icon>
+                    <span class="text-subtitle-2 font-weight-bold">{{ action.title }}</span>
+                  </v-card>
+                </v-col>
+              </v-row>
             </div>
+          </v-col>
+          <v-col cols="12">
+            <v-card class="pa-4 mb-4" elevation="2" rounded="xl">
+              <div class="d-flex align-center justify-space-between mb-2">
+                <div class="d-flex align-center gap-2">
+                  <v-icon color="primary" size="24">mdi-chart-box</v-icon>
+                  <span class="text-h6 font-weight-bold">ملخص اليوم العملي</span>
+                </div>
+                <v-chip size="small" color="primary" variant="flat">
+                  {{ new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' }) }}
+                </v-chip>
+              </div>
+              <v-divider></v-divider>
+              <v-row class="mt-4" dense>
+                <v-col cols="6">
+                  <v-sheet elevation="0" class="pa-3 d-flex flex-column align-center">
+                    <v-icon color="success" size="28">mdi-cash-plus</v-icon>
+                    <span class="text-subtitle-1 font-weight-bold mt-1">
+                      {{
+                        formatTodayRevenue()
+                      }}
+                    </span>
+                    <span class="text-caption text-medium-emphasis">
+                      مبيعات اليوم ({{ defaultCurrency === 'IQD' ? 'د.ع' : defaultCurrency }})
+                    </span>
+                  </v-sheet>
+                </v-col>
+                <v-col cols="6">
+                  <v-sheet elevation="0" class="pa-3 d-flex flex-column align-center" >
+                    <v-icon color="warning" size="28">mdi-account-check-outline</v-icon>
+                    <span class="text-subtitle-1 font-weight-bold mt-1">
+                      {{
+                        recentSales
+                          .filter(s => s.createdAt &&
+                            s.createdAt.startsWith(new Date().toISOString().split('T')[0]) &&
+                            s.status === 'completed'
+                          ).length
+                      }}
+                    </span>
+                    <span class="text-caption text-medium-emphasis">العمليات الناجحة اليوم</span>
+                  </v-sheet>
+                </v-col>
+                <v-col cols="12" class="mt-3">
 
-            <div class="flex-1">
-              <h3
-                :class="[
-                  'text-base font-semibold transition-colors duration-300',
-                  idx % 6 === 0 && 'group-hover:text-sky-600 dark:group-hover:text-sky-400',
-                  idx % 6 === 1 && 'group-hover:text-emerald-600 dark:group-hover:text-emerald-400',
-                  idx % 6 === 2 && 'group-hover:text-indigo-600 dark:group-hover:text-indigo-400',
-                  idx % 6 === 3 && 'group-hover:text-rose-600 dark:group-hover:text-rose-400',
-                  idx % 6 === 4 && 'group-hover:text-amber-600 dark:group-hover:text-amber-400',
-                  idx % 6 === 5 && 'group-hover:text-fuchsia-600 dark:group-hover:text-fuchsia-400',
-                ]"
-              >
-                {{ action.title }}
-              </h3>
-              <p
-                class="mt-0.5 text-sm text-gray-500 dark:text-gray-400 transition-all duration-300 group-hover:text-gray-700 dark:group-hover:text-gray-300"
-              >
-                ابدأ الآن
-              </p>
-            </div>
+                  <v-divider class="my-3"></v-divider>
+                  <div class="text-body-2 text-info py-5">
+                    🔍 راقب منتجاتك الأكثر مبيعاً هذا الأسبوع وحدث مخزونك مبكراً!
+                  </div>
+                </v-col>
+              </v-row>
+            </v-card>
+          </v-col>
+          <v-col cols="12">
+            <AlertsPanel />
+          </v-col>
+        </v-row>
+      </v-col>
 
-            <div
-              :class="[
-                'text-gray-400 transition-all duration-300 group-hover:-translate-x-2 group-hover:scale-125',
-                idx % 6 === 0 && 'group-hover:text-sky-600',
-                idx % 6 === 1 && 'group-hover:text-emerald-600',
-                idx % 6 === 2 && 'group-hover:text-indigo-600',
-                idx % 6 === 3 && 'group-hover:text-rose-600',
-                idx % 6 === 4 && 'group-hover:text-amber-600',
-                idx % 6 === 5 && 'group-hover:text-fuchsia-600',
-              ]"
-              aria-hidden="true"
-            >
-              <v-icon size="22">mdi-chevron-left</v-icon>
-            </div>
-          </div>
+      <v-col cols="12" md="8">
+        <!-- Statistics Cards -->
+        <v-row>
+          <!-- Total Sales Card -->
+          <v-col cols="12" sm="6" lg="3">
+            <v-card class="d-flex align-center justify-space-between pa-4">
+              <div>
+                <p class="text-caption text-medium-emphasis">إجمالي المبيعات</p>
+                <h3 class="text-h5 font-weight-bold">{{ countSales }}</h3>
+              </div>
+              <v-icon size="40" color="primary">mdi-cash-multiple</v-icon>
+            </v-card>
+          </v-col>
 
-          <!-- Animated border ring -->
-          <div
-            :class="[
-              'pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-inset ring-black/0 transition-all duration-300',
-              idx % 6 === 0 && 'group-hover:ring-sky-500/30 dark:group-hover:ring-sky-400/30',
-              idx % 6 === 1 &&
-                'group-hover:ring-emerald-500/30 dark:group-hover:ring-emerald-400/30',
-              idx % 6 === 2 && 'group-hover:ring-indigo-500/30 dark:group-hover:ring-indigo-400/30',
-              idx % 6 === 3 && 'group-hover:ring-rose-500/30 dark:group-hover:ring-rose-400/30',
-              idx % 6 === 4 && 'group-hover:ring-amber-500/30 dark:group-hover:ring-amber-400/30',
-              idx % 6 === 5 &&
-                'group-hover:ring-fuchsia-500/30 dark:group-hover:ring-fuchsia-400/30',
-            ]"
-          ></div>
+          <!-- Total Customers Card -->
+          <v-col cols="12" sm="6" lg="3">
+            <v-card class="d-flex align-center justify-space-between pa-4">
+              <div>
+                <p class="text-caption text-medium-emphasis">العملاء</p>
+                <h3 class="text-h5 font-weight-bold">{{ stats.totalCustomers }}</h3>
+              </div>
+              <v-icon size="40" color="success">mdi-account-group</v-icon>
+            </v-card>
+          </v-col>
 
-          <!-- Shimmer effect -->
-          <div
-            class="absolute inset-0 transition-transform duration-1000 ease-in-out -translate-x-full pointer-events-none group-hover:translate-x-full"
-            style="
-              background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.1),
-                transparent
-              );
-            "
-          ></div>
-        </v-card>
-      </div>
-    </div>
+          <!-- Total Products Card -->
+          <v-col cols="12" sm="6" lg="3">
+            <v-card class="d-flex align-center justify-space-between pa-4">
+              <div>
+                <p class="text-caption text-medium-emphasis">المنتجات</p>
+                <h3 class="text-h5 font-weight-bold">{{ stats.totalProducts }}</h3>
+              </div>
+              <v-icon size="40" color="purple">mdi-package-variant</v-icon>
+            </v-card>
+          </v-col>
 
-    <!-- Recent Sales -->
-    <v-row class="mt-4">
-      <v-col cols="12">
-        <v-card>
-          <v-card-title>أحدث المبيعات</v-card-title>
-          <v-card-text>
-            <v-table density="comfortable">
-              <thead>
-                <tr>
-                  <th>رقم الفاتورة</th>
-                  <th>العميل</th>
-                  <th>المبلغ</th>
-                  <th>الحالة</th>
-                  <th>التاريخ</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="loading">
-                  <td colspan="5" class="text-center pa-4">
-                    <v-progress-circular
-                      indeterminate
-                      color="primary"
-                      size="32"
-                    ></v-progress-circular>
-                  </td>
-                </tr>
-                <tr v-else-if="recentSales.length === 0">
-                  <td colspan="5" class="text-center pa-4 text-grey">لا توجد مبيعات حديثة</td>
-                </tr>
-                <template v-else>
-                  <tr v-for="sale in recentSales" :key="sale.id">
-                    <td>{{ sale.invoiceNumber }}</td>
-                    <td>{{ sale.customer || 'زبون نقدي' }}</td>
-                    <td>{{ formatCurrency(sale.total, sale.currency) }}</td>
-                    <td>
-                      <v-chip :color="getStatusColor(sale.status)" size="small">
-                        {{ getStatusText(sale.status) }}
-                      </v-chip>
-                    </td>
-                    <td>{{ formatDate(sale.createdAt) }}</td>
-                  </tr>
-                </template>
-              </tbody>
-            </v-table>
-          </v-card-text>
-        </v-card>
+          <!-- Low Stock Card -->
+          <v-col cols="12" sm="6" lg="3">
+            <v-card class="d-flex align-center justify-space-between pa-4">
+              <div>
+                <p class="text-caption text-medium-emphasis">منتجات قليلة المخزون</p>
+                <h3 class="text-h5 font-weight-bold">{{ stats.lowStock }}</h3>
+              </div>
+              <v-icon size="40" color="warning">mdi-alert-circle</v-icon>
+            </v-card>
+          </v-col>
+
+          <v-col cols="12" md="12">
+            <v-row>
+              <v-col cols="12">
+                <RevenueChart :sales="recentSales" :loading="loading" />
+              </v-col>
+              <v-col cols="12" md="6">
+                <TopProductsChart :loading="loading" />
+              </v-col>
+              <v-col cols="12" md="6">
+                <SalesStatusChart :sales="recentSales" :loading="loading" />
+              </v-col>
+              <v-col cols="12">
+                <v-card title="أحدث المبيعات">
+                  <v-table>
+                    <thead>
+                      <tr>
+                        <th>رقم الفاتورة</th>
+                        <th>العميل</th>
+                        <th>المبلغ</th>
+                        <th>الحالة</th>
+                        <th>التاريخ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-if="loading">
+                        <td colspan="5" class="text-center">
+                          <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                        </td>
+                      </tr>
+                      <tr v-else-if="recentSales.length === 0">
+                        <td colspan="5" class="text-center">لا توجد مبيعات حديثة</td>
+                      </tr>
+                      <template v-else>
+                        <tr v-for="sale in recentSales.slice(0, 10)" :key="sale.id">
+                          <td>{{ sale.invoiceNumber }}</td>
+                          <td>{{ sale.customer || 'زبون نقدي' }}</td>
+                          <td>{{ formatCurrency(sale.total, sale.currency) }}</td>
+                          <td>
+                            <v-chip :color="getStatusColor(sale.status)" size="small" label>
+                              {{ getStatusText(sale.status) }}
+                            </v-chip>
+                          </td>
+                          <td>{{ formatDate(sale.createdAt) }}</td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </v-table>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-col>
+        </v-row>
       </v-col>
     </v-row>
-  </div>
+  </v-container>
 </template>
 
 <script setup>
@@ -263,13 +191,24 @@ import { useProductStore } from '@/stores/product';
 import { useCustomerStore } from '@/stores/customer';
 import { useLoading } from '@/composables/useLoading';
 import { useAuthStore } from '@/stores/auth';
+import { useCurrency } from '@/composables/useCurrency';
 import * as uiAccess from '@/auth/uiAccess.js';
+import RevenueChart from '@/components/dashboard/RevenueChart.vue';
+import TopProductsChart from '@/components/dashboard/TopProductsChart.vue';
+import SalesStatusChart from '@/components/dashboard/SalesStatusChart.vue';
+import AlertsPanel from '@/components/AlertsPanel.vue';
 
 const saleStore = useSaleStore();
 const productStore = useProductStore();
 const customerStore = useCustomerStore();
 const authStore = useAuthStore();
 const { useAsyncData } = useLoading();
+const {
+  defaultCurrency,
+  initialize: initCurrency,
+  convertAmountSync,
+  formatCurrency: formatCurrencyAmount,
+} = useCurrency();
 
 const userRole = computed(() => authStore.user?.role);
 
@@ -316,12 +255,18 @@ const filteredQuickActions = computed(() => {
   return quickActions.filter((action) => isActionAllowed(action));
 });
 
+// Format currency with dynamic conversion
 const formatCurrency = (amount, curr) => {
-  const symbol = curr === 'USD' ? '$' : 'IQD';
-  return `${symbol} ${parseFloat(amount).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  if (!amount && amount !== 0) return '0';
+  
+  // If currency matches default, format directly
+  if (curr === defaultCurrency.value) {
+    return formatCurrencyAmount(amount, curr);
+  }
+  
+  // Convert to default currency and format
+  const converted = convertAmountSync(amount, curr);
+  return formatCurrencyAmount(converted);
 };
 
 const formatDate = (date) => {
@@ -356,14 +301,10 @@ const getStatusText = (status) => {
 // استخدام نظام التحميل المتقدم للبيانات
 const dashboardData = useAsyncData(async () => {
   // Fetch sales stats completed || pending
-  const salesResponse = await saleStore.fetchSales();
+  const salesResponse = await saleStore.fetchSales({ limit: 100 });
 
   const filteredSales =
-    (salesResponse?.data && Array.isArray(salesResponse.data)
-      ? salesResponse.data.filter(
-          (sale) => sale.status === 'completed' || sale.status === 'pending'
-        )
-      : []) || [];
+    (salesResponse?.data && Array.isArray(salesResponse.data) ? salesResponse.data : []) || [];
 
   // Fetch low stock products
   const lowStockProducts = await productStore.fetchLowStock({ lowStock: true });
@@ -374,7 +315,7 @@ const dashboardData = useAsyncData(async () => {
   const customers = await customerStore.fetchCustomers();
 
   return {
-    recentSales: filteredSales,
+    recentSales: filteredSales, // Now passing all sales for charts to process
     stats: {
       totalSales: salesResponse?.data?.length || 0,
       totalCustomers: customers?.meta?.total || customers?.data?.length || 0,
@@ -384,8 +325,31 @@ const dashboardData = useAsyncData(async () => {
   };
 });
 
+// Calculate today's revenue with currency conversion
+const formatTodayRevenue = () => {
+  const today = new Date().toISOString().split('T')[0];
+  const todaySales = recentSales.value.filter(
+    (s) =>
+      s.createdAt &&
+      s.createdAt.startsWith(today) &&
+      s.status === 'completed'
+  );
+
+  const total = todaySales.reduce((sum, s) => {
+    const amount = parseFloat(s.total || 0);
+    const currency = s.currency || 'IQD';
+    const converted = convertAmountSync(amount, currency);
+    return sum + converted;
+  }, 0);
+
+  return formatCurrencyAmount(total);
+};
+
 // تحديث البيانات المحلية عند تحميل البيانات
-onMounted(() => {
+onMounted(async () => {
+  // Initialize currency settings
+  await initCurrency();
+
   // مراقبة تغيير البيانات
   const unwatch = watchEffect(() => {
     if (dashboardData.data.value) {
@@ -404,8 +368,27 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.sticky-sidebar {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  z-index: 2;
+}
+
+.hover-scale {
+  transition: transform 0.2s ease-in-out;
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
 .opacity-50 {
   opacity: 0.5;
+}
+
+.opacity-90 {
+  opacity: 0.9;
 }
 
 @media (prefers-color-scheme: light) {

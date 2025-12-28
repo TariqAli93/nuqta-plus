@@ -5,9 +5,9 @@
     :color="snackbarColor"
     location="top"
     multi-line
-    @update:model-value="onClose"
     role="alert"
     :aria-live="notificationStore.type === 'error' ? 'assertive' : 'polite'"
+    @update:model-value="onClose"
   >
     <div class="d-flex align-center">
       <v-icon :icon="snackbarIcon" class="mr-3" aria-hidden="true" />
@@ -19,12 +19,12 @@
         v-if="notificationStore.action"
         :color="snackbarColor"
         variant="text"
-        @click="handleAction"
         :aria-label="notificationStore.action.label || 'تنفيذ الإجراء'"
+        @click="handleAction"
       >
         {{ notificationStore.action.label || 'تنفيذ' }}
       </v-btn>
-      <v-btn variant="text" icon="mdi-close" @click="notificationStore.hide()" aria-label="إغلاق" />
+      <v-btn variant="text" icon="mdi-close" aria-label="إغلاق" @click="notificationStore.hide()" />
     </template>
   </v-snackbar>
 </template>

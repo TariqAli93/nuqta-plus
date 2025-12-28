@@ -1,4 +1,4 @@
-import { getDb, saveDatabase } from '../db.js';
+import { getDb, getSqlite, saveDatabase } from '../db.js';
 import {
   sales,
   saleItems,
@@ -310,11 +310,84 @@ export class SaleService {
     const countResult = await countQuery.get();
     const total = Number(countResult?.count || 0);
 
-    // Get paginated results using offset and limit (better-sqlite3 supports this)
-    const results = await query
-      .orderBy(desc(sales.createdAt))
-      .limit(limit)
-      .offset((page - 1) * limit);
+    // Calculate offset for pagination
+    const offset = (page - 1) * limit;
+
+    // Workaround for Drizzle ORM offset issue with joins:
+    // Use raw SQL to get paginated IDs, then use Drizzle for the join query
+    const sqlite = await getSqlite();
+    
+    // Build WHERE clause and parameters
+    let whereClause = '';
+    const params = [];
+    
+    if (status) {
+      whereClause += (whereClause ? ' AND ' : '') + 'status = ?';
+      params.push(status);
+    }
+    
+    if (startDate) {
+      whereClause += (whereClause ? ' AND ' : '') + 'created_at >= ?';
+      params.push(startDate);
+    }
+    
+    if (endDate) {
+      whereClause += (whereClause ? ' AND ' : '') + 'created_at <= ?';
+      params.push(endDate);
+    }
+    
+    if (filters.customer) {
+      whereClause += (whereClause ? ' AND ' : '') + 'customer_id = ?';
+      params.push(filters.customer);
+    }
+    
+    // Get paginated IDs using raw SQL (avoids Drizzle offset bug)
+    const idsQuery = sqlite.prepare(`
+      SELECT id FROM sales 
+      ${whereClause ? 'WHERE ' + whereClause : ''}
+      ORDER BY created_at DESC 
+      LIMIT ? OFFSET ?
+    `);
+    
+    const paginatedIds = idsQuery.all(...params, limit, offset);
+    const saleIds = paginatedIds.map((row) => row.id);
+    
+    // If no sales found, return empty array
+    if (saleIds.length === 0) {
+      return {
+        data: [],
+        meta: {
+          total: total || 0,
+          page,
+          limit,
+          totalPages: Math.ceil((total || 0) / limit),
+        },
+      };
+    }
+    
+    // Now get full sale data with joins for the paginated IDs
+    let finalQuery = db
+      .select({
+        id: sales.id,
+        invoiceNumber: sales.invoiceNumber,
+        total: sales.total,
+        currency: sales.currency,
+        paymentType: sales.paymentType,
+        paidAmount: sales.paidAmount,
+        remainingAmount: sales.remainingAmount,
+        status: sales.status,
+        createdAt: sales.createdAt,
+        customer: customers.name,
+        customerPhone: customers.phone,
+        createdBy: users.username,
+      })
+      .from(sales)
+      .leftJoin(customers, eq(sales.customerId, customers.id))
+      .leftJoin(users, eq(sales.createdBy, users.id))
+      .where(inArray(sales.id, saleIds))
+      .orderBy(desc(sales.createdAt));
+    
+    const results = await finalQuery;
 
     return {
       data: results,
@@ -1187,5 +1260,78 @@ export class SaleService {
 
     saveDatabase();
     return await this.getById(updatedSale.id);
+  }
+
+  /**
+   * Get top selling products
+   * @param {Object} filters - Filters like limit, startDate, endDate
+   * @returns {Promise<Array>} Array of top products with sales data
+   */
+  async getTopProducts(filters = {}) {
+    const db = await getDb();
+    const { limit = 5, startDate, endDate } = filters;
+
+    // Build WHERE conditions for sales
+    const saleConditions = [eq(sales.status, 'completed')];
+    
+    if (startDate) {
+      saleConditions.push(gte(sales.createdAt, startDate));
+    }
+    
+    if (endDate) {
+      saleConditions.push(lte(sales.createdAt, endDate));
+    }
+
+    // Query to aggregate product sales
+    // Use raw SQL for better compatibility with SQLite aggregations
+    const sqlite = await getSqlite();
+    
+    // Build WHERE clause
+    let whereClause = 'sales.status = ?';
+    const params = ['completed'];
+    
+    if (startDate) {
+      whereClause += ' AND sales.created_at >= ?';
+      params.push(startDate);
+    }
+    
+    if (endDate) {
+      whereClause += ' AND sales.created_at <= ?';
+      params.push(endDate);
+    }
+    
+    // Build SQL query
+    const query = `
+      SELECT 
+        sale_items.product_id as productId,
+        products.name as productName,
+        CAST(SUM(sale_items.quantity) AS INTEGER) as totalQuantity,
+        CAST(SUM(sale_items.quantity * sale_items.unit_price) AS REAL) as totalRevenue
+      FROM sale_items
+      INNER JOIN sales ON sale_items.sale_id = sales.id
+      INNER JOIN products ON sale_items.product_id = products.id
+      WHERE ${whereClause}
+      GROUP BY sale_items.product_id, products.name
+      ORDER BY SUM(sale_items.quantity) DESC
+      LIMIT ?
+    `;
+    
+    params.push(limit);
+    
+    const result = sqlite.prepare(query).all(...params);
+    
+    const topProducts = result.map((row) => ({
+      productId: row.productId,
+      productName: row.productName,
+      totalQuantity: Number(row.totalQuantity) || 0,
+      totalRevenue: Number(row.totalRevenue) || 0,
+    }));
+
+    return topProducts.map((product) => ({
+      productId: product.productId,
+      productName: product.productName,
+      totalQuantity: Number(product.totalQuantity) || 0,
+      totalRevenue: Number(product.totalRevenue) || 0,
+    }));
   }
 }

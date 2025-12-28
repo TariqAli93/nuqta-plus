@@ -7,343 +7,341 @@ import {
   saleItems,
   payments,
   installments,
+  users,
 } from './models/index.js';
 import { sql } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
+
+// --- Helpers ---
+const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const randomFloat = (min, max) => Number((Math.random() * (max - min) + min).toFixed(2));
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const pickMultiple = (arr, count) => {
+  const shuffled = [...arr].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+};
+
+const randomDate = (start, end) => {
+  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+};
+
+const formatDate = (date) => date.toISOString().replace('T', ' ').slice(0, 19);
+
+// --- Data Generators ---
+
+const generateCategories = () => [
+  { name: 'هواتف ذكية', description: 'أحدث الهواتف من آبل وسامسونج وغيرها' },
+  { name: 'حواسيب محمولة', description: 'لابتوبات للأعمال والألعاب' },
+  { name: 'إكسسوارات', description: 'شواحن، سماعات، وكفرات' },
+  { name: 'أجهزة منزلية', description: 'خلاطات، مكانس، أدوات مطبخ' },
+  { name: 'مواد غذائية', description: 'رز، زيت، معلبات' },
+  { name: 'ملابس رجالية', description: 'قمصان، بنطال، أحذية' },
+  { name: 'أدوات كهربائية', description: 'توصيلات، مصابيح، بطاريات' },
+];
+
+const generateProducts = (categoryIds) => {
+  const productsList = [];
+  const brands = ['Apple', 'Samsung', 'Sony', 'Dell', 'LG', 'Nike', 'Adidas', 'Bosch'];
+
+  // Phone/Laptop items
+  productsList.push(
+    { name: 'iPhone 15 Pro', cat: 'هواتف ذكية', price: 1200, cost: 1000 },
+    { name: 'Samsung S24 Ultra', cat: 'هواتف ذكية', price: 1150, cost: 950 },
+    { name: 'MacBook Air M2', cat: 'حواسيب محمولة', price: 1100, cost: 900 },
+    { name: 'Dell XPS 15', cat: 'حواسيب محمولة', price: 1300, cost: 1100 },
+    { name: 'AirPods Pro 2', cat: 'إكسسوارات', price: 250, cost: 180 },
+    { name: 'Samsung Charger 45W', cat: 'إكسسوارات', price: 40, cost: 20 }
+  );
+
+  // Home & Grocery
+  productsList.push(
+    { name: 'خلاط Philips', cat: 'أجهزة منزلية', price: 80, cost: 50 },
+    { name: 'مكنسة Panasonic', cat: 'أجهزة منزلية', price: 120, cost: 85 },
+    { name: 'رز بسمتي 10كغ', cat: 'مواد غذائية', price: 18, cost: 12 },
+    { name: 'زيت دوار الشمس 1لتر', cat: 'مواد غذائية', price: 3, cost: 2 },
+    { name: 'شاي هيل 500غ', cat: 'مواد غذائية', price: 5, cost: 3 }
+  );
+
+  // Create generic products to fill up
+  for (let i = 1; i <= 30; i++) {
+    productsList.push({
+      name: `منتج عام ${i}`,
+      cat: 'أدوات كهربائية',
+      price: randomInt(10, 100),
+      cost: randomInt(5, 80),
+    });
+  }
+
+  return productsList.map((p, idx) => {
+    const catId = categoryIds[p.cat] || Object.values(categoryIds)[0];
+    return {
+      name: p.name,
+      sku: `SKU-${1000 + idx}`,
+      barcode: `${100000000000 + idx}`,
+      categoryId: catId,
+      description: `وصف للمنتج ${p.name}`,
+      costPrice: p.cost,
+      sellingPrice: p.price,
+      currency: 'USD',
+      stock: randomInt(10, 100),
+      minStock: 5,
+      unit: 'piece',
+      supplier: pick(brands),
+      status: 'available',
+    };
+  });
+};
+
+const generateCustomers = () => {
+  const names = [
+    'أحمد علي',
+    'سارة حسن',
+    'محمد رضا',
+    'زينب كاظم',
+    'حيدر الجبوري',
+    'نور الدين',
+    'فاطمة الزهراء',
+    'حسين كريم',
+    'مريم العبيدي',
+    'علي المحمداوي',
+    'يوسف عمر',
+    'هدى جميل',
+    'كرار حيدر',
+    'سماح وليد',
+    'مصطفى سعد',
+  ];
+  return names.map((name, idx) => ({
+    name,
+    phone: `07${pick(['7', '8', '9'])}${randomInt(10000000, 99999999)}`,
+    address: `بغداد - منطقة ${randomInt(1, 20)}`,
+    city: 'بغداد',
+    notes: idx % 3 === 0 ? 'مفضل للأقساط' : 'زبون نقدي',
+  }));
+};
+
+// --- Main Seed Function ---
 
 async function seed() {
-  console.log('🌱 Starting database seeding...\n');
+  console.log('🌱 Starting comprehensive database seeding...\n');
 
   try {
     const db = await getDb();
-    // Helper: Count rows of a table
-    const countTable = async (table) => {
-      const result = await db
-        .select({ count: sql`count(*)` })
-        .from(table)
-        .get();
-      return Number(result?.count || 0);
-    };
 
-    // ========== DEMO DATA: CATALOG & SALES ==========
-    console.log('\n→ Creating demo catalog and sales data...');
-
-    // Categories
-    let categoryRows = await db
-      .select({ id: categories.id, name: categories.name })
-      .from(categories)
-      .all();
-
-    if (categoryRows.length === 0) {
-      categoryRows = await db
-        .insert(categories)
-        .values([
-          { name: 'هواتف وحواسيب', description: 'أجهزة وإكسسوارات' },
-          { name: 'بقالة', description: 'مواد غذائية يومية' },
-          { name: 'إكسسوارات', description: 'ملحقات وأدوات مساعدة' },
-        ])
-        .returning({ id: categories.id, name: categories.name });
-      console.log('✓ Demo categories inserted');
-    } else {
-      console.log('↩️ Categories already exist, skipping insert');
+    // 0. Ensure Admin User exists
+    const usersCount = await db
+      .select({ count: sql`count(*)` })
+      .from(users)
+      .get();
+    if (Number(usersCount.count) === 0) {
+      const hashedPassword = await bcrypt.hash('Admin@123', 10);
+      await db.insert(users).values({
+        username: 'admin',
+        password: hashedPassword,
+        fullName: 'مدير النظام',
+        role: 'admin',
+        phone: '07700000000',
+      });
+      console.log('✓ Admin user created');
     }
 
-    const catId = (name) => categoryRows.find((c) => c.name === name)?.id;
+    // CLEANUP: Delete in correct order to avoid FK errors
+    console.log('🧹 Cleaning up old data...');
+    await db.delete(installments);
+    await db.delete(payments);
+    await db.delete(saleItems);
+    await db.delete(sales);
+    await db.delete(products);
+    await db.delete(customers);
+    await db.delete(categories); // Now safe to delete
+    console.log('✓ Old data cleared');
 
-    // Products
-    let productRows = await db
-      .select({ id: products.id, name: products.name, sellingPrice: products.sellingPrice })
-      .from(products)
-      .all();
+    // 1. Categories
+    console.log('→ Inserting categories...');
+    const insertedCats = await db.insert(categories).values(generateCategories()).returning();
+    const catMap = insertedCats.reduce((acc, c) => ({ ...acc, [c.name]: c.id }), {});
+    console.log(`✓ Inserted ${insertedCats.length} categories`);
 
-    if (productRows.length === 0) {
-      productRows = await db
-        .insert(products)
-        .values([
-          {
-            name: 'iPhone 15',
-            sku: 'SKU-IPH-15',
-            barcode: '111222333444',
-            categoryId: catId('هواتف وحواسيب'),
-            description: 'هاتف ذكي بشاشة OLED',
-            costPrice: 800,
-            sellingPrice: 950,
+    // 2. Products
+    console.log('→ Inserting products...');
+    const insertedProducts = await db.insert(products).values(generateProducts(catMap)).returning();
+    console.log(`✓ Inserted ${insertedProducts.length} products`);
+
+    // 3. Customers
+    console.log('→ Inserting customers...');
+    const insertedCustomers = await db.insert(customers).values(generateCustomers()).returning();
+    console.log(`✓ Inserted ${insertedCustomers.length} customers`);
+
+    // 4. Sales History (Past 6 Months)
+    console.log('→ Generating historical sales (this may take a moment)...');
+
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 6);
+    const today = new Date();
+
+    let saleCount = 0;
+    let invoiceCounter = 1000;
+
+    for (let d = new Date(startDate); d <= today; d.setDate(d.getDate() + 1)) {
+      // Randomly skip some days or have fewer sales
+      const dailySalesCount = randomInt(0, 5);
+
+      for (let i = 0; i < dailySalesCount; i++) {
+        invoiceCounter++;
+        const currentDateStr = formatDate(d);
+        const isInstallment = Math.random() > 0.7; // 30% installment sales
+        const customer = pick(insertedCustomers);
+
+        // Pick random products
+        const saleProducts = pickMultiple(insertedProducts, randomInt(1, 4));
+
+        let subtotal = 0;
+        const itemsToInsert = [];
+
+        saleProducts.forEach((p) => {
+          const qty = randomInt(1, 2);
+          const lineTotal = p.sellingPrice * qty;
+          subtotal += lineTotal;
+          itemsToInsert.push({
+            productId: p.id,
+            productName: p.name,
+            quantity: qty,
+            unitPrice: p.sellingPrice,
+            subtotal: lineTotal,
+            discount: 0,
+            createdAt: currentDateStr,
+          });
+        });
+
+        const discount = Math.random() > 0.8 ? randomInt(5, 20) : 0;
+        let total = subtotal - discount;
+        let saleId;
+
+        // Insert Sale
+        if (isInstallment) {
+          const interestRate = 5; // 5% interest
+          const interestAmount = (total * interestRate) / 100;
+          total += interestAmount;
+
+          const downPayment = Math.floor(total * 0.3); // 30% down
+          const remaining = total - downPayment;
+
+          const res = await db
+            .insert(sales)
+            .values({
+              invoiceNumber: `INV-${invoiceCounter}`,
+              customerId: customer.id,
+              subtotal,
+              discount,
+              total: Number(total.toFixed(2)),
+              currency: 'USD',
+              paymentType: 'installment',
+              paidAmount: downPayment,
+              remainingAmount: remaining,
+              interestRate,
+              interestAmount,
+              status: remaining < 1 ? 'completed' : 'pending',
+              createdAt: currentDateStr,
+              updatedAt: currentDateStr,
+              createdBy: 1,
+            })
+            .returning({ id: sales.id });
+          saleId = res[0].id;
+
+          // Initial Payment
+          await db.insert(payments).values({
+            saleId,
+            customerId: customer.id,
+            amount: downPayment,
             currency: 'USD',
-            stock: 25,
-            minStock: 5,
-            unit: 'piece',
-            supplier: 'Apple',
-            status: 'available',
-          },
-          {
-            name: 'Laptop Pro 14',
-            sku: 'SKU-LTP-014',
-            barcode: '555666777888',
-            categoryId: catId('هواتف وحواسيب'),
-            description: 'حاسوب محمول للأعمال',
-            costPrice: 900,
-            sellingPrice: 1150,
+            paymentMethod: 'cash',
+            paymentDate: currentDateStr,
+            notes: 'دفعة أولى',
+            createdAt: currentDateStr,
+          });
+
+          // Generate 3 Installments
+          const installmentAmount = Number((remaining / 3).toFixed(2));
+          for (let k = 1; k <= 3; k++) {
+            const dueDate = new Date(d);
+            dueDate.setMonth(dueDate.getMonth() + k);
+            const isPaid = dueDate < today; // If due date passed, assume paid for simulation
+
+            await db.insert(installments).values({
+              saleId,
+              customerId: customer.id,
+              installmentNumber: k,
+              dueAmount: installmentAmount,
+              paidAmount: isPaid ? installmentAmount : 0,
+              remainingAmount: isPaid ? 0 : installmentAmount,
+              currency: 'USD',
+              dueDate: formatDate(dueDate),
+              paidDate: isPaid ? formatDate(dueDate) : null,
+              status: isPaid ? 'paid' : 'pending',
+              createdAt: currentDateStr,
+            });
+
+            if (isPaid) {
+              // Add payment record for installment
+              await db.insert(payments).values({
+                saleId,
+                customerId: customer.id,
+                amount: installmentAmount,
+                currency: 'USD',
+                paymentMethod: 'cash',
+                paymentDate: formatDate(dueDate),
+                notes: `قسط رقم ${k}`,
+                createdAt: formatDate(dueDate),
+              });
+            }
+          }
+        } else {
+          // Cash Sale
+          const res = await db
+            .insert(sales)
+            .values({
+              invoiceNumber: `INV-${invoiceCounter}`,
+              customerId: customer.id,
+              subtotal,
+              discount,
+              total: Number(total.toFixed(2)),
+              currency: 'USD',
+              paymentType: 'cash',
+              paidAmount: total,
+              remainingAmount: 0,
+              status: 'completed',
+              createdAt: currentDateStr,
+              updatedAt: currentDateStr,
+              createdBy: 1,
+            })
+            .returning({ id: sales.id });
+          saleId = res[0].id;
+
+          await db.insert(payments).values({
+            saleId,
+            customerId: customer.id,
+            amount: total,
             currency: 'USD',
-            stock: 12,
-            minStock: 3,
-            unit: 'piece',
-            supplier: 'TechSupplier',
-            status: 'available',
-          },
-          {
-            name: 'رز بسمتي 5كغ',
-            sku: 'SKU-RICE-5KG',
-            barcode: '999000111222',
-            categoryId: catId('بقالة'),
-            description: 'أرز أبيض طويل الحبة',
-            costPrice: 8,
-            sellingPrice: 12,
-            currency: 'USD',
-            stock: 150,
-            minStock: 40,
-            unit: 'bag',
-            supplier: 'Al Grain',
-            status: 'available',
-          },
-          {
-            name: 'شاحن سريع 65W',
-            sku: 'SKU-CHG-065',
-            barcode: '333444555666',
-            categoryId: catId('إكسسوارات'),
-            description: 'شاحن USB-C بقدرة عالية',
-            costPrice: 8,
-            sellingPrice: 15,
-            currency: 'USD',
-            stock: 80,
-            minStock: 15,
-            unit: 'piece',
-            supplier: 'Voltix',
-            status: 'available',
-          },
-        ])
-        .returning({ id: products.id, name: products.name, sellingPrice: products.sellingPrice });
-      console.log('✓ Demo products inserted');
-    } else {
-      console.log('↩️ Products already exist, skipping insert');
+            paymentMethod: 'cash',
+            paymentDate: currentDateStr,
+            notes: 'دفع كامل',
+            createdAt: currentDateStr,
+          });
+        }
+
+        // Insert Items
+        await db.insert(saleItems).values(itemsToInsert.map((i) => ({ ...i, saleId })));
+        saleCount++;
+      }
     }
+    console.log(`✓ Generated ${saleCount} sales over the last 6 months`);
 
-    const productByName = (name) => productRows.find((p) => p.name === name);
-
-    // Customers
-    let customerRows = await db
-      .select({ id: customers.id, name: customers.name })
-      .from(customers)
-      .all();
-
-    if (customerRows.length === 0) {
-      customerRows = await db
-        .insert(customers)
-        .values([
-          {
-            name: 'علي محمد',
-            phone: '07701234567',
-            address: 'بغداد - الكرادة',
-            city: 'بغداد',
-            notes: 'عميل نقدي متكرر',
-          },
-          {
-            name: 'سارة أحمد',
-            phone: '07809876543',
-            address: 'بغداد - المنصور',
-            city: 'بغداد',
-            notes: 'تفضل الأقساط',
-          },
-          {
-            name: 'شركة الراشد',
-            phone: '07901112233',
-            address: 'بغداد - الجادرية',
-            city: 'بغداد',
-            notes: 'حساب آجل مع فواتير شهرية',
-          },
-        ])
-        .returning({ id: customers.id, name: customers.name });
-      console.log('✓ Demo customers inserted');
-    } else {
-      console.log('↩️ Customers already exist, skipping insert');
-    }
-
-    const customerByName = (name) => customerRows.find((c) => c.name === name);
-
-    // Sales & related tables (only if empty to avoid duplicates)
-    if ((await countTable(sales)) === 0) {
-      const ali = customerByName('علي محمد');
-      const sara = customerByName('سارة أحمد');
-
-      const iphone = productByName('iPhone 15');
-      const laptop = productByName('Laptop Pro 14');
-      const rice = productByName('رز بسمتي 5كغ');
-      const charger = productByName('شاحن سريع 65W');
-
-      // Cash sale
-      const iphoneTotal = (iphone?.sellingPrice ?? 950) - 50;
-      const [cashSale] = await db
-        .insert(sales)
-        .values({
-          invoiceNumber: 'INV-2001',
-          customerId: ali?.id ?? null,
-          subtotal: iphone?.sellingPrice ?? 950,
-          discount: 50,
-          tax: 0,
-          total: iphoneTotal,
-          currency: 'USD',
-          exchangeRate: 1,
-          interestRate: 0,
-          interestAmount: 0,
-          paymentType: 'cash',
-          paidAmount: iphoneTotal,
-          remainingAmount: 0,
-          status: 'completed',
-          notes: 'دفعة نقدية كاملة على جهاز واحد',
-        })
-        .returning({ id: sales.id });
-
-      // Installment sale
-      const laptopPrice = laptop?.sellingPrice ?? 1150;
-      const ricePrice = rice?.sellingPrice ?? 12;
-      const chargerPrice = charger?.sellingPrice ?? 15;
-      const sale2Base = laptopPrice + ricePrice * 2 + chargerPrice;
-      const sale2Discount = 60;
-      const sale2Interest = 25;
-      const sale2Total = sale2Base - sale2Discount + sale2Interest;
-
-      const [installSale] = await db
-        .insert(sales)
-        .values({
-          invoiceNumber: 'INV-2002',
-          customerId: sara?.id ?? null,
-          subtotal: sale2Base,
-          discount: sale2Discount,
-          tax: 0,
-          total: sale2Total,
-          currency: 'USD',
-          exchangeRate: 1,
-          interestRate: 2.5,
-          interestAmount: sale2Interest,
-          paymentType: 'installment',
-          paidAmount: 300,
-          remainingAmount: sale2Total - 300,
-          status: 'pending',
-          notes: 'خطة أقساط على ثلاث دفعات',
-        })
-        .returning({ id: sales.id });
-
-      await db.insert(saleItems).values([
-        {
-          saleId: cashSale.id,
-          productId: iphone?.id ?? null,
-          productName: 'iPhone 15',
-          quantity: 1,
-          unitPrice: iphone?.sellingPrice ?? 950,
-          discount: 50,
-          subtotal: iphoneTotal,
-        },
-        {
-          saleId: installSale.id,
-          productId: laptop?.id ?? null,
-          productName: 'Laptop Pro 14',
-          quantity: 1,
-          unitPrice: laptopPrice,
-          discount: 40,
-          subtotal: laptopPrice - 40,
-        },
-        {
-          saleId: installSale.id,
-          productId: rice?.id ?? null,
-          productName: 'رز بسمتي 5كغ',
-          quantity: 2,
-          unitPrice: ricePrice,
-          discount: 10,
-          subtotal: ricePrice * 2 - 10,
-        },
-        {
-          saleId: installSale.id,
-          productId: charger?.id ?? null,
-          productName: 'شاحن سريع 65W',
-          quantity: 1,
-          unitPrice: chargerPrice,
-          discount: 0,
-          subtotal: chargerPrice,
-        },
-      ]);
-
-      await db.insert(payments).values([
-        {
-          saleId: cashSale.id,
-          customerId: ali?.id ?? null,
-          amount: iphoneTotal,
-          currency: 'USD',
-          exchangeRate: 1,
-          paymentMethod: 'cash',
-          notes: 'دفع كامل للفاتورة INV-2001',
-        },
-        {
-          saleId: installSale.id,
-          customerId: sara?.id ?? null,
-          amount: 300,
-          currency: 'USD',
-          exchangeRate: 1,
-          paymentMethod: 'cash',
-          notes: 'الدفعة الأولى للأقساط',
-        },
-      ]);
-
-      await db.insert(installments).values([
-        {
-          saleId: installSale.id,
-          customerId: sara?.id ?? null,
-          installmentNumber: 1,
-          dueAmount: 300,
-          paidAmount: 300,
-          remainingAmount: 0,
-          currency: 'USD',
-          dueDate: '2025-01-15',
-          paidDate: '2025-01-10',
-          status: 'paid',
-          notes: 'مدفوعة بالكامل',
-        },
-        {
-          saleId: installSale.id,
-          customerId: sara?.id ?? null,
-          installmentNumber: 2,
-          dueAmount: 300,
-          paidAmount: 0,
-          remainingAmount: 300,
-          currency: 'USD',
-          dueDate: '2025-02-15',
-          status: 'pending',
-          notes: 'دفعة قادمة',
-        },
-        {
-          saleId: installSale.id,
-          customerId: sara?.id ?? null,
-          installmentNumber: 3,
-          dueAmount: sale2Total - 600,
-          paidAmount: 0,
-          remainingAmount: sale2Total - 600,
-          currency: 'USD',
-          dueDate: '2025-03-15',
-          status: 'pending',
-          notes: 'دفعة أخيرة',
-        },
-      ]);
-
-      // Inventory transactions removed - stock is managed directly in products table
-
-      console.log('✓ Demo sales, items, payments, and installments inserted');
-    } else {
-      console.log('↩️ Sales already exist, skipping demo sales');
-    }
-
-    // Save DB to disk
+    // Save DB
     saveDatabase();
-
     console.log('\n🌱 Database seeding completed successfully!');
+    process.exit(0);
   } catch (err) {
     console.error('❌ Database seeding failed:', err);
+    process.exit(1);
   }
 }
 

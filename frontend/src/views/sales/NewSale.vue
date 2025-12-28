@@ -1,370 +1,488 @@
 <template>
-  <div>
-    <v-card class="mb-4">
-      <div class="flex items-center justify-space-between pa-3">
-        <div class="font-semibold text-h6 text-primary">بطاقة بيع جديدة</div>
-        <v-btn color="primary" size="default" variant="text" @click="handleCancel">
-          <v-icon size="24">mdi-arrow-left</v-icon>
+  <div class="new-sale-page">
+    <!-- Header -->
+    <v-card class="mb-4" elevation="2">
+      <v-card-title class="d-flex align-center justify-space-between pa-4">
+        <div class="d-flex align-center ga-3">
+          <v-icon size="28" color="primary">mdi-cart-plus</v-icon>
+          <span class="text-h5 font-weight-bold">بطاقة بيع جديدة</span>
+        </div>
+        <v-btn color="primary" @click="handleCancel">
+          <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
-      </div>
+      </v-card-title>
     </v-card>
-    <v-card>
-      <v-card-text>
+
+    <v-row>
+      <!-- Main Content Column -->
+      <v-col cols="12" lg="8">
         <v-form ref="form">
-          <!-- 🧍 العميل والعملة -->
-          <v-row>
-            <v-col cols="12" md="6">
-              <CustomerSelector v-model="sale.customerId" :required="false" />
-              <FormFieldHelp
-                help-text="اختياري - يمكنك إتمام البيع بدون تحديد عميل"
-                tooltip="العميل اختياري للبيع النقدي، ولكنه مطلوب للبيع بالتقسيط"
-              />
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <v-select
-                v-model="sale.currency"
-                :items="availableCurrencies"
-                label="العملة"
-                :rules="[rules.required]"
-                density="comfortable"
-              >
-                <template v-slot:prepend-inner>
-                  <v-icon>mdi-currency-usd</v-icon>
-                </template>
-              </v-select>
-            </v-col>
-          </v-row>
-
-          <v-divider class="my-4"></v-divider>
-
-          <!-- 🧾 المنتجات -->
-          <h3 class="mb-4 text-h6">المنتجات</h3>
-          <v-text-field
-            v-model="barcode"
-            label="قراءة الباركود"
-            prepend-inner-icon="mdi-barcode-scan"
-            clearable
-            @keyup.enter="handleBarcodeScan"
-            autofocus
-            class="mb-4"
-            density="comfortable"
-            aria-label="قراءة الباركود - اضغط Enter لإضافة المنتج"
-          >
-            <template #append-inner>
-              <FormFieldHelp tooltip="امسح الباركود أو اكتبه واضغط Enter لإضافة المنتج تلقائياً" />
-            </template>
-          </v-text-field>
-
-          <v-row v-for="(item, index) in sale.items" :key="index" class="mb-3 align-center">
-            <v-col cols="12" md="3">
-              <v-autocomplete
-                v-model="item.productId"
-                :items="products"
-                item-title="name"
-                item-value="id"
-                label="المنتج"
-                :rules="[rules.required]"
-                @update:model-value="updateProductDetails(item)"
-                density="comfortable"
-                :search="productSearchQueries[index]"
-                @update:search="(val) => (productSearchQueries[index] = val)"
-                autocomplete="off"
-                :custom-filter="customProductFilter"
-              >
-                <template v-slot:item="{ props, item: productItem }">
-                  <v-list-item v-bind="props">
-                    <template #title>
-                      {{ productItem.raw.name }}
+          <!-- Customer & Currency Section -->
+          <v-card class="mb-4" elevation="1">
+            <v-card-title class="d-flex align-center ga-2 pa-4">
+              <v-icon color="primary">mdi-account-circle</v-icon>
+              <span class="text-h6 font-weight-medium">معلومات العميل والعملة</span>
+            </v-card-title>
+            <v-card-text class="pa-4">
+              <v-row>
+                <v-col cols="12" md="6">
+                  <CustomerSelector v-model="sale.customerId" :required="false" />
+                  <FormFieldHelp
+                    help-text="اختياري - يمكنك إتمام البيع بدون تحديد عميل"
+                  />
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-select
+                    v-model="sale.currency"
+                    :items="availableCurrencies"
+                    label="العملة"
+                    :rules="[rules.required]"
+                    density="comfortable"
+                    variant="outlined"
+                  >
+                    <template #prepend-inner>
+                      <v-icon>mdi-currency-usd</v-icon>
                     </template>
-                    <template #subtitle>
-                      السعر:
-                      {{ formatCurrency(productItem.raw.sellingPrice, productItem.raw.currency) }} |
-                      المخزون: {{ productItem.raw.stock }}
-                    </template>
-                  </v-list-item>
+                  </v-select>
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </v-card>
+
+          <!-- Products Section -->
+          <v-card class="mb-4" elevation="1">
+            <v-card-title class="d-flex align-center justify-space-between pa-4">
+              <div class="d-flex align-center ga-2">
+                <v-icon color="primary">mdi-package-variant</v-icon>
+                <span class="text-h6 font-weight-medium">المنتجات</span>
+              </div>
+              <v-chip v-if="sale.items.length > 0" color="primary" variant="tonal">
+                {{ sale.items.length }} منتج
+              </v-chip>
+            </v-card-title>
+            <v-card-text class="pa-4">
+              <!-- Barcode Scanner -->
+              <v-text-field
+                v-model="barcode"
+                label="قراءة الباركود"
+                prepend-inner-icon="mdi-barcode-scan"
+                append-inner-icon="mdi-information-outline"
+                clearable
+                autofocus
+                variant="outlined"
+                density="comfortable"
+                class="mb-4"
+                aria-label="قراءة الباركود - اضغط Enter لإضافة المنتج"
+                @keyup.enter="handleBarcodeScan"
+              >
+                <template #append-inner>
+                  <FormFieldHelp
+                    tooltip="امسح الباركود أو اكتبه واضغط Enter لإضافة المنتج تلقائياً"
+                  />
                 </template>
-              </v-autocomplete>
-            </v-col>
-            <v-col cols="12" md="3">
-              <v-text-field
-                v-model.number="item.quantity"
-                label="الكمية"
-                type="number"
-                min="1"
-                :rules="[
-                  rules.required,
-                  (v) => rules.positive(v),
-                  (v) => {
-                    if (!products.value || !Array.isArray(products.value)) return true;
-                    const product = products.value.find((p) => p.id === item.productId);
-                    return product ? rules.minStock(v, product.stock) : true;
-                  },
-                ]"
-                density="comfortable"
-                :error-messages="getQuantityError(item)"
-              />
-            </v-col>
-            <v-col cols="12" md="3">
-              <v-text-field
-                :model-value="formatCurrency(item.unitPrice)"
-                :suffix="sale.currency"
-                label="سعر الوحدة"
-                readonly
-                density="comfortable"
-              />
-            </v-col>
-            <v-col cols="12" md="3">
-              <v-text-field
-                :model-value="formatNumber(item.discount)"
-                @input="(e) => handleItemDiscountInput(item, e.target.value)"
-                :suffix="sale.currency"
-                label="الخصم على الوحدة"
-                hint="اختياري"
-                persistent-hint
-                density="comfortable"
-              />
-            </v-col>
-            <v-col cols="12" md="12">
-              <v-text-field
-                :model-value="
-                  formatCurrency(
-                    item.quantity * item.unitPrice - (item.discount || 0) * item.quantity
-                  )
-                "
-                :suffix="sale.currency"
-                label="صافي السعر"
-                readonly
-                hint="بعد الخصم"
-                persistent-hint
-                density="comfortable"
-              />
-            </v-col>
-            <v-col cols="12" md="1" class="d-flex align-center">
+              </v-text-field>
+
+              <!-- Product Items -->
+              <v-card
+                v-for="(item, index) in sale.items"
+                :key="index"
+                variant="outlined"
+                class="mb-3"
+                :class="{ 'border-primary': item.productId }"
+              >
+                <v-card-text class="pa-4">
+                  <div class="d-flex align-center justify-space-between mb-3">
+                    <v-chip size="small" color="primary" variant="tonal">
+                      منتج #{{ index + 1 }}
+                    </v-chip>
+                    <v-btn
+                      icon="mdi-delete"
+                      size="small"
+                      color="error"
+                      variant="text"
+                      :aria-label="`حذف المنتج ${index + 1}`"
+                      @click="removeItem(index)"
+                    />
+                  </div>
+
+                  <v-row dense>
+                    <v-col cols="12" md="6">
+                      <v-autocomplete
+                        v-model="item.productId"
+                        :items="products"
+                        item-title="name"
+                        item-value="id"
+                        label="المنتج"
+                        :rules="[rules.required]"
+                        density="comfortable"
+                        variant="outlined"
+                        :search="productSearchQueries[index]"
+                        autocomplete="off"
+                        :custom-filter="customProductFilter"
+                        @update:model-value="updateProductDetails(item)"
+                        @update:search="(val) => (productSearchQueries[index] = val)"
+                      >
+                        <template #item="{ props, item: productItem }">
+                          <v-list-item v-bind="props">
+                            <template #title>
+                              {{ productItem.raw.name }}
+                            </template>
+                            <template #subtitle>
+                              السعر:
+                              {{
+                                formatCurrency(
+                                  productItem.raw.sellingPrice,
+                                  productItem.raw.currency
+                                )
+                              }}
+                              | المخزون: {{ productItem.raw.stock }}
+                            </template>
+                          </v-list-item>
+                        </template>
+                      </v-autocomplete>
+                    </v-col>
+
+                    <v-col cols="12" md="3">
+                      <v-text-field
+                        v-model.number="item.quantity"
+                        label="الكمية"
+                        type="number"
+                        min="1"
+                        :rules="[
+                          rules.required,
+                          (v) => rules.positive(v),
+                          (v) => {
+                            if (!products.value || !Array.isArray(products.value)) return true;
+                            const product = products.value.find((p) => p.id === item.productId);
+                            return product ? rules.minStock(v, product.stock) : true;
+                          },
+                        ]"
+                        density="comfortable"
+                        variant="outlined"
+                        :error-messages="getQuantityError(item)"
+                      />
+                    </v-col>
+
+                    <v-col cols="12" md="3">
+                      <v-text-field
+                        :model-value="formatCurrency(item.unitPrice)"
+                        :suffix="sale.currency"
+                        label="سعر الوحدة"
+                        readonly
+                        density="comfortable"
+                        variant="outlined"
+                      />
+                    </v-col>
+
+                    <v-col cols="12" md="6">
+                      <v-text-field
+                        :model-value="formatNumber(item.discount)"
+                        :suffix="sale.currency"
+                        label="الخصم على الوحدة"
+                        hint="اختياري"
+                        persistent-hint
+                        density="comfortable"
+                        variant="outlined"
+                        @input="(e) => handleItemDiscountInput(item, e.target.value)"
+                      />
+                    </v-col>
+
+                    <v-col cols="12" md="6">
+                      <v-text-field
+                        :model-value="
+                          formatCurrency(
+                            item.quantity * item.unitPrice - (item.discount || 0) * item.quantity
+                          )
+                        "
+                        :suffix="sale.currency"
+                        label="صافي السعر"
+                        readonly
+                        hint="بعد الخصم"
+                        persistent-hint
+                        density="comfortable"
+                        variant="outlined"
+                        color="primary"
+                      />
+                    </v-col>
+                  </v-row>
+                </v-card-text>
+              </v-card>
+
+              <!-- Add Product Button -->
               <v-btn
-                icon="mdi-delete"
-                size="small"
-                color="error"
-                variant="text"
-                @click="removeItem(index)"
-                :aria-label="`حذف المنتج ${index + 1}`"
-              />
-            </v-col>
-          </v-row>
-
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-plus"
-            size="default"
-            @click="addItem"
-            class="mb-4"
-            aria-label="إضافة منتج جديد (F1)"
-          >
-            إضافة منتج
-            <v-chip size="x-small" class="mr-2" variant="outlined">F1</v-chip>
-          </v-btn>
-
-          <v-divider class="my-4"></v-divider>
-
-          <!-- 💳 نوع الدفع -->
-          <v-row>
-            <v-col cols="12" md="4">
-              <v-select
-                v-model="sale.paymentType"
-                :items="paymentTypes"
-                item-title="label"
-                item-value="value"
-                label="نوع الفاتورة"
-                density="comfortable"
-              />
-              <v-alert
-                v-if="sale.paymentType === 'installment' && !sale.customerId"
-                type="warning"
-                variant="tonal"
-                density="compact"
+                color="primary"
+                prepend-icon="mdi-plus"
+                size="large"
+                variant="outlined"
+                block
                 class="mt-2"
-                role="alert"
-                aria-live="polite"
+                aria-label="إضافة منتج جديد (F1)"
+                @click="addItem"
               >
-                <v-icon size="16" class="ml-1" aria-hidden="true">mdi-alert</v-icon>
-                يجب تحديد عميل للبيع بالتقسيط
-              </v-alert>
-            </v-col>
-            <v-col cols="12" md="4">
-              <v-text-field
-                :model-value="formatNumber(sale.discount)"
-                @input="(e) => handleSaleDiscountInput(e.target.value)"
-                label="الخصم"
-                density="comfortable"
-              />
-            </v-col>
-            <v-col cols="12" md="4">
-              <v-text-field
-                :model-value="formatNumber(sale.paidAmount)"
-                @input="(e) => handlePaidAmountInput(e.target.value)"
-                label="المبلغ المدفوع"
-                :hint="sale.paymentType === 'installment' ? 'الدفعة الأولى' : 'المبلغ الكامل'"
-                persistent-hint
-                density="comfortable"
-              />
-            </v-col>
-          </v-row>
+                إضافة منتج جديد
+                <v-chip size="x-small" class="mr-2" variant="flat" color="primary">F1</v-chip>
+              </v-btn>
+            </v-card-text>
+          </v-card>
 
-          <!-- 🧮 في حالة الدفع بالأقساط -->
-          <v-expand-transition>
-            <div v-if="sale.paymentType === 'installment'">
-              <v-divider class="my-4"></v-divider>
-              <h3 class="mb-3 text-h6">تفاصيل التقسيط</h3>
+          <!-- Payment Section -->
+          <v-card class="mb-4" elevation="1">
+            <v-card-title class="d-flex align-center ga-2 pa-4">
+              <v-icon color="primary">mdi-credit-card</v-icon>
+              <span class="text-h6 font-weight-medium">معلومات الدفع</span>
+            </v-card-title>
+            <v-card-text class="pa-4">
               <v-row>
                 <v-col cols="12" md="4">
-                  <v-text-field
-                    v-model.number="sale.installmentCount"
-                    label="عدد الأقساط"
-                    type="number"
-                    min="1"
+                  <v-select
+                    v-model="sale.paymentType"
+                    :items="paymentTypes"
+                    item-title="label"
+                    item-value="value"
+                    label="نوع الفاتورة"
                     density="comfortable"
+                    variant="outlined"
                   />
+                  <v-alert
+                    v-if="sale.paymentType === 'installment' && !sale.customerId"
+                    type="warning"
+                    variant="tonal"
+                    density="compact"
+                    class="mt-2"
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    <v-icon size="16" class="ml-1" aria-hidden="true">mdi-alert</v-icon>
+                    يجب تحديد عميل للبيع بالتقسيط
+                  </v-alert>
                 </v-col>
-
                 <v-col cols="12" md="4">
                   <v-text-field
-                    v-model.number="sale.interestRate"
-                    @update:model-value="handleInterestRateChange"
-                    label="نسبة الفائدة (%)"
-                    type="number"
-                    min="0"
-                    max="100"
-                    hint="أدخل النسبة المئوية"
-                    persistent-hint
-                    density="comfortable"
-                  />
-                </v-col>
-
-                <v-col cols="12" md="4">
-                  <v-text-field
-                    :model-value="formatNumber(sale.interestAmount)"
-                    @input="(e) => handleInterestAmountChange(e.target.value)"
+                    :model-value="formatNumber(sale.discount)"
+                    label="الخصم الإضافي"
                     :suffix="sale.currency"
-                    label="مبلغ الفائدة"
-                    hint="أدخل المبلغ مباشرة"
+                    density="comfortable"
+                    variant="outlined"
+                    @input="(e) => handleSaleDiscountInput(e.target.value)"
+                  />
+                </v-col>
+                <v-col cols="12" md="4">
+                  <v-text-field
+                    :model-value="formatNumber(sale.paidAmount)"
+                    label="المبلغ المدفوع"
+                    :suffix="sale.currency"
+                    :hint="sale.paymentType === 'installment' ? 'الدفعة الأولى' : 'المبلغ الكامل'"
                     persistent-hint
                     density="comfortable"
+                    variant="outlined"
+                    @input="(e) => handlePaidAmountInput(e.target.value)"
                   />
                 </v-col>
               </v-row>
-
-              <v-card variant="tonal" color="info" class="mt-3 pa-3">
-                <div class="py-2 border-b d-flex justify-space-between">
-                  <span>المبلغ بعد الفائدة:</span>
-                  <span class="font-weight-bold">
-                    {{ formatCurrency(totalWithInterest) }}
-                  </span>
-                </div>
-                <div class="py-2 border-b d-flex justify-space-between">
-                  <span>قيمة القسط الواحد:</span>
-                  <span class="font-weight-bold">
-                    {{ formatCurrency(installmentAmount) }}
-                  </span>
-                </div>
-                <div class="py-2 border-b d-flex justify-space-between">
-                  <span>النسبة الفعلية:</span>
-                  <span class="font-weight-bold"> {{ actualInterestRate.toFixed(2) }}% </span>
-                </div>
-                <div class="mt-2 d-flex justify-space-between">
-                  <span>المبلغ المتبقي:</span>
-                  <span class="font-weight-bold text-error">
-                    {{ formatCurrency(remainingAmount) }}
-                  </span>
-                </div>
-              </v-card>
-
-              <!-- جدول الأقساط -->
-              <v-card variant="outlined" class="mt-3">
-                <v-card-title class="text-h6">جدول الأقساط</v-card-title>
-                <v-table>
-                  <thead>
-                    <tr>
-                      <th>رقم القسط</th>
-                      <th>المبلغ</th>
-                      <th>المتبقي بعد القسط</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="installment in installmentSchedule" :key="installment.number">
-                      <td>{{ installment.number }}</td>
-                      <td class="font-weight-bold">{{ formatCurrency(installment.amount) }}</td>
-                      <td>
-                        <span
-                          :class="{
-                            'text-success font-weight-bold': installment.remaining === 0,
-                            'text-grey': installment.remaining > 0,
-                          }"
-                        >
-                          {{ formatCurrency(installment.remaining) }}
-                        </span>
-                      </td>
-                    </tr>
-                  </tbody>
-                  <tfoot v-if="installmentSchedule.length > 0">
-                    <tr class="bg-primary-lighten-5">
-                      <td class="text-left font-weight-bold">الإجمالي</td>
-                      <td class="font-weight-bold text-primary">
-                        {{ formatCurrency(totalWithInterest) }}
-                      </td>
-                      <td class="font-weight-bold">
-                        <span class="text-error">{{ formatCurrency(remainingAmount) }}</span>
-                      </td>
-                    </tr>
-                  </tfoot>
-                </v-table>
-              </v-card>
-            </div>
-          </v-expand-transition>
-
-          <v-divider class="my-4"></v-divider>
-
-          <!-- 💰 الملخص -->
-          <v-card variant="outlined" class="mb-4 pa-4">
-            <div
-              v-for="summary in saleSummary"
-              :key="summary.label"
-              class="py-3 mb-1 border-b d-flex justify-space-between"
-            >
-              <span>{{ summary.label }}:</span>
-              <span class="font-weight-bold">{{ summary.value }}</span>
-            </div>
+            </v-card-text>
           </v-card>
 
-          <!-- 📝 ملاحظات -->
-          <v-textarea
-            v-model="sale.notes"
-            label="ملاحظات"
-            rows="3"
-            auto-grow
-            class="mb-4"
-            density="comfortable"
-          />
+          <!-- Installment Details -->
+          <v-expand-transition>
+            <v-card v-if="sale.paymentType === 'installment'" class="mb-4" elevation="1">
+              <v-card-title class="d-flex align-center ga-2 pa-4">
+                <v-icon color="primary">mdi-calendar-clock</v-icon>
+                <span class="text-h6 font-weight-medium">تفاصيل التقسيط</span>
+              </v-card-title>
+              <v-card-text class="pa-4">
+                <v-row>
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      v-model.number="sale.installmentCount"
+                      label="عدد الأقساط"
+                      type="number"
+                      min="1"
+                      density="comfortable"
+                      variant="outlined"
+                    />
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      v-model.number="sale.interestRate"
+                      label="نسبة الفائدة (%)"
+                      type="number"
+                      min="0"
+                      max="100"
+                      hint="أدخل النسبة المئوية"
+                      persistent-hint
+                      density="comfortable"
+                      variant="outlined"
+                      @update:model-value="handleInterestRateChange"
+                    />
+                  </v-col>
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      :model-value="formatNumber(sale.interestAmount)"
+                      :suffix="sale.currency"
+                      label="مبلغ الفائدة"
+                      hint="أدخل المبلغ مباشرة"
+                      persistent-hint
+                      density="comfortable"
+                      variant="outlined"
+                      @input="(e) => handleInterestAmountChange(e.target.value)"
+                    />
+                  </v-col>
+                </v-row>
 
-          <!-- أزرار -->
-          <div class="gap-2 d-flex">
-            <v-btn
-              color="primary"
-              size="default"
-              :loading="loading"
-              @click="submitSale"
-              aria-label="حفظ البيع (F2)"
-            >
-              حفظ البيع
-              <v-chip size="x-small" class="mr-2" variant="outlined">F2</v-chip>
-            </v-btn>
-            <v-btn variant="outlined" size="default" @click="handleCancel" aria-label="إلغاء (F3)">
-              إلغاء
-              <v-chip size="x-small" class="mr-2" variant="outlined">F3</v-chip>
-            </v-btn>
-          </div>
+                <!-- Installment Summary -->
+                <v-card variant="tonal" color="info" class="mt-4">
+                  <v-card-text>
+                    <v-row dense>
+                      <v-col cols="6" md="3">
+                        <div class="text-caption text-medium-emphasis">المبلغ بعد الفائدة</div>
+                        <div class="text-h6 font-weight-bold">
+                          {{ formatCurrency(totalWithInterest) }}
+                        </div>
+                      </v-col>
+                      <v-col cols="6" md="3">
+                        <div class="text-caption text-medium-emphasis">قيمة القسط الواحد</div>
+                        <div class="text-h6 font-weight-bold">
+                          {{ formatCurrency(installmentAmount) }}
+                        </div>
+                      </v-col>
+                      <v-col cols="6" md="3">
+                        <div class="text-caption text-medium-emphasis">النسبة الفعلية</div>
+                        <div class="text-h6 font-weight-bold">
+                          {{ actualInterestRate.toFixed(2) }}%
+                        </div>
+                      </v-col>
+                      <v-col cols="6" md="3">
+                        <div class="text-caption text-medium-emphasis">المبلغ المتبقي</div>
+                        <div class="text-h6 font-weight-bold text-error">
+                          {{ formatCurrency(remainingAmount) }}
+                        </div>
+                      </v-col>
+                    </v-row>
+                  </v-card-text>
+                </v-card>
+
+                <!-- Installment Schedule Table -->
+                <v-card variant="outlined" class="mt-4">
+                  <v-card-title class="text-h6 pa-3">جدول الأقساط</v-card-title>
+                  <v-divider />
+                  <v-table density="comfortable">
+                    <thead>
+                      <tr>
+                        <th class="text-right">رقم القسط</th>
+                        <th class="text-right">المبلغ</th>
+                        <th class="text-right">المتبقي بعد القسط</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="installment in installmentSchedule" :key="installment.number">
+                        <td>{{ installment.number }}</td>
+                        <td class="font-weight-bold">
+                          {{ formatCurrency(installment.amount) }}
+                        </td>
+                        <td>
+                          <v-chip
+                            :color="installment.remaining === 0 ? 'success' : 'default'"
+                            :variant="installment.remaining === 0 ? 'flat' : 'tonal'"
+                            size="small"
+                          >
+                            {{ formatCurrency(installment.remaining) }}
+                          </v-chip>
+                        </td>
+                      </tr>
+                    </tbody>
+                    <tfoot v-if="installmentSchedule.length > 0">
+                      <tr>
+                        <td class="text-right font-weight-bold">الإجمالي</td>
+                        <td class="font-weight-bold text-primary">
+                          {{ formatCurrency(totalWithInterest) }}
+                        </td>
+                        <td>
+                          <v-chip color="error" variant="tonal" size="small">
+                            {{ formatCurrency(remainingAmount) }}
+                          </v-chip>
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </v-table>
+                </v-card>
+              </v-card-text>
+            </v-card>
+          </v-expand-transition>
+
+          <!-- Notes Section -->
+          <v-card class="mb-4" elevation="1">
+            <v-card-title class="d-flex align-center ga-2 pa-4">
+              <v-icon color="primary">mdi-note-text</v-icon>
+              <span class="text-h6 font-weight-medium">ملاحظات</span>
+            </v-card-title>
+            <v-card-text class="pa-4">
+              <v-textarea
+                v-model="sale.notes"
+                label="ملاحظات إضافية"
+                rows="3"
+                auto-grow
+                variant="outlined"
+                density="comfortable"
+                placeholder="أضف أي ملاحظات متعلقة بهذا البيع..."
+              />
+            </v-card-text>
+          </v-card>
         </v-form>
-      </v-card-text>
-    </v-card>
+      </v-col>
+
+      <!-- Summary Sidebar -->
+      <v-col cols="12" lg="4">
+        <v-card class="sticky-summary" elevation="2" style="position: sticky; top: 20px">
+          <v-card-title class="d-flex align-center ga-2 pa-4 bg-primary">
+            <v-icon color="white">mdi-calculator</v-icon>
+            <span class="text-h6 font-weight-bold text-white">ملخص البيع</span>
+          </v-card-title>
+          <v-card-text class="pa-4">
+            <div class="summary-list">
+              <div
+                v-for="(summary, idx) in saleSummary"
+                :key="summary.label"
+                class="summary-item"
+                :class="{ 'summary-item-highlight': idx === saleSummary.length - 1 }"
+              >
+                <div class="d-flex align-center justify-space-between py-2">
+                  <span class="text-body-2 text-medium-emphasis">{{ summary.label }}</span>
+                  <span class="text-body-1 font-weight-bold">{{ summary.value }}</span>
+                </div>
+                <v-divider v-if="idx < saleSummary.length - 1" class="my-1" />
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex flex-column ga-2 mt-4">
+              <v-btn
+                color="primary"
+                size="large"
+                :loading="loading"
+                block
+                prepend-icon="mdi-content-save"
+                aria-label="حفظ البيع (F2)"
+                @click="submitSale"
+              >
+                حفظ البيع
+                <v-chip size="x-small" class="mr-2" variant="flat" color="white">F2</v-chip>
+              </v-btn>
+              <v-btn
+                variant="outlined"
+                size="large"
+                block
+                prepend-icon="mdi-close"
+                aria-label="إلغاء (F3)"
+                @click="handleCancel"
+              >
+                إلغاء
+                <v-chip size="x-small" class="mr-2" variant="outlined">F3</v-chip>
+              </v-btn>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
   </div>
 </template>
 
@@ -1007,12 +1125,14 @@ onMounted(async () => {
 });
 
 /* 💱 تنسيق العملة */
-const formatCurrency = (amount) =>
-  new Intl.NumberFormat('ar', {
+const formatCurrency = (amount, currency = null) => {
+  const cur = currency || sale.value.currency;
+  return new Intl.NumberFormat('ar', {
     style: 'currency',
-    currency: sale.value.currency,
-    maximumFractionDigits: 0,
+    currency: cur,
+    maximumFractionDigits: cur === 'USD' ? 2 : 0,
   }).format(amount || 0);
+};
 
 // إضافة دوال تنسيق الأرقام
 const formatNumber = (value) => {
@@ -1074,3 +1194,56 @@ const handleInterestAmountChange = (value) => {
   }
 };
 </script>
+
+<style scoped>
+.new-sale-page {
+  padding-bottom: 2rem;
+}
+
+.bg-surface-variant {
+  background-color: rgba(var(--v-theme-surface-variant), 0.1);
+}
+
+.summary-list {
+  background-color: rgba(var(--v-theme-surface), 1);
+  border-radius: 8px;
+}
+
+.summary-item {
+  transition: background-color 0.2s ease;
+}
+
+.summary-item-highlight {
+  background-color: rgba(var(--v-theme-primary), 0.1);
+  border-radius: 4px;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.summary-item-highlight .text-body-1 {
+  color: rgb(var(--v-theme-primary));
+  font-size: 1.1rem;
+}
+
+.sticky-summary {
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 960px) {
+  .sticky-summary {
+    position: relative !important;
+    top: 0 !important;
+  }
+}
+
+/* Smooth transitions */
+.v-card {
+  transition: box-shadow 0.2s ease;
+}
+
+.v-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+</style>

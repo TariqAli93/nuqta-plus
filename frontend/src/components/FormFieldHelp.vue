@@ -13,7 +13,7 @@
         </v-icon>
       </template>
     </v-tooltip>
-    <div v-if="helpText" class="help-text" :id="helpId">
+    <div v-if="helpText" :id="helpId" class="help-text">
       <v-icon size="16" color="info" class="help-icon">mdi-information</v-icon>
       <span>{{ helpText }}</span>
     </div>
@@ -58,7 +58,6 @@ const helpId = computed(() => {
   align-items: center;
   gap: 0.25rem;
   font-size: 0.75rem;
-  color: rgb(var(--v-theme-on-surface-variant));
   line-height: 1.4;
 }
 

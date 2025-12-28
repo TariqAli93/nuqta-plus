@@ -12,10 +12,14 @@ const dbPath = config.database.path;
 const dbDir = pathDirname(dbPath);
 mkdirSync(dbDir, { recursive: true });
 
+// Store sqlite instance for raw queries
+let sqliteInstance = null;
+
 // Initialize SQLite database with better-sqlite3
 async function initDB() {
   // Open database file (better-sqlite3 works directly on file)
   const sqlite = new Database(dbPath);
+  sqliteInstance = sqlite;
 
   // Enable foreign keys
   sqlite.pragma('foreign_keys = ON');
@@ -113,6 +117,14 @@ export const getDb = async () => {
   if (dbInstance) return dbInstance;
   dbInstance = await dbPromise;
   return dbInstance;
+};
+
+// Helper to get the raw SQLite instance for raw queries
+export const getSqlite = async () => {
+  if (!sqliteInstance) {
+    await dbPromise; // Ensure DB is initialized
+  }
+  return sqliteInstance;
 };
 
 // saveDatabase is no longer needed (better-sqlite3 saves automatically)

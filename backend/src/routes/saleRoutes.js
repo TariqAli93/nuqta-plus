@@ -43,6 +43,24 @@ export default async function saleRoutes(fastify) {
     },
   });
 
+  fastify.get('/top-products', {
+    onRequest: [fastify.authenticate, fastify.authorize('sales:read')],
+    handler: saleController.getTopProducts,
+    schema: {
+      description: 'Get top selling products',
+      tags: ['sales'],
+      security: [{ bearerAuth: [] }],
+      querystring: {
+        type: 'object',
+        properties: {
+          limit: { type: 'number', default: 5 },
+          startDate: { type: 'string' },
+          endDate: { type: 'string' },
+        },
+      },
+    },
+  });
+
   fastify.get('/:id', {
     onRequest: [fastify.authenticate, fastify.authorize('sales:read')],
     handler: saleController.getById,

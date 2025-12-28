@@ -1,17 +1,17 @@
 <template>
   <v-app>
-    <v-navigation-drawer app v-model="drawer" permanent width="250" rail rail-width="120">
+    <v-navigation-drawer v-model="drawer" app permanent width="250" rail rail-width="120">
       <!-- add logo here -->
       <router-link
         to="/"
-        class="flex justify-center align-center pa-1 fixed top-0 left-0 right-0 border-b z-50"
+        class="flex justify-center align-center pa-1 absolute top-0 left-0 w-full border-b z-50"
         style="background-color: rgba(var(--v-theme-background), 1)"
       >
         <img
+          id="navigationDrawerLogo"
           src="@/assets/logo.png"
           :src-dark="'@/assets/logo.png'"
           alt="Nuqta Plus Logo"
-          id="navigationDrawerLogo"
         />
       </router-link>
 
@@ -40,10 +40,10 @@
           <!-- إذا بي مجموعة -->
           <v-list-group
             v-else
+            v-model:open="navigationDrawerSubItemsOpen"
             :value="navigationDrawerSubItemsOpen"
             :ripple="false"
             fluid
-            v-model:open="navigationDrawerSubItemsOpen"
             class="custom-group"
           >
             <!-- عنوان المجموعة -->
@@ -82,8 +82,8 @@
     <v-app-bar app elevation="0" dark class="border-b" color="background">
       <v-container class="px-10 flex align-center">
         <v-app-bar-nav-icon
-          @click="drawer = !drawer"
           aria-label="إظهار/إخفاء القائمة الجانبية"
+          @click="drawer = !drawer"
         ></v-app-bar-nav-icon>
         <v-toolbar-title>{{ currentPageTitle }}</v-toolbar-title>
 
@@ -147,8 +147,8 @@
 
         <v-btn
           icon
-          @click="toggleTheme"
           :aria-label="isDark ? 'التبديل إلى الوضع الفاتح' : 'التبديل إلى الوضع الداكن'"
+          @click="toggleTheme"
         >
           <v-icon>{{ isDark ? 'mdi-white-balance-sunny' : 'mdi-weather-night' }}</v-icon>
         </v-btn>
@@ -176,7 +176,7 @@
             <v-list-item prepend-icon="mdi-account-circle" to="/profile" aria-label="الملف الشخصي">
               <v-list-item-title>الملف الشخصي</v-list-item-title>
             </v-list-item>
-            <v-list-item prepend-icon="mdi-logout" @click="handleLogout" aria-label="تسجيل خروج">
+            <v-list-item prepend-icon="mdi-logout" aria-label="تسجيل خروج" @click="handleLogout">
               <v-list-item-title>تسجيل خروج</v-list-item-title>
             </v-list-item>
           </v-list>

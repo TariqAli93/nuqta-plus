@@ -23,9 +23,9 @@
           label="البحث عن عميل"
           single-line
           hide-details
-          @input="handleSearch"
           density="comfortable"
           aria-label="البحث عن عميل"
+          @input="handleSearch"
         ></v-text-field>
       </div>
     </v-card>
@@ -37,9 +37,9 @@
           icon="mdi-download"
           variant="text"
           size="small"
-          @click="handleExport"
           :disabled="!customerStore.customers || customerStore.customers.length === 0"
           aria-label="تصدير البيانات"
+          @click="handleExport"
         >
           <v-icon>mdi-download</v-icon>
         </v-btn>
@@ -48,13 +48,18 @@
         :headers="headers"
         :items="customerStore.customers"
         :loading="customerStore.loading"
-        :items-per-page="10"
+        :items-per-page="customerStore.pagination.limit"
+        :page="customerStore.pagination.page"
+        :items-length="customerStore.pagination.total"
+        server-items-length
+        hide-default-footer
         density="comfortable"
+        @update:items-per-page="changeItemsPerPage"
       >
-        <template v-slot:loading>
+        <template #loading>
           <TableSkeleton :rows="5" :columns="headers.length" />
         </template>
-        <template v-slot:no-data>
+        <template #no-data>
           <EmptyState
             title="لا يوجد عملاء"
             description="ابدأ بإضافة عميل جديد"
@@ -87,14 +92,20 @@
             size="small"
             variant="text"
             color="error"
-            @click="confirmDelete(item)"
             title="حذف"
             aria-label="حذف العميل"
+            @click="confirmDelete(item)"
           >
             <v-icon size="20">mdi-delete</v-icon>
           </v-btn>
         </template>
       </v-data-table>
+      
+      <PaginationControls
+        :pagination="customerStore.pagination"
+        @update:page="changePage"
+        @update:items-per-page="changeItemsPerPage"
+      />
     </v-card>
 
     <ConfirmDialog
@@ -120,6 +131,7 @@ import * as uiAccess from '@/auth/uiAccess.js';
 import EmptyState from '@/components/EmptyState.vue';
 import TableSkeleton from '@/components/TableSkeleton.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import PaginationControls from '@/components/PaginationControls.vue';
 import { useExport } from '@/composables/useExport';
 import { useUndo } from '@/composables/useUndo';
 import { useNotificationStore } from '@/stores/notification';
@@ -145,7 +157,33 @@ const headers = [
 ];
 
 const handleSearch = () => {
-  customerStore.fetchCustomers({ search: search.value });
+  customerStore.pagination.page = 1;
+  customerStore.fetchCustomers({
+    search: search.value,
+    page: 1,
+    limit: customerStore.pagination.limit,
+  });
+};
+
+const changePage = (page) => {
+  const pageNum = Number(page);
+  customerStore.pagination.page = pageNum;
+  customerStore.fetchCustomers({
+    search: search.value,
+    page: pageNum,
+    limit: customerStore.pagination.limit,
+  });
+};
+
+const changeItemsPerPage = (limit) => {
+  const limitNum = Number(limit);
+  customerStore.pagination.limit = limitNum;
+  customerStore.pagination.page = 1;
+  customerStore.fetchCustomers({
+    search: search.value,
+    page: 1,
+    limit: limitNum,
+  });
 };
 
 const confirmDelete = (customer) => {
@@ -196,6 +234,9 @@ const handleDelete = async () => {
 };
 
 onMounted(() => {
-  customerStore.fetchCustomers();
+  customerStore.fetchCustomers({
+    page: 1,
+    limit: customerStore.pagination.limit,
+  });
 });
 </script>

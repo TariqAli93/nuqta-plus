@@ -79,7 +79,7 @@
         <v-card-title class="bg-secondary text-white"> صلاحيات جديدة </v-card-title>
 
         <v-card-text class="py-6 px-6">
-          <v-form ref="formRef" @submit.prevent="save" class="space-y-4">
+          <v-form ref="formRef" class="space-y-4" @submit.prevent="save">
             <!-- ✅ اختيار المورد -->
             <v-select
               v-model="form.resource"

@@ -41,7 +41,7 @@
         </div>
       </v-card-text>
       <v-card-actions class="justify-end">
-        <v-btn color="primary" @click="store.hide()" aria-label="حسناً">حسناً</v-btn>
+        <v-btn color="primary" aria-label="حسناً" @click="store.hide()">حسناً</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

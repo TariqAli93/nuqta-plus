@@ -99,12 +99,12 @@ const total = ref(0);
 const errorMessage = ref('');
 
 const startDownload = () => {
-  window.electronAPI.invoke('update:download');
+  window?.electronAPI?.invoke('update:download');
   stage.value = 'downloading';
 };
 
 const installUpdate = () => {
-  window.electronAPI.invoke('update:install');
+  window?.electronAPI?.invoke('update:install');
 };
 
 const formatBytes = (x) => (!x ? '0 B' : `${(x / 1024 / 1024).toFixed(2)} MB`);
@@ -144,7 +144,7 @@ const closeDialog = () => {
 
 onMounted(() => {
   // 🔵 1. بدأ الفحص
-  window.electronAPI.on('update-checking', (data) => {
+  window?.electronAPI?.on('update-checking', (data) => {
     const payload = data.payload || {};
     if (!payload.manual) return; // ⛔ تجاهل الفحص التلقائي
 
@@ -153,7 +153,7 @@ onMounted(() => {
   });
 
   // 🔵 2. لا يوجد تحديث
-  window.electronAPI.on('update-not-available', (data) => {
+  window?.electronAPI?.on('update-not-available', (data) => {
     const payload = data.payload || {};
     if (!payload.manual) return;
 
@@ -165,7 +165,7 @@ onMounted(() => {
   });
 
   // 🔵 3. وجد تحديث
-  window.electronAPI.on('update-available', (data) => {
+  window?.electronAPI?.on('update-available', (data) => {
     const payload = data.payload || data || {};
     if (!payload.manual) return;
 
@@ -175,13 +175,13 @@ onMounted(() => {
   });
 
   // 🔵 4. بدأ التحميل
-  window.electronAPI.on('update-downloading', () => {
+  window?.electronAPI?.on('update-downloading', () => {
     stage.value = 'downloading';
     progress.value = 0;
   });
 
   // 🔵 5. تقدم التحميل
-  window.electronAPI.on('update-progress', (data) => {
+  window?.electronAPI?.on('update-progress', (data) => {
     const p = data.payload || data || {};
     progress.value = p.percent || 0;
     transferred.value = p.transferred || 0;
@@ -189,12 +189,12 @@ onMounted(() => {
   });
 
   // 🔵 6. اكتمل التحميل
-  window.electronAPI.on('update-ready', () => {
+  window?.electronAPI?.on('update-ready', () => {
     stage.value = 'ready';
   });
 
   // 🔵 7. خطأ
-  window.electronAPI.on('update-error', (data) => {
+  window?.electronAPI?.on('update-error', (data) => {
     const payload = data.payload || {};
     if (!payload.manual) return; // ⛔ تجاهل الأخطاء التلقائية
 
@@ -204,8 +204,8 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  if (window.electronAPI?.removeUpdateListeners) {
-    window.electronAPI.removeUpdateListeners();
+  if (window?.electronAPI?.removeUpdateListeners) {
+    window?.electronAPI?.removeUpdateListeners();
   }
 });
 </script>

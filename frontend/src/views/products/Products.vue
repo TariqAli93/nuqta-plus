@@ -27,8 +27,8 @@
               single-line
               hide-details
               density="comfortable"
-              @input="handleSearch"
               aria-label="البحث عن منتج"
+              @input="handleSearch"
             ></v-text-field>
           </v-col>
           <v-col cols="12" md="4">
@@ -55,9 +55,9 @@
           icon="mdi-download"
           variant="text"
           size="small"
-          @click="handleExport"
           :disabled="productStore.products.length === 0"
           aria-label="تصدير البيانات"
+          @click="handleExport"
         >
           <v-icon>mdi-download</v-icon>
         </v-btn>
@@ -69,15 +69,15 @@
         :items-per-page="productStore.pagination.limit"
         :page="productStore.pagination.page"
         :items-length="productStore.pagination.total"
-        @update:page="changePage"
-        @update:items-per-page="changeItemsPerPage"
         server-items-length
         density="comfortable"
+        hide-default-footer
+        @update:items-per-page="changeItemsPerPage"
       >
-        <template v-slot:loading>
+        <template #loading>
           <TableSkeleton :rows="5" :columns="headers.length" />
         </template>
-        <template v-slot:no-data>
+        <template #no-data>
           <EmptyState
             title="لا توجد منتجات"
             description="ابدأ بإضافة منتج جديد لبناء مخزونك"
@@ -123,14 +123,20 @@
             size="small"
             variant="text"
             color="error"
-            @click="confirmDelete(item)"
             title="حذف"
             aria-label="حذف المنتج"
+            @click="confirmDelete(item)"
           >
             <v-icon size="20">mdi-delete</v-icon>
           </v-btn>
         </template>
       </v-data-table>
+      
+      <PaginationControls
+        :pagination="productStore.pagination"
+        @update:page="changePage"
+        @update:items-per-page="changeItemsPerPage"
+      />
     </v-card>
 
     <ConfirmDialog
@@ -156,6 +162,7 @@ import * as uiAccess from '@/auth/uiAccess.js';
 import EmptyState from '@/components/EmptyState.vue';
 import TableSkeleton from '@/components/TableSkeleton.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import PaginationControls from '@/components/PaginationControls.vue';
 import { useExport } from '@/composables/useExport';
 import { useUndo } from '@/composables/useUndo';
 import { useNotificationStore } from '@/stores/notification';
@@ -235,23 +242,42 @@ const handleSearch = () => {
 };
 
 const changePage = (page) => {
-  productStore.pagination.page = page;
+  // Prevent recursive calls when API response updates pagination
+  if (typeof window !== 'undefined' && window.isUpdatingFromAPI) {
+    return;
+  }
+  
+  // Initialize flag if not exists
+  if (typeof window !== 'undefined' && window.isUpdatingFromAPI === undefined) {
+    window.isUpdatingFromAPI = false;
+  }
+  
+  const pageNum = Number(page);
+  if (isNaN(pageNum) || pageNum < 1) {
+    return;
+  }
+  if (pageNum === productStore.pagination.page) {
+    return;
+  }
+  
+  productStore.pagination.page = pageNum;
   productStore.fetchProducts({
-    search: search.value,
-    categoryId: selectedCategory.value,
-    page,
+    search: search.value ?? "",
+    categoryId: selectedCategory.value ?? null,
+    page: pageNum,
     limit: productStore.pagination.limit,
   });
 };
 
 const changeItemsPerPage = (limit) => {
-  productStore.pagination.limit = limit;
+  const limitNum = Number(limit);
+  productStore.pagination.limit = limitNum;
   productStore.pagination.page = 1;
   productStore.fetchProducts({
     search: search.value,
     categoryId: selectedCategory.value,
     page: 1,
-    limit,
+    limit: limitNum,
   });
 };
 
@@ -315,5 +341,7 @@ onMounted(async () => {
   // Fetch all categories for the dropdown
   const { data } = await categoryStore.fetchCategories();
   categories.value = data || [];
+
+  console.log(productStore.pagination);
 });
 </script>

@@ -22,9 +22,17 @@ export const useCustomerStore = defineStore('customer', {
       try {
         const response = await api.get('/customers', { params });
         this.customers = response?.data || [];
-        this.pagination = response?.meta || this.pagination;
+        
+        // Ensure pagination values are numbers
+        if (response?.meta) {
+          this.pagination = {
+            page: Number(response.meta.page) || this.pagination.page,
+            limit: Number(response.meta.limit) || this.pagination.limit,
+            total: Number(response.meta.total) || this.pagination.total,
+            totalPages: Number(response.meta.totalPages) || this.pagination.totalPages,
+          };
+        }
 
-        console.log(response)
         return response;
       } catch (error) {
         notificationStore.error(error.response?.data?.message || 'فشل تحميل العملاء');

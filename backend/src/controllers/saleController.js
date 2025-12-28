@@ -148,4 +148,12 @@ export class SaleController {
       message: `Deleted ${deletedCount} old draft(s)`,
     });
   }
+
+  async getTopProducts(request, reply) {
+    const topProducts = await saleService.getTopProducts(request.query);
+    return reply.send({
+      success: true,
+      data: topProducts,
+    });
+  }
 }

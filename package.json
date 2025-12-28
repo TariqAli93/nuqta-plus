@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "cross-env NODE_ENV=development concurrently \"cd backend && pnpm dev\" \"cd frontend && pnpm dev\"",
+    "dev:web": "cross-env NODE_ENV=development concurrently \"cd backend && pnpm dev\" \"cd frontend && pnpm dev:web\"",
     "publish:electron": "node pumb-version.js && cd backend && pnpm build && cd ../frontend && pnpm run publish:win",
     "build": "cd backend && pnpm build && cd ../frontend && pnpm build:win",
     "lint": "cd backend && pnpm lint && cd ../frontend && pnpm lint",

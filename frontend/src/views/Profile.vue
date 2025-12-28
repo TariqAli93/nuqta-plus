@@ -23,7 +23,7 @@
           <v-card-text>
             <v-list lines="two">
               <v-list-item>
-                <template v-slot:prepend>
+                <template #prepend>
                   <v-icon>mdi-account</v-icon>
                 </template>
                 <v-list-item-title>اسم المستخدم</v-list-item-title>
@@ -31,7 +31,7 @@
               </v-list-item>
 
               <v-list-item>
-                <template v-slot:prepend>
+                <template #prepend>
                   <v-icon>mdi-shield-account</v-icon>
                 </template>
                 <v-list-item-title>الدور الوظيفي</v-list-item-title>
@@ -47,7 +47,7 @@
               </v-list-item>
 
               <v-list-item>
-                <template v-slot:prepend>
+                <template #prepend>
                   <v-icon>mdi-calendar</v-icon>
                 </template>
                 <v-list-item-title>تاريخ الإنشاء</v-list-item-title>
@@ -75,12 +75,12 @@
                 label="كلمة المرور الحالية"
                 :type="showCurrentPassword ? 'text' : 'password'"
                 :append-inner-icon="showCurrentPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                @click:append-inner="showCurrentPassword = !showCurrentPassword"
                 :rules="[rules.required]"
                 prepend-inner-icon="mdi-lock"
                 variant="outlined"
                 density="comfortable"
                 class="mb-2"
+                @click:append-inner="showCurrentPassword = !showCurrentPassword"
               ></v-text-field>
 
               <v-text-field
@@ -88,12 +88,12 @@
                 label="كلمة المرور الجديدة"
                 :type="showNewPassword ? 'text' : 'password'"
                 :append-inner-icon="showNewPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                @click:append-inner="showNewPassword = !showNewPassword"
                 :rules="[rules.required, rules.minLength]"
                 prepend-inner-icon="mdi-lock-plus"
                 variant="outlined"
                 density="comfortable"
                 class="mb-2"
+                @click:append-inner="showNewPassword = !showNewPassword"
               ></v-text-field>
 
               <v-text-field
@@ -101,12 +101,12 @@
                 label="تأكيد كلمة المرور الجديدة"
                 :type="showConfirmPassword ? 'text' : 'password'"
                 :append-inner-icon="showConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                @click:append-inner="showConfirmPassword = !showConfirmPassword"
                 :rules="[rules.required, rules.passwordMatch]"
                 prepend-inner-icon="mdi-lock-check"
                 variant="outlined"
                 density="comfortable"
                 class="mb-2"
+                @click:append-inner="showConfirmPassword = !showConfirmPassword"
               ></v-text-field>
 
               <v-btn

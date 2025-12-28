@@ -8,7 +8,7 @@
 
         <v-spacer />
 
-        <v-btn color="primary" prepend-icon="mdi-printer" @click="handlePrint" :loading="printing">
+        <v-btn color="primary" prepend-icon="mdi-printer" :loading="printing" @click="handlePrint">
           طباعة
         </v-btn>
 
@@ -18,7 +18,7 @@
 
         <select-printer class="mr-3" />
 
-        <v-btn variant="text" @click="$router.back()" class="mr-2">
+        <v-btn color="primary" class="mx-3" @click="router.back()">
           <v-icon>mdi-arrow-left</v-icon>
         </v-btn>
       </div>
@@ -375,7 +375,6 @@
             <v-col cols="12" md="4">
               <v-text-field
                 :model-value="formatNumber(paymentData.amount)"
-                @update:model-value="handlePaymentAmountInput($event)"
                 label="المبلغ"
                 step="0.01"
                 min="0.01"
@@ -396,6 +395,7 @@
                   },
                 ]"
                 required
+                @update:model-value="handlePaymentAmountInput($event)"
               ></v-text-field>
             </v-col>
             <v-col cols="12" md="4">

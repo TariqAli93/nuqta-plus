@@ -29,8 +29,8 @@
           <v-btn
             variant="outlined"
             size="default"
-            @click="resetFilters"
             :disabled="activeFiltersCount === 0"
+            @click="resetFilters"
           >
             إعادة تعيين
           </v-btn>

@@ -14,8 +14,8 @@
           :variant="action.variant || 'elevated'"
           :to="action.to"
           :prepend-icon="action.icon"
-          @click="action.onClick"
           :aria-label="action.label || action.text"
+          @click="action.onClick"
         >
           {{ action.text }}
         </v-btn>

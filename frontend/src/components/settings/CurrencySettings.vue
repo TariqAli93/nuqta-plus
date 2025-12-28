@@ -41,13 +41,13 @@
                 prepend-inner-icon="mdi-currency-usd"
                 required
               >
-                <template v-slot:selection="{ item }">
+                <template #selection="{ item }">
                   <v-chip :color="item.raw.color" size="small" class="ma-1">
                     <v-icon start size="18">{{ item.raw.icon }}</v-icon>
                     {{ item.raw.text }}
                   </v-chip>
                 </template>
-                <template v-slot:item="{ props, item }">
+                <template #item="{ props, item }">
                   <v-list-item
                     v-bind="props"
                     :prepend-icon="item.raw.icon"

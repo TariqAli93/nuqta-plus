@@ -62,10 +62,10 @@
               <template #prepend>
                 <v-checkbox
                   :model-value="isRead(`installment-${installment.id}`)"
-                  @click.stop="toggleRead(`installment-${installment.id}`)"
                   color="error"
                   hide-details
                   class="mr-2"
+                  @click.stop="toggleRead(`installment-${installment.id}`)"
                 ></v-checkbox>
                 <v-icon :color="isRead(`installment-${installment.id}`) ? 'grey' : 'error'">
                   mdi-calendar-alert
@@ -117,10 +117,10 @@
               <template #prepend>
                 <v-checkbox
                   :model-value="isRead(`outofstock-${product.id}`)"
-                  @click.stop="toggleRead(`outofstock-${product.id}`)"
                   color="red"
                   hide-details
                   class="mr-2"
+                  @click.stop="toggleRead(`outofstock-${product.id}`)"
                 ></v-checkbox>
                 <v-icon :color="isRead(`outofstock-${product.id}`) ? 'grey' : 'red'">
                   mdi-package-variant-remove
@@ -167,10 +167,10 @@
               <template #prepend>
                 <v-checkbox
                   :model-value="isRead(`lowstock-${product.id}`)"
-                  @click.stop="toggleRead(`lowstock-${product.id}`)"
                   color="orange"
                   hide-details
                   class="mr-2"
+                  @click.stop="toggleRead(`lowstock-${product.id}`)"
                 ></v-checkbox>
                 <v-icon :color="isRead(`lowstock-${product.id}`) ? 'grey' : 'orange'">
                   mdi-alert

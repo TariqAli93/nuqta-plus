@@ -3,10 +3,10 @@
     v-model="dialog"
     :max-width="maxWidth"
     :persistent="persistent"
-    @update:model-value="onUpdate"
     role="alertdialog"
     :aria-labelledby="titleId"
     :aria-describedby="messageId"
+    @update:model-value="onUpdate"
   >
     <v-card>
       <v-card-title
@@ -40,17 +40,17 @@
       <v-divider></v-divider>
 
       <v-card-actions class="justify-end gap-2 pa-3">
-        <v-btn variant="outlined" size="default" @click="handleCancel" :aria-label="cancelLabel">
+        <v-btn variant="outlined" size="default" :aria-label="cancelLabel" @click="handleCancel">
           {{ cancelText }}
         </v-btn>
         <v-btn
           :color="type"
           variant="elevated"
           size="default"
-          @click="handleConfirm"
           :loading="loading"
           :disabled="showInput && !isInputValid"
           :aria-label="confirmLabel"
+          @click="handleConfirm"
         >
           {{ confirmText }}
         </v-btn>

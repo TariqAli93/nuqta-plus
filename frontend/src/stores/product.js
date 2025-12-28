@@ -22,7 +22,29 @@ export const useProductStore = defineStore('product', {
       try {
         const response = await api.get('/products', { params });
         this.products = response?.data || [];
-        this.pagination = response?.meta || this.pagination;
+        
+        // Ensure pagination values are numbers
+        if (response?.meta) {
+          const newPagination = {
+            page: Number(response.meta.page) || this.pagination.page,
+            limit: Number(response.meta.limit) || this.pagination.limit,
+            total: Number(response.meta.total) || this.pagination.total,
+            totalPages: Number(response.meta.totalPages) || this.pagination.totalPages,
+          };
+          // Set flag to prevent recursive changePage calls
+          if (typeof window !== 'undefined' && window.isUpdatingFromAPI !== undefined) {
+            window.isUpdatingFromAPI = true;
+          }
+          this.pagination = newPagination;
+          // Clear flag after a microtask to allow Vue reactivity to settle
+          if (typeof window !== 'undefined') {
+            Promise.resolve().then(() => {
+              if (window.isUpdatingFromAPI !== undefined) {
+                window.isUpdatingFromAPI = false;
+              }
+            });
+          }
+        }
 
         return response;
       } catch (error) {

@@ -37,20 +37,20 @@
           hide-details
           density="comfortable"
           clearable
-          @update:model-value="handleFilter"
           :custom-filter="customFilter"
+          @update:model-value="handleFilter"
         >
-          <template v-slot:item="{ props, item }">
+          <template #item="{ props, item }">
             <v-list-item v-bind="props">
-              <template v-slot:title>
+              <template #title>
                 {{ item.raw.name }}
               </template>
-              <template v-slot:subtitle>
+              <template #subtitle>
                 {{ item.raw.phone }}
               </template>
             </v-list-item>
           </template>
-          <template v-slot:selection="{ item }">
+          <template #selection="{ item }">
             {{ item.raw.name }} - {{ item.raw.phone }}
           </template>
         </v-autocomplete>
@@ -82,9 +82,9 @@
           icon="mdi-download"
           variant="text"
           size="small"
-          @click="handleExport"
           :disabled="saleStore.sales.length === 0"
           aria-label="تصدير البيانات"
+          @click="handleExport"
         >
           <v-icon>mdi-download</v-icon>
         </v-btn>
@@ -93,14 +93,20 @@
         :headers="headers"
         :items="saleStore.sales"
         :loading="saleStore.loading"
-        @click:row="viewSale"
+        :items-per-page="saleStore.pagination.limit"
+        :page="saleStore.pagination.page"
+        :items-length="saleStore.pagination.total"
+        server-items-length
+        hide-default-footer
         class="cursor-pointer"
         density="comfortable"
+        @update:items-per-page="changeItemsPerPage"
+        @click:row="viewSale"
       >
-        <template v-slot:loading>
+        <template #loading>
           <TableSkeleton :rows="5" :columns="headers.length" />
         </template>
-        <template v-slot:no-data>
+        <template #no-data>
           <EmptyState
             title="لا توجد مبيعات"
             description="ابدأ بإنشاء بيع جديد"
@@ -140,8 +146,8 @@
               variant="text"
               color="primary"
               icon
-              @click.stop="completeDraft(item.id)"
               title="إكمال المسودة"
+              @click.stop="completeDraft(item.id)"
             >
               <v-icon size="20">mdi-check</v-icon>
             </v-btn>
@@ -151,8 +157,8 @@
               color="error"
               icon
               :disabled="!canDelete"
-              @click.stop="deleteSale(item.id)"
               title="حذف المسودة"
+              @click.stop="deleteSale(item.id)"
             >
               <v-icon size="20">mdi-delete</v-icon>
             </v-btn>
@@ -160,32 +166,38 @@
           <!-- أزرار المبيعات العادية -->
           <template v-else>
             <v-btn
+              v-if="item.status !== 'cancelled'"
               size="small"
               variant="text"
               color="error"
-              v-if="item.status !== 'cancelled'"
               icon
               :disabled="!canDelete"
-              @click.stop="deleteSale(item.id)"
               title="إلغاء البيع"
+              @click.stop="deleteSale(item.id)"
             >
               <v-icon size="20">mdi-delete</v-icon>
             </v-btn>
             <v-btn
+              v-if="item.status === 'cancelled'"
               size="small"
               variant="text"
               color="success"
-              v-if="item.status === 'cancelled'"
               icon
               :disabled="!canDelete"
-              @click.stop="restoreSale(item.id)"
               title="استعادة البيع"
+              @click.stop="restoreSale(item.id)"
             >
               <v-icon size="20">mdi-restore</v-icon>
             </v-btn>
           </template>
         </template>
       </v-data-table>
+      
+      <PaginationControls
+        :pagination="saleStore.pagination"
+        @update:page="changePage"
+        @update:items-per-page="changeItemsPerPage"
+      />
     </v-card>
 
     <!-- Delete Sale Dialog -->
@@ -229,6 +241,7 @@ import { useAuthStore } from '../../stores/auth';
 import EmptyState from '@/components/EmptyState.vue';
 import TableSkeleton from '@/components/TableSkeleton.vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import PaginationControls from '@/components/PaginationControls.vue';
 import { useExport } from '@/composables/useExport';
 import { useNotificationStore } from '@/stores/notification';
 
@@ -314,7 +327,33 @@ const getStatusText = (status) => {
 };
 
 const handleFilter = () => {
-  saleStore.fetchSales(filters.value);
+  saleStore.pagination.page = 1;
+  saleStore.fetchSales({
+    ...filters.value,
+    page: 1,
+    limit: saleStore.pagination.limit,
+  });
+};
+
+const changePage = (page) => {
+  const pageNum = Number(page);
+  saleStore.pagination.page = pageNum;
+  saleStore.fetchSales({
+    ...filters.value,
+    page: pageNum,
+    limit: saleStore.pagination.limit,
+  });
+};
+
+const changeItemsPerPage = (limit) => {
+  const limitNum = Number(limit);
+  saleStore.pagination.limit = limitNum;
+  saleStore.pagination.page = 1;
+  saleStore.fetchSales({
+    ...filters.value,
+    page: 1,
+    limit: limitNum,
+  });
 };
 
 const viewSale = (_event, { item }) => {
@@ -415,7 +454,10 @@ const customFilter = (itemText, queryText, item) => {
 };
 
 onMounted(async () => {
-  await saleStore.fetchSales();
+  await saleStore.fetchSales({
+    page: 1,
+    limit: saleStore.pagination.limit,
+  });
   await customerStore.fetchCustomers();
   customers.value = customerStore.customers;
 });

@@ -3,8 +3,8 @@
     :disabled="isLoading || disabled"
     :loading="isLoading"
     v-bind="$attrs"
-    @click="handleClick"
     :class="['loading-btn', { 'loading-btn--loading': isLoading }]"
+    @click="handleClick"
   >
     <!-- محتوى الزر العادي -->
     <template v-if="!isLoading">

@@ -98,7 +98,7 @@
         </v-card-title>
         <v-divider></v-divider>
         <v-card-text>
-          <v-form ref="formRef" @submit.prevent="save" class="space-y-3">
+          <v-form ref="formRef" class="space-y-3" @submit.prevent="save">
             <v-text-field
               v-model="form.username"
               label="اسم المستخدم"
@@ -149,7 +149,7 @@
         <v-card-title class="bg-secondary text-white"> تغيير كلمة المرور </v-card-title>
         <v-divider></v-divider>
         <v-card-text>
-          <v-form @submit.prevent="resetPw" ref="resetPwRef" lazy-validation>
+          <v-form ref="resetPwRef" lazy-validation @submit.prevent="resetPw">
             <v-text-field
               v-model="resetPwInfo.newPassword"
               label="كلمة المرور الجديدة"
