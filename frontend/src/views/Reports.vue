@@ -1,269 +1,285 @@
 <template>
-  <div class="pa-4">
-    <!-- Header -->
-    <div class="mb-8 d-flex justify-space-between align-center">
-      <div>
-        <h1 class="mb-1 text-h4 font-weight-bold">📊 التقارير والتحليلات</h1>
-        <p class="text-body-2 text-grey-darken-1">نظرة شاملة على أداء المبيعات للفترة المحددة</p>
-      </div>
+  <v-app>
+    <v-container fluid>
+      <!-- Hero Header Section -->
+      <div class="d-flex align-center justify-space-between mb-4">
+        <h1 class="text-h4">التقارير والتحليلات</h1>
 
-      <div class="gap-2 d-flex">
+        <v-spacer />
         <v-btn
-          color="error"
-          variant="flat"
-          prepend-icon="mdi-file-pdf-box"
+          color="primary"
+          prepend-icon="mdi-file-export"
           :disabled="!report"
           @click="exportToPDF"
         >
-          PDF
+          تصدير التقرير
         </v-btn>
       </div>
-    </div>
 
-    <!-- Filters -->
-    <v-card class="mb-8 pa-4">
-      <v-row density="comfortable">
-        <v-col cols="12" md="4">
-          <v-menu
-            v-model="menus.start"
-            :close-on-content-click="true"
-            transition="scale-transition"
-            min-width="auto"
-          >
-            <template #activator="{ props }">
-              <v-text-field
-                v-model="formattedStartDate"
-                label="من تاريخ"
-                readonly
-                prepend-inner-icon="mdi-calendar"
-                v-bind="props"
-                density="comfortable"
-              ></v-text-field>
-            </template>
-            <v-date-picker
-              v-model="filters.startDate"
-              color="primary"
-              elevation="4"
-              @change="
-                () => {
-                  menuStart = false;
-                }
-              "
-            ></v-date-picker>
-          </v-menu>
+      <!-- Main Content Layout -->
+      <v-row align="start" class="mt-2">
+        <!-- Left Sidebar - Filters -->
+        <v-col cols="12" md="3">
+          <v-card elevation="0" rounded="xl" class="mb-6">
+            <v-card-title class="pb-0">
+              <v-icon size="24" class="ml-2">mdi-filter</v-icon>
+              <span>فلترة البيانات</span>
+            </v-card-title>
+            <v-divider class="mb-3"></v-divider>
+            <v-card-text>
+              <v-form>
+                <v-row dense>
+                  <v-col cols="12" class="mb-2">
+                    <label class="mb-1 d-block">من تاريخ</label>
+                    <v-menu
+                      v-model="menus.start"
+                      :close-on-content-click="false"
+                      min-width="auto"
+                      transition="scale-transition"
+                    >
+                      <template #activator="{ props }">
+                        <v-text-field
+                          v-model="formattedStartDate"
+                          readonly
+                          prepend-inner-icon="mdi-calendar-start"
+                          v-bind="props"
+                          variant="outlined"
+                          density="comfortable"
+                          hide-details
+                        ></v-text-field>
+                      </template>
+                      <v-date-picker
+                        v-model="filters.startDate"
+                        elevation="4"
+                        view="date"
+                        color="primary"
+                        @update:model-value="
+                          (val) => {
+                            filters.startDate = val;
+                            menus.start = false;
+                          }
+                        "
+                        show-adjacent-months
+                        :show-current="true"
+                      ></v-date-picker>
+                    </v-menu>
+                  </v-col>
+                  <v-col cols="12" class="mb-2">
+                    <label class="mb-1 d-block">إلى تاريخ</label>
+                    <v-menu
+                      v-model="menus.end"
+                      :close-on-content-click="false"
+                      min-width="auto"
+                      transition="scale-transition"
+                    >
+                      <template #activator="{ props }">
+                        <v-text-field
+                          v-model="formattedEndDate"
+                          readonly
+                          prepend-inner-icon="mdi-calendar-end"
+                          v-bind="props"
+                          variant="outlined"
+                          density="comfortable"
+                          hide-details
+                        ></v-text-field>
+                      </template>
+                      <v-date-picker
+                        v-model="filters.endDate"
+                        elevation="4"
+                        view="date"
+                        color="primary"
+                        @update:model-value="
+                          (val) => {
+                            filters.endDate = val;
+                            menus.end = false;
+                          }
+                        "
+                        show-adjacent-months
+                        :show-current="true"
+                      ></v-date-picker>
+                    </v-menu>
+                  </v-col>
+                  <v-col cols="12" class="mb-2">
+                    <label class="mb-1 d-block">العملة</label>
+                    <v-select
+                      v-model="filters.currency"
+                      :items="currencyOptions"
+                      item-title="title"
+                      item-value="value"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-currency-usd"
+                      hide-details
+                    ></v-select>
+                  </v-col>
+                  <v-col cols="12" class="mt-4">
+                    <v-btn
+                      block
+                      color="primary"
+                      :loading="loading"
+                      @click="fetchReport"
+                    >
+                      <v-icon start>mdi-magnify</v-icon>
+                      عرض التقرير
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </v-form>
+            </v-card-text>
+          </v-card>
         </v-col>
 
-        <v-col cols="12" md="4">
-          <v-menu
-            v-model="menus.end"
-            :close-on-content-click="true"
-            transition="scale-transition"
-            min-width="auto"
-          >
-            <template #activator="{ props }">
-              <v-text-field
-                v-model="formattedEndDate"
-                label="إلى تاريخ"
-                readonly
-                prepend-inner-icon="mdi-calendar"
-                v-bind="props"
-                density="comfortable"
-              ></v-text-field>
-            </template>
-            <v-date-picker
-              v-model="filters.endDate"
-              color="primary"
-              elevation="4"
-              @change="
-                () => {
-                  menuEnd = false;
-                }
-              "
-            ></v-date-picker>
-          </v-menu>
-        </v-col>
+        <!-- Main Content Area -->
+        <v-col cols="12" md="9">
+          <!-- Loading State -->
+          <v-row v-if="loading" align="center" justify="center">
+            <v-col cols="12" class="text-center py-12">
+              <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
+              <p class="mt-2 mb-0">جاري تحميل التقرير...</p>
+            </v-col>
+          </v-row>
 
-        <v-col cols="12" md="4">
-          <v-select
-            v-model="filters.currency"
-            :items="currencyOptions"
-            label="العملة"
-            density="comfortable"
-          >
-            <template #prepend-inner>
-              <v-icon>mdi-currency-usd</v-icon>
-            </template>
-          </v-select>
+          <!-- Report Content -->
+          <div v-else-if="report">
+            <!-- Key Metrics -->
+            <v-card elevation="2" class="mb-4 pa-4">
+              <div class="d-flex align-center mb-4">
+                <v-icon size="24" class="ml-2">mdi-chart-box-outline</v-icon>
+                <h1 class="mb-0 text-h5">نظرة عامة على المبيعات</h1>
+              </div>
+              <v-row>
+                <v-col cols="12" md="4">
+                  <v-card flat class="pa-4 text-center">
+                    <v-icon size="36" color="primary" class="mb-2">mdi-counter</v-icon>
+                    <div class="text-h6 mt-2">{{ report.count ?? 0 }}</div>
+                    <div class="caption grey--text mt-1">عدد المبيعات</div>
+                  </v-card>
+                </v-col>
+                <v-col cols="12" md="4">
+                  <v-card flat class="pa-4 text-center">
+                    <v-icon size="36" color="success" class="mb-2">mdi-check-circle</v-icon>
+                    <div class="text-h6 mt-2">{{ report.completedSales ?? 0 }}</div>
+                    <div class="caption grey--text mt-1">مبيعات مكتملة</div>
+                  </v-card>
+                </v-col>
+                <v-col cols="12" md="4">
+                  <v-card flat class="pa-4 text-center">
+                    <v-icon size="36" color="warning" class="mb-2">mdi-clock-outline</v-icon>
+                    <div class="text-h6 mt-2">{{ report.pendingSales ?? 0 }}</div>
+                    <div class="caption grey--text mt-1">مبيعات معلقة</div>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-card>
+
+            <!-- Financial Metrics -->
+            <v-card elevation="2" class="mb-4 pa-4">
+              <div class="d-flex align-center mb-4">
+                <v-icon size="24" class="ml-2">mdi-cash-multiple</v-icon>
+                <h1 class="mb-0 text-h5">
+                  المؤشرات المالية
+                  <span class="ml-2 currency-label">{{ reportByCurrency.currencyLabel }}</span>
+                </h1>
+              </div>
+              <v-row >
+                <v-col cols="12" md="3">
+                  <v-card flat class="pa-4 text-center">
+                    <v-icon size="32" color="primary" class="mb-1">mdi-cash</v-icon>
+                    <div class="text-h6 mt-2">
+                      {{ reportByCurrency.format(reportByCurrency.sales ?? 0) }}
+                    </div>
+                    <div class="caption grey--text mt-1">إجمالي المبيعات</div>
+                  </v-card>
+                </v-col>
+                <v-col cols="12" md="3">
+                  <v-card flat class="pa-4 text-center">
+                    <v-icon size="32" color="success" class="mb-1">mdi-cash-check</v-icon>
+                    <div class="text-h6 mt-2">
+                      {{ reportByCurrency.format(reportByCurrency.paid ?? 0) }}
+                    </div>
+                    <div class="caption grey--text mt-1">المدفوع</div>
+                  </v-card>
+                </v-col>
+                <v-col cols="12" md="3">
+                  <v-card flat class="pa-4 text-center">
+                    <v-icon size="32" color="red" class="mb-1">mdi-tag-off</v-icon>
+                    <div class="text-h6 mt-2">
+                      {{ reportByCurrency.format(reportByCurrency.discount ?? 0) }}
+                    </div>
+                    <div class="caption grey--text mt-1">إجمالي الخصومات</div>
+                  </v-card>
+                </v-col>
+                <v-col cols="12" md="3">
+                  <v-card flat class="pa-4 text-center">
+                    <v-icon size="32" color="orange" class="mb-1">mdi-percent</v-icon>
+                    <div class="text-h6 mt-2">
+                      {{ reportByCurrency.format(reportByCurrency.interest ?? 0) }}
+                    </div>
+                    <div class="caption grey--text mt-1">إجمالي الفائدة</div>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-card>
+
+            <!-- Performance Metrics -->
+            <v-card elevation="2" class="pa-4">
+              <div class="d-flex align-center mb-4">
+                <v-icon size="24" class="ml-2">mdi-trending-up</v-icon>
+                <h1 class="mb-0 text-h5">مؤشرات الأداء</h1>
+              </div>
+              <v-row >
+                <v-col cols="12" md="3">
+                  <v-card flat class="pa-4 text-center">
+                    <v-icon size="32" color="info" class="mb-1">mdi-finance</v-icon>
+                    <div class="text-h6 mt-2">
+                      {{ reportByCurrency.format(reportByCurrency.avgSale ?? 0) }}
+                    </div>
+                    <div class="caption grey--text mt-1">متوسط البيع</div>
+                  </v-card>
+                </v-col>
+                <v-col cols="12" md="3">
+                  <v-card flat class="pa-4 text-center">
+                    <v-icon size="32" color="teal" class="mb-1">mdi-cash-plus</v-icon>
+                    <div class="text-h6 mt-2">
+                      {{ reportByCurrency.format(reportByCurrency.profit ?? 0) }}
+                    </div>
+                    <div class="caption grey--text mt-1">الربح</div>
+                  </v-card>
+                </v-col>
+                <v-col cols="12" md="3">
+                  <v-card flat class="pa-4 text-center">
+                    <v-icon size="32" color="deep-purple" class="mb-1">mdi-poll</v-icon>
+                    <div class="text-h6 mt-2">
+                      {{ reportByCurrency.format(reportByCurrency.avgProfit ?? 0) }}
+                    </div>
+                    <div class="caption grey--text mt-1">متوسط الربح</div>
+                  </v-card>
+                </v-col>
+                <v-col cols="12" md="3">
+                  <v-card flat class="pa-4 text-center">
+                    <v-icon size="32" color="lime-darken-2" class="mb-1">mdi-percent-circle</v-icon>
+                    <div class="text-h6 mt-2">{{ reportByCurrency.profitMargin ?? 0 }}%</div>
+                    <div class="caption grey--text mt-1">هامش الربح</div>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-card>
+          </div>
+
+          <!-- Empty State -->
+          <v-card v-else elevation="2" rounded="xl">
+            <div class="pa-8 text-center">
+              <div class="mb-2">
+                <v-icon size="80" color="grey-lighten-1">mdi-chart-line-variant</v-icon>
+              </div>
+              <h3 class="mb-1">لا توجد بيانات</h3>
+              <p class="grey--text text--darken-1">يرجى تحديد الفترة المطلوبة وعرض التقرير</p>
+            </div>
+          </v-card>
         </v-col>
       </v-row>
-      <v-btn color="primary" :loading="loading" @click="fetchReport">
-        <v-icon start>mdi-magnify</v-icon> عرض التقرير
-      </v-btn>
-    </v-card>
-
-    <!-- Main Stats -->
-    <v-row v-if="report" density="comfortable">
-      <!-- عدد المبيعات -->
-      <v-col cols="12" md="4">
-        <v-card class="pa-4">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <div class="text-h5 font-weight-bold text-primary">{{ report.count || 0 }}</div>
-              <div class="text-body-2 text-grey">عدد المبيعات</div>
-            </div>
-            <v-icon size="42" color="primary">mdi-counter</v-icon>
-          </div>
-        </v-card>
-      </v-col>
-
-      <!-- مبيعات مكتملة -->
-      <v-col cols="12" md="4">
-        <v-card class="pa-4">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <div class="text-h6 font-weight-bold text-success">
-                {{ report.completedSales || 0 }}
-              </div>
-              <div class="text-body-2 text-grey">مبيعات مكتملة</div>
-            </div>
-            <v-icon size="42" color="success">mdi-check-circle</v-icon>
-          </div>
-        </v-card>
-      </v-col>
-
-      <!-- مبيعات معلقة -->
-      <v-col cols="12" md="4">
-        <v-card class="pa-4">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <div class="text-h6 font-weight-bold text-warning">
-                {{ report.pendingSales || 0 }}
-              </div>
-              <div class="text-body-2 text-grey">مبيعات معلقة</div>
-            </div>
-            <v-icon size="42" color="warning">mdi-clock-outline</v-icon>
-          </div>
-        </v-card>
-      </v-col>
-
-      <!-- مؤشرات حسب العملة المختارة -->
-      <v-col cols="12" md="3">
-        <v-card class="pa-4">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <div class="text-h6 font-weight-bold text-success">
-                {{ reportByCurrency.format(reportByCurrency.sales || 0) }}
-              </div>
-              <div class="text-body-2 text-grey">
-                إجمالي المبيعات ({{ reportByCurrency.currencyLabel }})
-              </div>
-            </div>
-            <v-icon size="42" color="success">mdi-cash</v-icon>
-          </div>
-        </v-card>
-      </v-col>
-
-      <v-col cols="12" md="3">
-        <v-card class="pa-4">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <div class="text-h6 font-weight-bold text-info">
-                {{ reportByCurrency.format(reportByCurrency.paid || 0) }}
-              </div>
-              <div class="text-body-2 text-grey">
-                المدفوع ({{ reportByCurrency.currencyLabel }})
-              </div>
-            </div>
-            <v-icon size="42" color="info">mdi-cash-check</v-icon>
-          </div>
-        </v-card>
-      </v-col>
-
-      <v-col cols="12" md="3">
-        <v-card class="pa-4">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <div class="text-h6 font-weight-bold text-red-darken-2">
-                {{ reportByCurrency.format(reportByCurrency.discount || 0) }}
-              </div>
-              <div class="text-body-2 text-grey">إجمالي الخصومات</div>
-            </div>
-            <v-icon size="42" color="red-darken-2">mdi-tag-off</v-icon>
-          </div>
-        </v-card>
-      </v-col>
-
-      <v-col cols="12" md="3">
-        <v-card class="pa-4">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <div class="text-h6 font-weight-bold" style="color: #ff9800">
-                {{ reportByCurrency.format(reportByCurrency.interest || 0) }}
-              </div>
-              <div class="text-body-2 text-grey">إجمالي الفائدة</div>
-            </div>
-            <v-icon size="42" color="amber-darken-2">mdi-percent</v-icon>
-          </div>
-        </v-card>
-      </v-col>
-
-      <v-col cols="12" md="3">
-        <v-card class="pa-4">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <div class="text-h6 font-weight-bold text-purple">
-                {{ reportByCurrency.format(reportByCurrency.avgSale || 0) }}
-              </div>
-              <div class="text-body-2 text-grey">متوسط البيع</div>
-            </div>
-            <v-icon size="42" color="purple">mdi-finance</v-icon>
-          </div>
-        </v-card>
-      </v-col>
-
-      <v-col cols="12" md="3">
-        <v-card class="pa-4">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <div class="text-h6 font-weight-bold text-pink-darken-2">
-                {{ reportByCurrency.format(reportByCurrency.profit || 0) }}
-              </div>
-              <div class="text-body-2 text-grey">الربح</div>
-            </div>
-            <v-icon size="42" color="pink-darken-2">mdi-cash-plus</v-icon>
-          </div>
-        </v-card>
-      </v-col>
-
-      <v-col cols="12" md="3">
-        <v-card class="pa-4">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <div class="text-h6 font-weight-bold text-indigo">
-                {{ reportByCurrency.format(reportByCurrency.avgProfit || 0) }}
-              </div>
-              <div class="text-body-2 text-grey">متوسط الربح</div>
-            </div>
-            <v-icon size="42" color="indigo">mdi-poll</v-icon>
-          </div>
-        </v-card>
-      </v-col>
-
-      <v-col cols="12" md="3">
-        <v-card class="pa-4">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <div class="text-h6 font-weight-bold text-cyan-darken-2">
-                {{ reportByCurrency.profitMargin || 0 }}%
-              </div>
-              <div class="text-body-2 text-grey">هامش الربح</div>
-            </div>
-            <v-icon size="42" color="cyan-darken-2">mdi-percent</v-icon>
-          </div>
-        </v-card>
-      </v-col>
-    </v-row>
-  </div>
+    </v-container>
+  </v-app>
 </template>
 
 <script setup>
@@ -287,19 +303,27 @@ const filters = ref({
   currency: null,
 });
 
-// Computed property for available currencies based on settings
+// Use settingsStore.availableCurrencies as array (fix default and fallback)
 const currencyOptions = computed(() => {
-  const available = settingsStore.availableCurrencies || ['USD', 'IQD'];
+  let available = settingsStore.availableCurrencies;
+  if (!Array.isArray(available) || available.length === 0) {
+    available = ['IQD', 'USD'];
+  }
   return available.map((currency) => ({
     title: currency === 'USD' ? 'دولار (USD)' : 'دينار عراقي (IQD)',
     value: currency,
   }));
 });
 
+// defaultCurrency fallback IQD
 const defaultCurrency = computed(() => settingsStore.settings?.defaultCurrency || 'IQD');
+
+// selectedCurrency always fallback to default if not available or selected
 const selectedCurrency = computed(() => {
-  // إذا كانت العملة المحددة غير متاحة، استخدم العملة الافتراضية
-  const available = settingsStore.availableCurrencies || ['IQD'];
+  let available = settingsStore.availableCurrencies;
+  if (!Array.isArray(available) || available.length === 0) {
+    available = ['IQD', 'USD'];
+  }
   if (filters.value.currency && available.includes(filters.value.currency)) {
     return filters.value.currency;
   }
@@ -308,25 +332,27 @@ const selectedCurrency = computed(() => {
 
 const toYmd = (date) => {
   if (!date) return '';
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return date;
+  }
   const d = new Date(date);
+  if (isNaN(d)) return '';
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 
-// 🔹 Formatting helpers
+// Fix: always format a number, even if input is null/undefined
 const formatUSD = (amount) =>
-  `$${parseFloat(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+  `$${parseFloat(amount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 const formatIQD = (amount) =>
-  `${parseFloat(amount || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} IQD`;
+  `${parseFloat(amount ?? 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} IQD`;
 
-// بيانات التقرير حسب العملة المختارة
 const reportByCurrency = computed(() => {
   const cur = selectedCurrency.value;
   const r = report.value || {};
   const isUSD = cur === 'USD';
-
   return {
     currency: cur,
     sales: isUSD ? r.salesUSD : r.salesIQD,
@@ -342,42 +368,45 @@ const reportByCurrency = computed(() => {
   };
 });
 
+// Makes sure toYmd always returns a string for the field
 const formattedStartDate = computed({
   get: () => toYmd(filters.value.startDate),
   set: (val) => {
-    filters.value.startDate = val ? new Date(val) : null;
+    // Accept yyyy-mm-dd or Date
+    filters.value.startDate = val ? val : null;
   },
 });
-
 const formattedEndDate = computed({
   get: () => toYmd(filters.value.endDate),
   set: (val) => {
-    filters.value.endDate = val ? new Date(val) : null;
+    filters.value.endDate = val ? val : null;
   },
 });
 
-// 🔹 Fetch report
 const fetchReport = async () => {
   loading.value = true;
 
   try {
+    // Pass string dates for API compatibility
     report.value = await saleStore.getSalesReport({
       startDate: toYmd(filters.value.startDate),
       endDate: toYmd(filters.value.endDate),
       currency: filters.value.currency || defaultCurrency.value,
     });
-  } catch {
+  } catch (e) {
     notificationStore.error('حدث خطأ أثناء تحميل التقرير');
   } finally {
     loading.value = false;
   }
 };
 
-// 🔹 Export to PDF (تصميم احترافي للطباعة)
 const exportToPDF = () => {
   if (!report.value) return;
 
   const win = window.open('', '', 'height=800,width=1000');
+  // Format date fields for the PDF
+  const startDateStr = formattedStartDate.value || '---';
+  const endDateStr = formattedEndDate.value || '---';
 
   win.document.write(`
     <html dir="rtl">
@@ -388,37 +417,18 @@ const exportToPDF = () => {
             font-family: "Cairo", Arial, sans-serif;
             padding: 30px;
             direction: rtl;
-            background: #f9fafb;
             color: #333;
           }
-
-          h1 {
-            text-align: center;
-            color: white;
-            margin-bottom: 10px;
-          }
-
-          .subtitle {
-            text-align: center;
-            color: #555;
-            font-size: 14px;
-            margin-bottom: 30px;
-          }
-
+          h1 { text-align: center; color: #333; margin-bottom: 10px; }
+          .subtitle { text-align: center; color: #555; font-size: 14px; margin-bottom: 30px; }
           .info-box {
             display: flex;
             justify-content: space-between;
             margin-bottom: 20px;
-            background: #e3f2fd;
             border-radius: 8px;
             padding: 12px 20px;
           }
-
-          .info-box div {
-            font-size: 14px;
-            color: #333;
-          }
-
+          .info-box div { font-size: 14px; color: #333; }
           table {
             width: 100%;
             border-collapse: collapse;
@@ -426,119 +436,90 @@ const exportToPDF = () => {
             border-radius: 8px;
             overflow: hidden;
           }
-
           th {
-            background-color: #1976d2;
+            background: #1976d2;
             color: #fff;
             padding: 12px;
             font-size: 15px;
           }
-
           td {
             border: 1px solid #ccc;
             padding: 10px;
             text-align: center;
-            background: #fff;
           }
-
-          tr:nth-child(even) td {
-            background: #f2f6fc;
-          }
-
-          tr:hover td {
-            background: #e1f5fe;
-          }
-
           .footer {
             margin-top: 40px;
             text-align: center;
             font-size: 12px;
             color: #888;
           }
-
           .currency-label {
             font-weight: bold;
             color: #1976d2;
           }
         </style>
       </head>
-
       <body>
         <h1>📊 تقرير المبيعات</h1>
         <div class="subtitle">نظرة شاملة على الأداء المالي للفترة المحددة</div>
-
         <div class="info-box">
-          <div><strong>من:</strong> ${filters.value.startDate || '---'}</div>
-          <div><strong>إلى:</strong> ${filters.value.endDate || '---'}</div>
+          <div><strong>من:</strong> ${startDateStr}</div>
+          <div><strong>إلى:</strong> ${endDateStr}</div>
         </div>
-
         <table>
           <tr>
             <th>المقياس</th>
             <th><span class="currency-label">${reportByCurrency.value.currencyLabel}</span></th>
           </tr>
-
           <tr>
             <td>إجمالي المبيعات</td>
-            <td>${reportByCurrency.value.format(reportByCurrency.value.sales || 0)}</td>
+            <td>${reportByCurrency.value.format(reportByCurrency.value.sales ?? 0)}</td>
           </tr>
-
           <tr>
             <td>المدفوع</td>
-            <td>${reportByCurrency.value.format(reportByCurrency.value.paid || 0)}</td>
+            <td>${reportByCurrency.value.format(reportByCurrency.value.paid ?? 0)}</td>
           </tr>
-
           <tr>
             <td>إجمالي الخصومات</td>
-            <td>${reportByCurrency.value.format(reportByCurrency.value.discount || 0)}</td>
+            <td>${reportByCurrency.value.format(reportByCurrency.value.discount ?? 0)}</td>
           </tr>
-
           <tr>
             <td>إجمالي الفائدة</td>
-            <td>${reportByCurrency.value.format(reportByCurrency.value.interest || 0)}</td>
+            <td>${reportByCurrency.value.format(reportByCurrency.value.interest ?? 0)}</td>
           </tr>
-
           <tr>
             <td>متوسط البيع</td>
-            <td>${reportByCurrency.value.format(reportByCurrency.value.avgSale || 0)}</td>
+            <td>${reportByCurrency.value.format(reportByCurrency.value.avgSale ?? 0)}</td>
           </tr>
-
           <tr>
             <td>إجمالي الربح</td>
-            <td>${reportByCurrency.value.format(reportByCurrency.value.profit || 0)}</td>
+            <td>${reportByCurrency.value.format(reportByCurrency.value.profit ?? 0)}</td>
           </tr>
-
           <tr>
             <td>متوسط الربح</td>
-            <td>${reportByCurrency.value.format(reportByCurrency.value.avgProfit || 0)}</td>
+            <td>${reportByCurrency.value.format(reportByCurrency.value.avgProfit ?? 0)}</td>
           </tr>
-
           <tr>
             <td>هامش الربح %</td>
-            <td>${reportByCurrency.value.profitMargin || 0}%</td>
+            <td>${reportByCurrency.value.profitMargin ?? 0}%</td>
           </tr>
-
           <tr>
             <td>عدد الفواتير</td>
-            <td colspan="2">${report.value.count || 0}</td>
+            <td>${report.value.count ?? 0}</td>
           </tr>
-
           <tr>
             <td>مبيعات مكتملة</td>
-            <td colspan="2">${report.value.completedSales || 0}</td>
+            <td>${report.value.completedSales ?? 0}</td>
           </tr>
-
           <tr>
             <td>مبيعات معلقة</td>
-            <td colspan="2">${report.value.pendingSales || 0}</td>
+            <td>${report.value.pendingSales ?? 0}</td>
           </tr>
-
           <tr>
             <td>أقساط متأخرة</td>
-            <td colspan="2">${report.value.overdueInstallments || 0}</td>
+            <td>${report.value.overdueInstallments ?? 0}</td>
           </tr>
         </table>
-
         <div class="footer">
           <p>تم إنشاء هذا التقرير تلقائيًا بتاريخ ${new Date().toLocaleDateString('ar', {
             year: 'numeric',
@@ -563,13 +544,12 @@ onMounted(() => {
   const load = async () => {
     try {
       await settingsStore.fetchCurrencySettings();
-    } catch {
-      // Error handled silently
-    }
+    } catch {}
 
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - 30);
+    // set start & end as yyyy-mm-dd, as expected by our UI and API
     filters.value.startDate = start.toISOString().split('T')[0];
     filters.value.endDate = end.toISOString().split('T')[0];
     filters.value.currency = defaultCurrency.value;

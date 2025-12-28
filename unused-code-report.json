@@ -1,0 +1,1591 @@
+{
+  "unusedComponents": [
+    {
+      "file": "frontend\\src\\components\\AdvancedFilters.vue",
+      "name": "AdvancedFilters"
+    },
+    {
+      "file": "frontend\\src\\components\\Breadcrumbs.vue",
+      "name": "Breadcrumbs"
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\DailyTargetCard.vue",
+      "name": "DailyTargetCard"
+    },
+    {
+      "file": "frontend\\src\\components\\LoadingButton.vue",
+      "name": "LoadingButton"
+    }
+  ],
+  "unusedComposables": [
+    {
+      "file": "frontend\\src\\composables\\useAutoSave.js",
+      "name": "useAutoSave"
+    },
+    {
+      "file": "frontend\\src\\composables\\useDesignSystem.js",
+      "name": "useDesignSystem"
+    },
+    {
+      "file": "frontend\\src\\composables\\useTableColumns.js",
+      "name": "useTableColumns"
+    }
+  ],
+  "unusedVariables": [
+    {
+      "file": "backend\\src\\db.js",
+      "variable": "getDb",
+      "line": 116
+    },
+    {
+      "file": "backend\\src\\db.js",
+      "variable": "getSqlite",
+      "line": 123
+    },
+    {
+      "file": "backend\\src\\db.js",
+      "variable": "saveDatabase",
+      "line": 132
+    },
+    {
+      "file": "backend\\src\\dummySeed.js",
+      "variable": "randomFloat",
+      "line": 17
+    },
+    {
+      "file": "backend\\src\\dummySeed.js",
+      "variable": "randomDate",
+      "line": 24
+    },
+    {
+      "file": "backend\\src\\models\\schema.js",
+      "variable": "saleItems",
+      "line": 92
+    },
+    {
+      "file": "backend\\src\\models\\schema.js",
+      "variable": "currencySettings",
+      "line": 141
+    },
+    {
+      "file": "backend\\src\\services\\saleService.js",
+      "variable": "db",
+      "line": 1271
+    },
+    {
+      "file": "backend\\src\\utils\\validation.js",
+      "variable": "userSchema",
+      "line": 9
+    },
+    {
+      "file": "backend\\src\\utils\\validation.js",
+      "variable": "loginSchema",
+      "line": 26
+    },
+    {
+      "file": "backend\\src\\utils\\validation.js",
+      "variable": "customerSchema",
+      "line": 33
+    },
+    {
+      "file": "backend\\src\\utils\\validation.js",
+      "variable": "productSchema",
+      "line": 42
+    },
+    {
+      "file": "backend\\src\\utils\\validation.js",
+      "variable": "categorySchema",
+      "line": 60
+    },
+    {
+      "file": "backend\\src\\utils\\validation.js",
+      "variable": "saleSchema",
+      "line": 73
+    },
+    {
+      "file": "backend\\src\\utils\\validation.js",
+      "variable": "paymentSchema",
+      "line": 109
+    },
+    {
+      "file": "backend\\src\\utils\\validation.js",
+      "variable": "installmentSchema",
+      "line": 120
+    },
+    {
+      "file": "backend\\src\\utils\\validation.js",
+      "variable": "paginationSchema",
+      "line": 131
+    },
+    {
+      "file": "backend\\src\\utils\\validation.js",
+      "variable": "settingsSchema",
+      "line": 139
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 913
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 965
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 969
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 2172
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 3490
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 3565
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "vu",
+      "line": 7746
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "Su",
+      "line": 7801
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "un",
+      "line": 7809
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "jo",
+      "line": 7829
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 8334
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 9000
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 9435
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 9882
+    },
+    {
+      "file": "frontend\\dist-electron\\main\\main.js",
+      "variable": "$e",
+      "line": 10191
+    },
+    {
+      "file": "frontend\\electron\\scripts\\logger.js",
+      "variable": "color",
+      "line": 77
+    },
+    {
+      "file": "frontend\\electron\\scripts\\receiptBuilder.js",
+      "variable": "generateReceiptHtml",
+      "line": 851
+    },
+    {
+      "file": "frontend\\src\\blueprints\\fluentBlueprint.js",
+      "variable": "fluentBlueprint",
+      "line": 5
+    },
+    {
+      "file": "frontend\\src\\components\\AdvancedFilters.vue",
+      "variable": "activeFiltersCount",
+      "line": 93
+    },
+    {
+      "file": "frontend\\src\\components\\AdvancedFilters.vue",
+      "variable": "handleFilterChange",
+      "line": 98
+    },
+    {
+      "file": "frontend\\src\\components\\AdvancedFilters.vue",
+      "variable": "resetFilters",
+      "line": 103
+    },
+    {
+      "file": "frontend\\src\\components\\AdvancedFilters.vue",
+      "variable": "saveFilters",
+      "line": 113
+    },
+    {
+      "file": "frontend\\src\\components\\AlertsPanel.vue",
+      "variable": "alertStore",
+      "line": 137
+    },
+    {
+      "file": "frontend\\src\\components\\AlertsPanel.vue",
+      "variable": "formatCurrency",
+      "line": 139
+    },
+    {
+      "file": "frontend\\src\\components\\AlertsPanel.vue",
+      "variable": "formatDate",
+      "line": 147
+    },
+    {
+      "file": "frontend\\src\\components\\AppErrorDialog.vue",
+      "variable": "store",
+      "line": 52
+    },
+    {
+      "file": "frontend\\src\\components\\AppSnackbar.vue",
+      "variable": "snackbarColor",
+      "line": 38
+    },
+    {
+      "file": "frontend\\src\\components\\AppSnackbar.vue",
+      "variable": "snackbarIcon",
+      "line": 48
+    },
+    {
+      "file": "frontend\\src\\components\\AppSnackbar.vue",
+      "variable": "handleAction",
+      "line": 58
+    },
+    {
+      "file": "frontend\\src\\components\\AppSnackbar.vue",
+      "variable": "onClose",
+      "line": 65
+    },
+    {
+      "file": "frontend\\src\\components\\Breadcrumbs.vue",
+      "variable": "crumbs",
+      "line": 55
+    },
+    {
+      "file": "frontend\\src\\components\\ConfirmDialog.vue",
+      "variable": "titleId",
+      "line": 142
+    },
+    {
+      "file": "frontend\\src\\components\\ConfirmDialog.vue",
+      "variable": "messageId",
+      "line": 143
+    },
+    {
+      "file": "frontend\\src\\components\\ConfirmDialog.vue",
+      "variable": "typeIcon",
+      "line": 145
+    },
+    {
+      "file": "frontend\\src\\components\\ConfirmDialog.vue",
+      "variable": "confirmLabel",
+      "line": 163
+    },
+    {
+      "file": "frontend\\src\\components\\ConfirmDialog.vue",
+      "variable": "cancelLabel",
+      "line": 164
+    },
+    {
+      "file": "frontend\\src\\components\\ConfirmDialog.vue",
+      "variable": "handleConfirm",
+      "line": 166
+    },
+    {
+      "file": "frontend\\src\\components\\ConfirmDialog.vue",
+      "variable": "handleCancel",
+      "line": 172
+    },
+    {
+      "file": "frontend\\src\\components\\ConfirmDialog.vue",
+      "variable": "onUpdate",
+      "line": 177
+    },
+    {
+      "file": "frontend\\src\\components\\CreateFirstUser.vue",
+      "variable": "userFormValid",
+      "line": 198
+    },
+    {
+      "file": "frontend\\src\\components\\CreateFirstUser.vue",
+      "variable": "companyFormValid",
+      "line": 199
+    },
+    {
+      "file": "frontend\\src\\components\\CreateFirstUser.vue",
+      "variable": "showPassword",
+      "line": 204
+    },
+    {
+      "file": "frontend\\src\\components\\CreateFirstUser.vue",
+      "variable": "rules",
+      "line": 264
+    },
+    {
+      "file": "frontend\\src\\components\\CreateFirstUser.vue",
+      "variable": "handleCreateUser",
+      "line": 275
+    },
+    {
+      "file": "frontend\\src\\components\\CreateFirstUser.vue",
+      "variable": "handleSaveCompany",
+      "line": 300
+    },
+    {
+      "file": "frontend\\src\\components\\CustomerSelector.vue",
+      "variable": "rules",
+      "line": 116
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\DailyTargetCard.vue",
+      "variable": "todayDate",
+      "line": 77
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\DailyTargetCard.vue",
+      "variable": "todayTotal",
+      "line": 93
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\DailyTargetCard.vue",
+      "variable": "todayCount",
+      "line": 102
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\DailyTargetCard.vue",
+      "variable": "formatCurrency",
+      "line": 104
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\RevenueChart.vue",
+      "variable": "chartSeries",
+      "line": 105
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\RevenueChart.vue",
+      "variable": "chartOptions",
+      "line": 110
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\SalesStatusChart.vue",
+      "variable": "chartSeries",
+      "line": 64
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\SalesStatusChart.vue",
+      "variable": "chartOptions",
+      "line": 66
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\TopProductsChart.vue",
+      "variable": "chartSeries",
+      "line": 174
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\TopProductsChart.vue",
+      "variable": "chartOptions",
+      "line": 181
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\TopProductsChart.vue",
+      "variable": "getRankColor",
+      "line": 281
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\TopProductsChart.vue",
+      "variable": "getProgressPercentage",
+      "line": 292
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\TopProductsChart.vue",
+      "variable": "formatNumber",
+      "line": 297
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\TopProductsChart.vue",
+      "variable": "convertRevenue",
+      "line": 304
+    },
+    {
+      "file": "frontend\\src\\components\\dashboard\\TopProductsChart.vue",
+      "variable": "formatCurrency",
+      "line": 309
+    },
+    {
+      "file": "frontend\\src\\components\\FormFieldHelp.vue",
+      "variable": "helpId",
+      "line": 41
+    },
+    {
+      "file": "frontend\\src\\components\\LoadingButton.vue",
+      "variable": "handleClick",
+      "line": 92
+    },
+    {
+      "file": "frontend\\src\\components\\LoadingProgressBar.vue",
+      "variable": "progressStyle",
+      "line": 71
+    },
+    {
+      "file": "frontend\\src\\components\\LoadingProgressBar.vue",
+      "variable": "getTransitionDuration",
+      "line": 84
+    },
+    {
+      "file": "frontend\\src\\components\\LoadingSpinner.vue",
+      "variable": "loadingStore",
+      "line": 76
+    },
+    {
+      "file": "frontend\\src\\components\\LoadingSpinner.vue",
+      "variable": "spinnerSize",
+      "line": 79
+    },
+    {
+      "file": "frontend\\src\\components\\PaginationControls.vue",
+      "variable": "handlePageChange",
+      "line": 48
+    },
+    {
+      "file": "frontend\\src\\components\\PaginationControls.vue",
+      "variable": "handleItemsPerPageChange",
+      "line": 52
+    },
+    {
+      "file": "frontend\\src\\components\\QuickSearch.vue",
+      "variable": "hasResults",
+      "line": 157
+    },
+    {
+      "file": "frontend\\src\\components\\QuickSearch.vue",
+      "variable": "handleSearch",
+      "line": 166
+    },
+    {
+      "file": "frontend\\src\\components\\QuickSearch.vue",
+      "variable": "navigateResults",
+      "line": 171
+    },
+    {
+      "file": "frontend\\src\\components\\QuickSearch.vue",
+      "variable": "selectCurrent",
+      "line": 192
+    },
+    {
+      "file": "frontend\\src\\components\\QuickSearch.vue",
+      "variable": "onDialogUpdate",
+      "line": 218
+    },
+    {
+      "file": "frontend\\src\\components\\SelectPrinter.vue",
+      "variable": "confirmSelection",
+      "line": 57
+    },
+    {
+      "file": "frontend\\src\\components\\SelectPrinter.vue",
+      "variable": "refreshPrinters",
+      "line": 69
+    },
+    {
+      "file": "frontend\\src\\components\\settings\\CompanyInfoForm.vue",
+      "variable": "formRef",
+      "line": 161
+    },
+    {
+      "file": "frontend\\src\\components\\settings\\CompanyInfoForm.vue",
+      "variable": "rules",
+      "line": 194
+    },
+    {
+      "file": "frontend\\src\\components\\settings\\CurrencySettings.vue",
+      "variable": "formRef",
+      "line": 135
+    },
+    {
+      "file": "frontend\\src\\components\\settings\\CurrencySettings.vue",
+      "variable": "currencies",
+      "line": 139
+    },
+    {
+      "file": "frontend\\src\\components\\settings\\CurrencySettings.vue",
+      "variable": "rules",
+      "line": 164
+    },
+    {
+      "file": "frontend\\src\\components\\UpdateNotification.vue",
+      "variable": "startDownload",
+      "line": 101
+    },
+    {
+      "file": "frontend\\src\\components\\UpdateNotification.vue",
+      "variable": "installUpdate",
+      "line": 106
+    },
+    {
+      "file": "frontend\\src\\components\\UpdateNotification.vue",
+      "variable": "formatBytes",
+      "line": 110
+    },
+    {
+      "file": "frontend\\src\\components\\UpdateNotification.vue",
+      "variable": "parsedChangelog",
+      "line": 139
+    },
+    {
+      "file": "frontend\\src\\components\\UpdateNotification.vue",
+      "variable": "closeDialog",
+      "line": 141
+    },
+    {
+      "file": "frontend\\src\\design-system\\index.js",
+      "variable": "getColorWithOpacity",
+      "line": 318
+    },
+    {
+      "file": "frontend\\src\\design-system\\index.js",
+      "variable": "generateThemeVariables",
+      "line": 331
+    },
+    {
+      "file": "frontend\\src\\design-system\\index.js",
+      "variable": "getBreakpoint",
+      "line": 357
+    },
+    {
+      "file": "frontend\\src\\design-system\\index.js",
+      "variable": "getGridColumn",
+      "line": 364
+    },
+    {
+      "file": "frontend\\src\\layouts\\MainLayout.vue",
+      "variable": "drawer",
+      "line": 227
+    },
+    {
+      "file": "frontend\\src\\layouts\\MainLayout.vue",
+      "variable": "navigationDrawerSubItemsOpen",
+      "line": 230
+    },
+    {
+      "file": "frontend\\src\\layouts\\MainLayout.vue",
+      "variable": "openQuickSearch",
+      "line": 233
+    },
+    {
+      "file": "frontend\\src\\layouts\\MainLayout.vue",
+      "variable": "filteredMenu",
+      "line": 283
+    },
+    {
+      "file": "frontend\\src\\layouts\\MainLayout.vue",
+      "variable": "currentPageTitle",
+      "line": 326
+    },
+    {
+      "file": "frontend\\src\\layouts\\MainLayout.vue",
+      "variable": "toggleTheme",
+      "line": 340
+    },
+    {
+      "file": "frontend\\src\\layouts\\MainLayout.vue",
+      "variable": "handleLogout",
+      "line": 347
+    },
+    {
+      "file": "frontend\\src\\plugins\\fontLoader.js",
+      "variable": "useFontLoading",
+      "line": 157
+    },
+    {
+      "file": "frontend\\src\\stores\\alert.js",
+      "variable": "useAlertStore",
+      "line": 5
+    },
+    {
+      "file": "frontend\\src\\stores\\auth.js",
+      "variable": "useAuthStore",
+      "line": 6
+    },
+    {
+      "file": "frontend\\src\\stores\\category.js",
+      "variable": "useCategoryStore",
+      "line": 5
+    },
+    {
+      "file": "frontend\\src\\stores\\currency.js",
+      "variable": "useCurrencyStore",
+      "line": 5
+    },
+    {
+      "file": "frontend\\src\\stores\\customer.js",
+      "variable": "useCustomerStore",
+      "line": 5
+    },
+    {
+      "file": "frontend\\src\\stores\\errorDialog.js",
+      "variable": "useErrorDialogStore",
+      "line": 3
+    },
+    {
+      "file": "frontend\\src\\stores\\loading.js",
+      "variable": "useLoadingStore",
+      "line": 4
+    },
+    {
+      "file": "frontend\\src\\stores\\notification.js",
+      "variable": "useNotificationStore",
+      "line": 3
+    },
+    {
+      "file": "frontend\\src\\stores\\permissions.js",
+      "variable": "usePermissionsStore",
+      "line": 5
+    },
+    {
+      "file": "frontend\\src\\stores\\product.js",
+      "variable": "useProductStore",
+      "line": 5
+    },
+    {
+      "file": "frontend\\src\\stores\\roles.js",
+      "variable": "useRolesStore",
+      "line": 5
+    },
+    {
+      "file": "frontend\\src\\stores\\sale.js",
+      "variable": "useSaleStore",
+      "line": 5
+    },
+    {
+      "file": "frontend\\src\\stores\\settings.js",
+      "variable": "useSettingsStore",
+      "line": 6
+    },
+    {
+      "file": "frontend\\src\\stores\\users.js",
+      "variable": "useUsersStore",
+      "line": 5
+    },
+    {
+      "file": "frontend\\src\\utils\\helpers.js",
+      "variable": "toYmdWithTime",
+      "line": 10
+    },
+    {
+      "file": "frontend\\src\\utils\\helpers.js",
+      "variable": "formatCurrency",
+      "line": 20
+    },
+    {
+      "file": "frontend\\src\\utils\\helpers.js",
+      "variable": "formatCurrencyShort",
+      "line": 28
+    },
+    {
+      "file": "frontend\\src\\utils\\helpers.js",
+      "variable": "formatDateShort",
+      "line": 40
+    },
+    {
+      "file": "frontend\\src\\utils\\helpers.js",
+      "variable": "getStatusColor",
+      "line": 51
+    },
+    {
+      "file": "frontend\\src\\utils\\helpers.js",
+      "variable": "getStatusText",
+      "line": 60
+    },
+    {
+      "file": "frontend\\src\\utils\\helpers.js",
+      "variable": "getPaymentTypeText",
+      "line": 69
+    },
+    {
+      "file": "frontend\\src\\utils\\helpers.js",
+      "variable": "getPaymentMethodText",
+      "line": 78
+    },
+    {
+      "file": "frontend\\src\\utils\\helpers.js",
+      "variable": "getInstallmentStatusLabel",
+      "line": 87
+    },
+    {
+      "file": "frontend\\src\\utils\\helpers.js",
+      "variable": "buildHtmlInvoice",
+      "line": 90
+    },
+    {
+      "file": "frontend\\src\\utils\\receiptFormatter.js",
+      "variable": "formatReceiptData",
+      "line": 168
+    },
+    {
+      "file": "frontend\\src\\utils\\receiptFormatter.js",
+      "variable": "generateReceiptHtml",
+      "line": 261
+    },
+    {
+      "file": "frontend\\src\\views\\About.vue",
+      "variable": "checkForUpdatesManually",
+      "line": 229
+    },
+    {
+      "file": "frontend\\src\\views\\auth\\Login.vue",
+      "variable": "showPassword",
+      "line": 137
+    },
+    {
+      "file": "frontend\\src\\views\\auth\\Login.vue",
+      "variable": "rules",
+      "line": 141
+    },
+    {
+      "file": "frontend\\src\\views\\auth\\Login.vue",
+      "variable": "handleLogin",
+      "line": 143
+    },
+    {
+      "file": "frontend\\src\\views\\auth\\Login.vue",
+      "variable": "svgRef",
+      "line": 172
+    },
+    {
+      "file": "frontend\\src\\views\\auth\\Login.vue",
+      "variable": "ids",
+      "line": 175
+    },
+    {
+      "file": "frontend\\src\\views\\auth\\Login.vue",
+      "variable": "bgStops",
+      "line": 180
+    },
+    {
+      "file": "frontend\\src\\views\\categories\\Categories.vue",
+      "variable": "headers",
+      "line": 105
+    },
+    {
+      "file": "frontend\\src\\views\\categories\\Categories.vue",
+      "variable": "rules",
+      "line": 113
+    },
+    {
+      "file": "frontend\\src\\views\\categories\\Categories.vue",
+      "variable": "openDialog",
+      "line": 117
+    },
+    {
+      "file": "frontend\\src\\views\\categories\\Categories.vue",
+      "variable": "handleSubmit",
+      "line": 128
+    },
+    {
+      "file": "frontend\\src\\views\\categories\\Categories.vue",
+      "variable": "confirmDelete",
+      "line": 147
+    },
+    {
+      "file": "frontend\\src\\views\\categories\\Categories.vue",
+      "variable": "handleDelete",
+      "line": 152
+    },
+    {
+      "file": "frontend\\src\\views\\categories\\Categories.vue",
+      "variable": "changePage",
+      "line": 161
+    },
+    {
+      "file": "frontend\\src\\views\\categories\\Categories.vue",
+      "variable": "changeItemsPerPage",
+      "line": 172
+    },
+    {
+      "file": "frontend\\src\\views\\customers\\CustomerForm.vue",
+      "variable": "rules",
+      "line": 72
+    },
+    {
+      "file": "frontend\\src\\views\\customers\\CustomerForm.vue",
+      "variable": "handleSubmit",
+      "line": 76
+    },
+    {
+      "file": "frontend\\src\\views\\customers\\Customers.vue",
+      "variable": "handleSearch",
+      "line": 159
+    },
+    {
+      "file": "frontend\\src\\views\\customers\\Customers.vue",
+      "variable": "changePage",
+      "line": 168
+    },
+    {
+      "file": "frontend\\src\\views\\customers\\Customers.vue",
+      "variable": "changeItemsPerPage",
+      "line": 178
+    },
+    {
+      "file": "frontend\\src\\views\\customers\\Customers.vue",
+      "variable": "confirmDelete",
+      "line": 189
+    },
+    {
+      "file": "frontend\\src\\views\\customers\\Customers.vue",
+      "variable": "handleExport",
+      "line": 198
+    },
+    {
+      "file": "frontend\\src\\views\\customers\\Customers.vue",
+      "variable": "handleDelete",
+      "line": 211
+    },
+    {
+      "file": "frontend\\src\\views\\Dashboard.vue",
+      "variable": "filteredQuickActions",
+      "line": 254
+    },
+    {
+      "file": "frontend\\src\\views\\Dashboard.vue",
+      "variable": "formatCurrency",
+      "line": 259
+    },
+    {
+      "file": "frontend\\src\\views\\Dashboard.vue",
+      "variable": "formatDate",
+      "line": 272
+    },
+    {
+      "file": "frontend\\src\\views\\Dashboard.vue",
+      "variable": "getStatusColor",
+      "line": 283
+    },
+    {
+      "file": "frontend\\src\\views\\Dashboard.vue",
+      "variable": "getStatusText",
+      "line": 292
+    },
+    {
+      "file": "frontend\\src\\views\\Dashboard.vue",
+      "variable": "formatTodayRevenue",
+      "line": 329
+    },
+    {
+      "file": "frontend\\src\\views\\errors\\Forbidden.vue",
+      "variable": "goBack",
+      "line": 38
+    },
+    {
+      "file": "frontend\\src\\views\\errors\\Forbidden.vue",
+      "variable": "goHome",
+      "line": 39
+    },
+    {
+      "file": "frontend\\src\\views\\Notifications.vue",
+      "variable": "hasUnreadAlerts",
+      "line": 213
+    },
+    {
+      "file": "frontend\\src\\views\\Notifications.vue",
+      "variable": "markAllAsRead",
+      "line": 248
+    },
+    {
+      "file": "frontend\\src\\views\\Notifications.vue",
+      "variable": "refreshAlerts",
+      "line": 267
+    },
+    {
+      "file": "frontend\\src\\views\\Notifications.vue",
+      "variable": "formatCurrency",
+      "line": 272
+    },
+    {
+      "file": "frontend\\src\\views\\Notifications.vue",
+      "variable": "formatDate",
+      "line": 280
+    },
+    {
+      "file": "frontend\\src\\views\\permissions\\Permissions.vue",
+      "variable": "formRef",
+      "line": 149
+    },
+    {
+      "file": "frontend\\src\\views\\permissions\\Permissions.vue",
+      "variable": "headers",
+      "line": 189
+    },
+    {
+      "file": "frontend\\src\\views\\permissions\\Permissions.vue",
+      "variable": "permissionsList",
+      "line": 206
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "statusOptions",
+      "line": 281
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "isAdmin",
+      "line": 288
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "rules",
+      "line": 293
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "regenerateSKU",
+      "line": 357
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "handleSubmit",
+      "line": 363
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "handleBarcodeScan",
+      "line": 382
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "customCategoryFilter",
+      "line": 388
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "isSearchValueInList",
+      "line": 400
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "handleCategorySelect",
+      "line": 407
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "handleCategoryKeydown",
+      "line": 425
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "verifyAdmin",
+      "line": 494
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "closeAdminDialog",
+      "line": 525
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "formatNumber",
+      "line": 616
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "handleCostPriceInput",
+      "line": 638
+    },
+    {
+      "file": "frontend\\src\\views\\products\\ProductForm.vue",
+      "variable": "handleSellingPriceInput",
+      "line": 643
+    },
+    {
+      "file": "frontend\\src\\views\\products\\Products.vue",
+      "variable": "canDeleteProducts",
+      "line": 178
+    },
+    {
+      "file": "frontend\\src\\views\\products\\Products.vue",
+      "variable": "getStatusColor",
+      "line": 200
+    },
+    {
+      "file": "frontend\\src\\views\\products\\Products.vue",
+      "variable": "formatNumber",
+      "line": 220
+    },
+    {
+      "file": "frontend\\src\\views\\products\\Products.vue",
+      "variable": "handleSearch",
+      "line": 234
+    },
+    {
+      "file": "frontend\\src\\views\\products\\Products.vue",
+      "variable": "changePage",
+      "line": 244
+    },
+    {
+      "file": "frontend\\src\\views\\products\\Products.vue",
+      "variable": "changeItemsPerPage",
+      "line": 272
+    },
+    {
+      "file": "frontend\\src\\views\\products\\Products.vue",
+      "variable": "confirmDelete",
+      "line": 284
+    },
+    {
+      "file": "frontend\\src\\views\\products\\Products.vue",
+      "variable": "handleExport",
+      "line": 293
+    },
+    {
+      "file": "frontend\\src\\views\\products\\Products.vue",
+      "variable": "handleDelete",
+      "line": 312
+    },
+    {
+      "file": "frontend\\src\\views\\Profile.vue",
+      "variable": "showCurrentPassword",
+      "line": 171
+    },
+    {
+      "file": "frontend\\src\\views\\Profile.vue",
+      "variable": "showNewPassword",
+      "line": 172
+    },
+    {
+      "file": "frontend\\src\\views\\Profile.vue",
+      "variable": "showConfirmPassword",
+      "line": 173
+    },
+    {
+      "file": "frontend\\src\\views\\Profile.vue",
+      "variable": "rules",
+      "line": 181
+    },
+    {
+      "file": "frontend\\src\\views\\Profile.vue",
+      "variable": "userPermissions",
+      "line": 187
+    },
+    {
+      "file": "frontend\\src\\views\\Profile.vue",
+      "variable": "getRoleColor",
+      "line": 191
+    },
+    {
+      "file": "frontend\\src\\views\\Profile.vue",
+      "variable": "formatDate",
+      "line": 201
+    },
+    {
+      "file": "frontend\\src\\views\\Profile.vue",
+      "variable": "getPermissionLabel",
+      "line": 214
+    },
+    {
+      "file": "frontend\\src\\views\\Profile.vue",
+      "variable": "changePassword",
+      "line": 269
+    },
+    {
+      "file": "frontend\\src\\views\\Reports.vue",
+      "variable": "menus",
+      "line": 296
+    },
+    {
+      "file": "frontend\\src\\views\\Reports.vue",
+      "variable": "currencyOptions",
+      "line": 307
+    },
+    {
+      "file": "frontend\\src\\views\\Reports.vue",
+      "variable": "exportToPDF",
+      "line": 403
+    },
+    {
+      "file": "frontend\\src\\views\\roles\\Roles.vue",
+      "variable": "headers",
+      "line": 218
+    },
+    {
+      "file": "frontend\\src\\views\\roles\\Roles.vue",
+      "variable": "filteredGroupedPermissions",
+      "line": 361
+    },
+    {
+      "file": "frontend\\src\\views\\roles\\Roles.vue",
+      "variable": "groupedRolePermissions",
+      "line": 372
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "productSearchQueries",
+      "line": 510
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "rules",
+      "line": 512
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "paymentTypes",
+      "line": 569
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "installmentSchedule",
+      "line": 632
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "actualInterestRate",
+      "line": 684
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "saleSummary",
+      "line": 788
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "removeItem",
+      "line": 808
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "updateProductDetails",
+      "line": 809
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "getQuantityError",
+      "line": 833
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "customProductFilter",
+      "line": 845
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "handleBarcodeScan",
+      "line": 855
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "formatCurrency",
+      "line": 1131
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "formatNumber",
+      "line": 1141
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "handleItemDiscountInput",
+      "line": 1158
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "handleSaleDiscountInput",
+      "line": 1164
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "handlePaidAmountInput",
+      "line": 1170
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "handleInterestRateChange",
+      "line": 1176
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\NewSale.vue",
+      "variable": "handleInterestAmountChange",
+      "line": 1190
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\SaleDetails.vue",
+      "variable": "previewPrint",
+      "line": 449
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\SaleDetails.vue",
+      "variable": "paymentMethods",
+      "line": 496
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\SaleDetails.vue",
+      "variable": "getInstallmentColor",
+      "line": 514
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\SaleDetails.vue",
+      "variable": "getInstallmentStatusLabel",
+      "line": 521
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\SaleDetails.vue",
+      "variable": "getInstallmentRowClass",
+      "line": 528
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\SaleDetails.vue",
+      "variable": "getInstallmentStatusColor",
+      "line": 534
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\SaleDetails.vue",
+      "variable": "getInstallmentStatusText",
+      "line": 546
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\SaleDetails.vue",
+      "variable": "handlePrint",
+      "line": 591
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\SaleDetails.vue",
+      "variable": "formatNumber",
+      "line": 643
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\SaleDetails.vue",
+      "variable": "handlePaymentAmountInput",
+      "line": 660
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\Sales.vue",
+      "variable": "canDelete",
+      "line": 263
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\Sales.vue",
+      "variable": "statusOptions",
+      "line": 273
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\Sales.vue",
+      "variable": "getStatusColor",
+      "line": 310
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\Sales.vue",
+      "variable": "changePage",
+      "line": 339
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\Sales.vue",
+      "variable": "changeItemsPerPage",
+      "line": 349
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\Sales.vue",
+      "variable": "viewSale",
+      "line": 360
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\Sales.vue",
+      "variable": "deleteSale",
+      "line": 370
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\Sales.vue",
+      "variable": "confirmDeleteSale",
+      "line": 378
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\Sales.vue",
+      "variable": "confirmRestoreSale",
+      "line": 411
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\Sales.vue",
+      "variable": "completeDraft",
+      "line": 424
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\Sales.vue",
+      "variable": "handleExport",
+      "line": 429
+    },
+    {
+      "file": "frontend\\src\\views\\sales\\Sales.vue",
+      "variable": "customFilter",
+      "line": 450
+    },
+    {
+      "file": "frontend\\src\\views\\Settings.vue",
+      "variable": "activeTab",
+      "line": 74
+    },
+    {
+      "file": "frontend\\src\\views\\users\\Users.vue",
+      "variable": "headers",
+      "line": 194
+    },
+    {
+      "file": "frontend\\src\\views\\users\\Users.vue",
+      "variable": "statusOptions",
+      "line": 204
+    },
+    {
+      "file": "frontend\\src\\views\\users\\Users.vue",
+      "variable": "formRef",
+      "line": 218
+    },
+    {
+      "file": "frontend\\src\\views\\users\\Users.vue",
+      "variable": "rules",
+      "line": 222
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\db.js",
+      "variable": "getDb",
+      "line": 104
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\db.js",
+      "variable": "saveDatabase",
+      "line": 112
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\EXAMPLES_DEBUG.js",
+      "variable": "exampleController",
+      "line": 22
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\EXAMPLES_DEBUG.js",
+      "variable": "exampleService",
+      "line": 57
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\EXAMPLES_DEBUG.js",
+      "variable": "performanceExampleRoute",
+      "line": 93
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\EXAMPLES_DEBUG.js",
+      "variable": "debugHelperExample",
+      "line": 118
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\EXAMPLES_DEBUG.js",
+      "variable": "logLevelExamples",
+      "line": 146
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\EXAMPLES_DEBUG.js",
+      "variable": "manualQueryLogging",
+      "line": 199
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\EXAMPLES_DEBUG.js",
+      "variable": "contextSpecificLogging",
+      "line": 247
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\EXAMPLES_DEBUG.js",
+      "variable": "performanceComparison",
+      "line": 280
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\models\\schema.js",
+      "variable": "saleItems",
+      "line": 92
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\models\\schema.js",
+      "variable": "currencySettings",
+      "line": 141
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\utils\\validation.js",
+      "variable": "userSchema",
+      "line": 9
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\utils\\validation.js",
+      "variable": "loginSchema",
+      "line": 26
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\utils\\validation.js",
+      "variable": "customerSchema",
+      "line": 33
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\utils\\validation.js",
+      "variable": "productSchema",
+      "line": 42
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\utils\\validation.js",
+      "variable": "categorySchema",
+      "line": 60
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\utils\\validation.js",
+      "variable": "saleSchema",
+      "line": 73
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\utils\\validation.js",
+      "variable": "paymentSchema",
+      "line": 109
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\utils\\validation.js",
+      "variable": "installmentSchema",
+      "line": 120
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\utils\\validation.js",
+      "variable": "paginationSchema",
+      "line": 132
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\backend\\src\\utils\\validation.js",
+      "variable": "settingsSchema",
+      "line": 140
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 436
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 925
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 3436
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 3470
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 3562
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 5617
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\main\\main.js",
+      "variable": "vu",
+      "line": 7750
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\main\\main.js",
+      "variable": "Su",
+      "line": 7805
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\main\\main.js",
+      "variable": "un",
+      "line": 7813
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\main\\main.js",
+      "variable": "Ho",
+      "line": 7833
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 8307
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 8970
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 9441
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\main\\main.js",
+      "variable": "$",
+      "line": 9890
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\scripts\\logger.js",
+      "variable": "color",
+      "line": 77
+    },
+    {
+      "file": "release\\win-unpacked\\resources\\dist-electron\\scripts\\receiptBuilder.js",
+      "variable": "generateReceiptHtml",
+      "line": 851
+    }
+  ],
+  "unusedFiles": [],
+  "componentUsage": {
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\AdvancedFilters.vue": 0,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\AlertsPanel.vue": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\AppErrorDialog.vue": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\AppSnackbar.vue": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\Breadcrumbs.vue": 0,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\ConfirmDialog.vue": 9,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\CreateFirstUser.vue": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\CustomerSelector.vue": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\dashboard\\DailyTargetCard.vue": 0,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\dashboard\\RevenueChart.vue": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\dashboard\\SalesStatusChart.vue": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\dashboard\\TopProductsChart.vue": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\EmptyState.vue": 6,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\FormFieldHelp.vue": 3,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\LoadingButton.vue": 0,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\LoadingProgressBar.vue": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\LoadingSpinner.vue": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\PaginationControls.vue": 8,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\QuickSearch.vue": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\SelectPrinter.vue": 1,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\settings\\BackupManager.vue": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\settings\\CompanyInfoForm.vue": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\settings\\CurrencySettings.vue": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\TableSkeleton.vue": 6,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\components\\UpdateNotification.vue": 2
+  },
+  "composableUsage": {
+    "D:\\dev_projects\\nuqta\\frontend\\src\\composables\\useAutoSave.js": 0,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\composables\\useCurrency.js": 8,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\composables\\useDesignSystem.js": 0,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\composables\\useExport.js": 6,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\composables\\useKeyboardShortcuts.js": 4,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\composables\\useLoading.js": 9,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\composables\\useQuickSearch.js": 2,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\composables\\useTableColumns.js": 0,
+    "D:\\dev_projects\\nuqta\\frontend\\src\\composables\\useUndo.js": 4
+  },
+  "fileUsage": {}
+}

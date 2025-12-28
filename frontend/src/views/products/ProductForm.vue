@@ -40,6 +40,7 @@
                 label="التصنيف"
                 :custom-filter="customCategoryFilter"
                 clearable
+                variant="outlined"
                 autocomplete="off"
                 @keydown="handleCategoryKeydown"
                 @update:model-value="handleCategorySelect"

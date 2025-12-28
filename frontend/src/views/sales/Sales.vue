@@ -37,6 +37,7 @@
           hide-details
           density="comfortable"
           clearable
+          variant="outlined"
           :custom-filter="customFilter"
           @update:model-value="handleFilter"
         >

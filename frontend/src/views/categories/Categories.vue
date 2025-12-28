@@ -52,8 +52,9 @@
               v-model="formData.name"
               label="اسم التصنيف"
               :rules="[rules.required]"
+              variant="outlined"
             ></v-text-field>
-            <v-textarea v-model="formData.description" label="الوصف" rows="2"></v-textarea>
+            <v-textarea v-model="formData.description" variant="outlined" class="mt-4" label="الوصف" rows="2"></v-textarea>
           </v-form>
         </v-card-text>
 
