@@ -76,14 +76,14 @@ export function useKeyboardShortcuts(shortcuts = {}, enabled = true) {
     if (!enabled) return;
 
     // Don't trigger shortcuts when typing in inputs
-    const target = event.target;
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-      // Allow Escape and Ctrl+K even in inputs
-      const key = getKeyFromEvent(event);
-      if (key !== 'escape' && !(event.ctrlKey && key === 'k')) {
-        return;
-      }
-    }
+    // const target = event.target;
+    // if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+    //   // Allow Escape and Ctrl+K even in inputs
+    //   const key = getKeyFromEvent(event);
+    //   if (key !== 'escape' && !(event.ctrlKey && key === 'k')) {
+    //     return;
+    //   }
+    // }
 
     const modifiers = [];
     if (event.ctrlKey || event.metaKey) modifiers.push('ctrl');
