@@ -3,7 +3,7 @@
     <!-- Header -->
     <v-card class="mb-4" elevation="2">
       <v-card-title class="d-flex align-center justify-space-between pa-4">
-        <div class="d-flex align-center ga-3">
+        <div class="d-flex align-center gap-3">
           <v-icon size="28" color="primary">mdi-cart-plus</v-icon>
           <span class="text-h5 font-weight-bold">بطاقة بيع جديدة</span>
         </div>
@@ -27,9 +27,7 @@
               <v-row>
                 <v-col cols="12" md="6">
                   <CustomerSelector v-model="sale.customerId" :required="false" />
-                  <FormFieldHelp
-                    help-text="اختياري - يمكنك إتمام البيع بدون تحديد عميل"
-                  />
+                  <FormFieldHelp help-text="اختياري - يمكنك إتمام البيع بدون تحديد عميل" />
                 </v-col>
                 <v-col cols="12" md="6">
                   <v-select
@@ -454,31 +452,36 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="d-flex flex-column ga-2 mt-4">
-              <v-btn
-                color="primary"
-                size="large"
-                :loading="loading"
-                block
-                prepend-icon="mdi-content-save"
-                aria-label="حفظ البيع (F2)"
-                @click="submitSale"
-              >
-                حفظ البيع
-                <v-chip size="x-small" class="mr-2" variant="flat" color="white">F2</v-chip>
-              </v-btn>
-              <v-btn
-                variant="outlined"
-                size="large"
-                block
-                prepend-icon="mdi-close"
-                aria-label="إلغاء (F3)"
-                @click="handleCancel"
-              >
-                إلغاء
-                <v-chip size="x-small" class="mr-2" variant="outlined">F3</v-chip>
-              </v-btn>
-            </div>
+
+            <v-btn
+              :loading="loading"
+              class="flex items-center justify-between mt-3"
+              block
+              color="primary"
+              aria-label="حفظ البيع (F2)"
+              @click="submitSale"
+            >
+            <template #prepend>
+              <span>حفظ البيع</span>
+            </template>
+            <template #append>
+              <v-hotkey keys="F2" variant="contained" />
+            </template>
+            </v-btn>
+            <v-btn
+              class="flex items-center justify-between mt-3"
+              block
+              color="error"
+              aria-label="إلغاء (F3)"
+              @click="handleCancel"
+            >
+            <template #prepend>
+              <span>إلغاء</span>
+            </template>
+            <template #append>
+              <v-hotkey keys="F3" variant="contained" />
+            </template>
+            </v-btn>
           </v-card-text>
         </v-card>
       </v-col>

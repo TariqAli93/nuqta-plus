@@ -1,148 +1,88 @@
 <template>
   <div class="customer-selector">
-    <!-- Selected Customer Card -->
-    <v-card v-if="selectedCustomer && !showSelector" class="mb-4" elevation="0" variant="outlined">
-      <v-card-text class="pa-2 d-flex justify-space-between align-center">
-        <div class="customer-info">
-          <div class="d-flex align-center mb-2">
-            <v-icon color="primary" class="ml-2">mdi-account</v-icon>
-            <span class="text-h6 font-weight-bold">{{ selectedCustomer.name }}</span>
-          </div>
-          <div v-if="selectedCustomer.phone" class="text-body-2 text-grey-7">
-            <v-icon size="small" class="ml-1">mdi-phone</v-icon>
-            {{ selectedCustomer.phone }}
-          </div>
-          <div v-if="selectedCustomer.city" class="text-body-2 text-grey-7">
-            <v-icon size="small" class="ml-1">mdi-map-marker</v-icon>
-            {{ selectedCustomer.city }}
-          </div>
-        </div>
-        <v-btn size="small" color="primary" variant="outlined" @click="showSelector = true">
-          تغيير العميل
-        </v-btn>
-      </v-card-text>
-    </v-card>
-
-    <!-- Customer Selector & New Customer Form -->
-    <v-card v-if="showSelector || !selectedCustomer" class="pa-0" elevation="0">
-      <v-card-text class="pa-0 px-3">
-        <v-autocomplete
-          v-model="internalValue"
-          v-model:search="searchQuery"
-          :items="displayItems"
-          :loading="searchLoading"
-          item-title="name"
-          item-value="id"
-          label="ابحث عن عميل أو أضف عميل جديد"
-          prepend-inner-icon="mdi-magnify"
-          clearable
-          no-data-text="لا توجد نتائج"
-          variant="outlined"
-          @update:search="onSearchInput"
-          @update:model-value="onItemSelect"
+    <v-autocomplete
+      v-model="selectedId"
+      :items="autocompleteItems"
+      item-title="name"
+      item-value="id"
+      :label="showLabel ? 'العميل' : undefined"
+      :rules="required ? [rules.required] : []"
+      density="comfortable"
+      variant="outlined"
+      clearable
+      :loading="loading"
+      no-data-text="لا توجد نتائج"
+      @update:model-value="handleSelect"
+      @update:search="handleSearch"
+    >
+      <template #item="{ props: itemProps, item }">
+        <v-list-item
+          v-bind="itemProps"
+          :class="{ 'add-new-customer-item': item.raw.isNewCustomer }"
         >
-          <template #item="{ props: itemProps, item }">
-            <v-list-item
-              v-if="item.raw.isNewCustomer"
-              v-bind="itemProps"
-              class="add-new-customer-item"
-            >
-              <template #prepend>
-                <v-icon color="primary">mdi-account-plus</v-icon>
-              </template>
-              <template #title>
-                <div class="font-weight-bold text-primary">
-                  إضافة عميل جديد: "{{ item.raw.searchText }}"
-                </div>
-              </template>
-            </v-list-item>
-            <v-list-item
-              v-else-if="item.raw.isDefault"
-              v-bind="itemProps"
-              class="default-customer-item"
-            >
-              <template #prepend>
-                <v-icon color="grey">mdi-account-outline</v-icon>
-              </template>
-              <template #title>
-                <div class="font-weight-bold">{{ item.raw.name }}</div>
-              </template>
-              <template #subtitle>
-                <div class="text-caption">عميل افتراضي - مبيعات عامة</div>
-              </template>
-            </v-list-item>
-            <v-list-item v-else v-bind="itemProps">
-              <template #prepend>
-                <v-icon>mdi-account</v-icon>
-              </template>
-              <template #title>
-                <div class="font-weight-bold">{{ item.raw.name }}</div>
-              </template>
-              <template #subtitle>
-                <div class="text-caption">
-                  <span v-if="item.raw.phone">{{ item.raw.phone }}</span>
-                  <span v-if="item.raw.city"> • {{ item.raw.city }}</span>
-                </div>
-              </template>
-            </v-list-item>
+          <template #prepend>
+            <v-icon v-if="item.raw.isNewCustomer" color="primary">mdi-plus-circle</v-icon>
+            <v-icon v-else>mdi-account</v-icon>
           </template>
-        </v-autocomplete>
+        </v-list-item>
+      </template>
+    </v-autocomplete>
 
-        <v-expand-transition>
-          <v-form v-if="showNewCustomerForm" ref="newCustomerForm" class="mt-4">
-            <v-card variant="outlined" class="pa-4">
-              <div class="text-subtitle-1 font-weight-bold mb-3">
-                <v-icon class="ml-1">mdi-account-plus</v-icon>
-                تفاصيل العميل الجديد
-              </div>
-              <v-text-field
-                v-model="newCustomerData.name"
-                label="اسم العميل *"
-                :rules="[rules.required]"
-                prepend-inner-icon="mdi-account"
-                required
-              />
-              <v-text-field
-                v-model="newCustomerData.phone"
-                label="رقم الهاتف"
-                prepend-inner-icon="mdi-phone"
-                type="tel"
-              />
-              <v-row>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="newCustomerData.city"
-                    label="المدينة"
-                    prepend-inner-icon="mdi-map-marker"
-                  />
-                </v-col>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    v-model="newCustomerData.address"
-                    label="العنوان"
-                    prepend-inner-icon="mdi-home"
-                  />
-                </v-col>
-              </v-row>
-              <v-textarea
-                v-model="newCustomerData.notes"
-                label="ملاحظات"
-                rows="2"
-                auto-grow
-                prepend-inner-icon="mdi-note-text"
-              />
-              <div class="d-flex justify-space-between mt-2">
-                <v-btn variant="outlined" @click="cancelNewCustomer">إلغاء</v-btn>
-                <v-btn color="primary" :loading="creatingCustomer" @click="createNewCustomer">
-                  <v-icon class="ml-1">mdi-check</v-icon>
-                  حفظ العميل
-                </v-btn>
-              </div>
-            </v-card>
+    <!-- New Customer Dialog -->
+    <v-dialog v-model="showNewCustomerForm" max-width="600" persistent>
+      <v-card>
+        <v-card-title class="d-flex align-center justify-space-between">
+          <span class="text-h6">إضافة عميل جديد</span>
+          <v-btn icon="mdi-close" variant="text" @click="cancelNewCustomer" />
+        </v-card-title>
+        <v-card-text>
+          <v-form ref="newCustomerForm">
+            <v-text-field
+              v-model="newCustomerData.name"
+              label="اسم العميل"
+              :rules="[rules.required]"
+              density="comfortable"
+              variant="outlined"
+              class="mb-3"
+            />
+            <v-text-field
+              v-model="newCustomerData.phone"
+              label="رقم الهاتف"
+              density="comfortable"
+              variant="outlined"
+              class="mb-3"
+            />
+            <v-text-field
+              v-model="newCustomerData.city"
+              label="المدينة"
+              density="comfortable"
+              variant="outlined"
+              class="mb-3"
+            />
+            <v-textarea
+              v-model="newCustomerData.address"
+              label="العنوان"
+              density="comfortable"
+              variant="outlined"
+              rows="2"
+              class="mb-3"
+            />
+            <v-textarea
+              v-model="newCustomerData.notes"
+              label="ملاحظات"
+              density="comfortable"
+              variant="outlined"
+              rows="2"
+            />
           </v-form>
-        </v-expand-transition>
-      </v-card-text>
-    </v-card>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="cancelNewCustomer">إلغاء</v-btn>
+          <v-btn color="primary" :loading="creating" @click="createNewCustomer">إضافة</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -152,8 +92,8 @@ import { useCustomerStore } from '@/stores/customer';
 import { useNotificationStore } from '@/stores/notification';
 
 const props = defineProps({
-  modelValue: [Number, Object],
-  required: Boolean,
+  modelValue: { type: [Number, Object], default: null },
+  required: { type: Boolean, default: false },
   showLabel: { type: Boolean, default: true },
 });
 
@@ -164,163 +104,199 @@ const notification = useNotificationStore();
 // State
 const showSelector = ref(!props.modelValue);
 const searchQuery = ref('');
-const searchResults = ref([]);
-const searchLoading = ref(false);
-const internalValue = ref(props.modelValue);
+const customers = ref([]);
+const loading = ref(false);
+const selectedId = ref(props.modelValue);
 const selectedCustomer = ref(null);
 const showNewCustomerForm = ref(false);
-
 const newCustomerForm = ref(null);
-const creatingCustomer = ref(false);
+const creating = ref(false);
 const newCustomerData = ref({ name: '', phone: '', city: '', address: '', notes: '' });
 
-// Rules
-const rules = { required: v => !!v || 'هذا الحقل مطلوب' };
+const rules = { required: (v) => !!v || 'هذا الحقل مطلوب' };
 
-// Display options for autocomplete
-const displayItems = computed(() => {
-  const items = [...searchResults.value];
-  if (searchQuery.value?.length >= 2) {
-    const exists = items.some(c => c.name.toLowerCase() === searchQuery.value.toLowerCase());
-    if (!exists) {
+// Generate default phone number based on next customer ID
+function generateDefaultPhone() {
+  if (customers.value.length === 0) return '1';
+  const maxId = Math.max(...customers.value.map((c) => c.id || 0));
+  return String(maxId + 1);
+}
+
+// Autocomplete items with "add new" option
+const autocompleteItems = computed(() => {
+  const items = [...customers.value];
+  const query = searchQuery.value?.trim();
+
+  if (query && query.length >= 2) {
+    // البحث عن التكرارات (نفس الاسم بالضبط)
+    const duplicateNames = items.filter((c) => c.name?.toLowerCase() === query.toLowerCase());
+
+    // إذا لم يوجد اسم مطابق أو يوجد تكرار، أظهر خيار إضافة جديد
+    if (duplicateNames.length === 0 || duplicateNames.length > 1) {
+      // إنشاء رقم هاتف افتراضي من customerId (آخر ID + 1 أو timestamp)
+      const defaultPhone = generateDefaultPhone();
+
       items.unshift({
         id: 'new-customer',
-        name: `إضافة: ${searchQuery.value}`,
+        name: `إضافة عميل جديد: "${query}"`,
         isNewCustomer: true,
-        searchText: searchQuery.value,
+        searchText: query,
+        defaultPhone: defaultPhone,
       });
     }
   }
   return items;
 });
 
-// Autocomplete search
-const onSearchInput = async (query) => {
-  if (!query || query.length < 2) {
-    try {
-      const { data } = await customerStore.fetchCustomers({ limit: 50 });
-      searchResults.value = data || [];
-    } catch {}
-    return;
+// Search customers
+async function handleSearch(query) {
+  searchQuery.value = query || '';
+  if (query === null || query === undefined) {
+    query = '';
   }
-  searchLoading.value = true;
+  
+  loading.value = true;
   try {
-    const { data } = await customerStore.fetchCustomers({ search: query, limit: 20 });
-    searchResults.value = data || [];
+    const params = query && query.length >= 2 ? { search: query, limit: 20 } : { limit: 50 };
+    const { data } = await customerStore.fetchCustomers(params);
+    customers.value = data || [];
   } catch {
-    searchResults.value = [];
+    customers.value = [];
   } finally {
-    searchLoading.value = false;
+    loading.value = false;
   }
-};
+}
 
 // Handle selection
-const onItemSelect = (value) => {
-  if (value === 'new-customer') {
-    newCustomerData.value.name = searchQuery.value;
-    showNewCustomerForm.value = true;
-    internalValue.value = null;
-  } else if (value) {
-    const customer = searchResults.value.find(c => c.id === value);
-    if (customer) setSelectedCustomer(customer);
+function handleSelect(value) {
+  if (!value) {
+    selectedId.value = null;
+    emit('update:modelValue', null);
+    return;
   }
-};
 
-function setSelectedCustomer(customer) {
+  if (value === 'new-customer') {
+    const newCustomerItem = autocompleteItems.value.find((item) => item.id === 'new-customer');
+    newCustomerData.value.name = newCustomerItem?.searchText || searchQuery.value;
+    newCustomerData.value.phone = newCustomerItem?.defaultPhone || generateDefaultPhone();
+    showNewCustomerForm.value = true;
+    selectedId.value = null;
+    emit('update:modelValue', null);
+  } else if (value) {
+    const customer = customers.value.find((c) => c.id === value);
+    if (customer) {
+      selectCustomer(customer);
+    }
+  }
+}
+
+// Select customer
+function selectCustomer(customer) {
   selectedCustomer.value = customer;
-  internalValue.value = customer.id;
+  selectedId.value = customer.id;
   showSelector.value = false;
   showNewCustomerForm.value = false;
   emit('update:modelValue', customer.id);
   emit('customer-selected', customer);
-  notification.success(`تم اختيار العميل: ${customer.name}`);
 }
 
-// Add new customer
-const createNewCustomer = async () => {
-  if (!newCustomerForm.value) return notification.error('حدث خطأ في النموذج');
-  const { valid } = await newCustomerForm.value.validate();
-  if (!valid) return;
-  if (!newCustomerData.value.name?.trim()) return notification.error('اسم العميل مطلوب');
-  if (newCustomerData.value.phone?.trim()) {
-    const exists = searchResults.value.some(
-      c => c.phone === newCustomerData.value.phone.trim()
-    );
-    if (exists) return notification.error('رقم الهاتف مستخدم بالفعل من قبل عميل آخر');
+// Create new customer
+async function createNewCustomer() {
+  if (!newCustomerForm.value?.validate) {
+    notification.error('حدث خطأ في النموذج');
+    return;
   }
-  creatingCustomer.value = true;
+
+  const { valid } = await newCustomerForm.value.validate();
+  if (!valid || !newCustomerData.value.name?.trim()) {
+    notification.error('اسم العميل مطلوب');
+    return;
+  }
+
+  // Check phone uniqueness
+  if (newCustomerData.value.phone?.trim()) {
+    const exists = customers.value.some((c) => c.phone === newCustomerData.value.phone.trim());
+    if (exists) {
+      notification.error('رقم الهاتف مستخدم بالفعل من قبل عميل آخر');
+      return;
+    }
+  }
+
+  creating.value = true;
   try {
-    const { data: newCustomer } = await customerStore.createCustomer(newCustomerData.value);
-    if (!newCustomer) throw new Error('Invalid response from server');
-    searchResults.value.unshift(newCustomer);
-    setSelectedCustomer(newCustomer);
+    const response = await customerStore.createCustomer(newCustomerData.value);
+    const newCustomer = response.data;
+    if (!newCustomer) throw new Error('Invalid response');
+
+    customers.value.unshift(newCustomer);
+    selectCustomer(newCustomer);
     resetNewCustomerForm();
     notification.success(`تم إضافة العميل: ${newCustomer.name}`);
   } catch (error) {
-    let msg = 'فشل في إضافة العميل الجديد';
-    const serverMsg = error?.response?.data?.message;
-    if (serverMsg) {
-      if (serverMsg.includes('phone number already exists') || serverMsg.includes('Customer with this phone')) {
-        msg = 'رقم الهاتف مستخدم بالفعل من قبل عميل آخر';
-      } else {
-        msg = serverMsg;
-      }
-    } else if (error?.message) {
-      msg = error.message;
+    const msg = error?.response?.data?.message || error?.message || 'فشل في إضافة العميل الجديد';
+    if (msg.includes('phone') || msg.includes('Phone')) {
+      notification.error('رقم الهاتف مستخدم بالفعل من قبل عميل آخر');
+    } else {
+      notification.error(msg);
     }
-    notification.error(msg);
   } finally {
-    creatingCustomer.value = false;
+    creating.value = false;
   }
-};
+}
 
 function cancelNewCustomer() {
   showNewCustomerForm.value = false;
   resetNewCustomerForm();
-  searchQuery.value = '';
 }
+
 function resetNewCustomerForm() {
-  Object.assign(newCustomerData.value, { name: '', phone: '', city: '', address: '', notes: '' });
+  newCustomerData.value = { name: '', phone: '', city: '', address: '', notes: '' };
   showNewCustomerForm.value = false;
   newCustomerForm.value?.resetValidation?.();
   searchQuery.value = '';
 }
 
-// Watch for changes
+// Load customer by ID
+async function loadCustomer(id) {
+  try {
+    const response = await customerStore.fetchCustomer(id);
+    selectedCustomer.value = response.data;
+    showSelector.value = false;
+  } catch {
+    selectedCustomer.value = null;
+  }
+}
+
+// Watch modelValue changes
 watch(
   () => props.modelValue,
   (newVal) => {
-    internalValue.value = newVal;
-    if (newVal && !selectedCustomer.value) loadCustomerById(newVal);
-    else if (!newVal) {
-      selectedCustomer.value = null;
-      showSelector.value = true;
+    if (newVal !== selectedId.value) {
+      selectedId.value = newVal;
+      if (newVal && (!selectedCustomer.value || selectedCustomer.value.id !== newVal)) {
+        loadCustomer(newVal);
+      } else if (!newVal) {
+        selectedCustomer.value = null;
+        showSelector.value = true;
+      }
     }
-  }
+  },
+  { immediate: true }
 );
 
-async function loadCustomerById(customerId) {
-  try {
-    const customer = await customerStore.fetchCustomer(customerId);
-    selectedCustomer.value = customer;
-    showSelector.value = false;
-  } catch {}
-}
-
-// Init
+// Initialize
 onMounted(async () => {
-  if (props.modelValue) await loadCustomerById(props.modelValue);
-  try {
-    const { data } = await customerStore.fetchCustomers({ limit: 50 });
-    searchResults.value = data || [];
-  } catch {}
+  if (props.modelValue) {
+    await loadCustomer(props.modelValue);
+  }
+  await handleSearch('');
 });
 
-// Exposed method
+// Exposed methods
 defineExpose({
   resetSelection() {
     selectedCustomer.value = null;
-    internalValue.value = null;
+    selectedId.value = null;
     showSelector.value = true;
     showNewCustomerForm.value = false;
     emit('update:modelValue', null);
@@ -329,17 +305,24 @@ defineExpose({
 </script>
 
 <style scoped>
-.customer-selector { width: 100%; }
-.customer-info { flex: 1; }
-.customer-actions { display: flex; gap: 8px; }
+.customer-selector {
+  width: 100%;
+}
+.customer-info {
+  flex: 1;
+}
 .add-new-customer-item {
   background-color: rgba(var(--v-theme-primary), 0.05);
   border-top: 1px solid rgba(var(--v-theme-primary), 0.2);
   border-bottom: 1px solid rgba(var(--v-theme-primary), 0.2);
 }
-.default-customer-item { background-color: rgba(0,0,0,0.02); }
 @media (max-width: 600px) {
-  .quick-options .v-btn-toggle { width: 100%; }
-  .quick-options .v-btn { flex: 1; font-size: 0.75rem; }
+  .quick-options .v-btn-toggle {
+    width: 100%;
+  }
+  .quick-options .v-btn {
+    flex: 1;
+    font-size: 0.75rem;
+  }
 }
 </style>

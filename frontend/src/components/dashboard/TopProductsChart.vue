@@ -3,9 +3,7 @@
     <!-- Header -->
     <v-card-title class="d-flex align-center justify-space-between pa-6 pb-4">
       <div class="d-flex align-center gap-3">
-        <v-avatar size="48" color="primary" variant="flat" class="elevation-1">
-          <v-icon size="28" color="primary">mdi-trophy-variant</v-icon>
-        </v-avatar>
+        <v-icon color="primary">mdi-package-variant-closed</v-icon>
         <div>
           <h3 class="text-h6 font-weight-bold mb-1">المنتجات الأكثر مبيعاً</h3>
           <p class="text-caption text-medium-emphasis mb-0">
