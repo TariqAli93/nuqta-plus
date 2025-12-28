@@ -1,11 +1,11 @@
 <template>
-  <v-container fluid>
+  <v-container>
     <div class="d-flex align-center justify-space-between mb-4">
       <h1 class="text-h4">لوحة التحكم</h1>
     </div>
 
     <v-row>
-      <v-col cols="12" md="4" class="sticky-sidebar">
+      <v-col cols="12" md="3" :class="$vuetify.display.mdAndUp ? 'sticky-sidebar' : ''">
         <v-row>
           <v-col cols="12">
             <div v-if="filteredQuickActions.length > 0">
@@ -67,8 +67,8 @@
                 <v-col cols="12" class="mt-3">
 
                   <v-divider class="my-3"></v-divider>
-                  <div class="text-body-2 text-info py-5">
-                    🔍 راقب منتجاتك الأكثر مبيعاً هذا الأسبوع وحدث مخزونك مبكراً!
+                  <div class="text-xs text-info py-5">
+                    {{ dynamicHint }}
                   </div>
                 </v-col>
               </v-row>
@@ -80,7 +80,7 @@
         </v-row>
       </v-col>
 
-      <v-col cols="12" md="8">
+      <v-col cols="12" md="9">
         <!-- Statistics Cards -->
         <v-row>
           <!-- Total Sales Card -->
@@ -132,10 +132,10 @@
               <v-col cols="12">
                 <RevenueChart :sales="recentSales" :loading="loading" />
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="8">
                 <TopProductsChart :loading="loading" />
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col cols="12" md="4">
                 <SalesStatusChart :sales="recentSales" :loading="loading" />
               </v-col>
               <v-col cols="12">
@@ -253,6 +253,74 @@ const isActionAllowed = (action) => {
 
 const filteredQuickActions = computed(() => {
   return quickActions.filter((action) => isActionAllowed(action));
+});
+
+// Dynamic hint based on statistics
+const dynamicHint = computed(() => {
+  const today = new Date().toISOString().split('T')[0];
+  const todaySalesCount = recentSales.value.filter(
+    (s) =>
+      s.createdAt &&
+      s.createdAt.startsWith(today) &&
+      s.status === 'completed'
+  ).length;
+
+  const todaySales = recentSales.value.filter(
+    (s) =>
+      s.createdAt &&
+      s.createdAt.startsWith(today) &&
+      s.status === 'completed'
+  );
+
+  const todayRevenue = todaySales.reduce((sum, s) => {
+    const amount = parseFloat(s.total || 0);
+    const currency = s.currency || 'IQD';
+    const converted = convertAmountSync(amount, currency);
+    return sum + converted;
+  }, 0);
+
+  // Priority 1: Low stock products
+  if (stats.value.lowStock > 0) {
+    return `⚠️ لديك ${stats.value.lowStock} منتج بقليل المخزون! راجع المخزون وأضف الكميات المطلوبة.`;
+  }
+
+  // Priority 2: No sales today
+  if (todaySalesCount === 0 && stats.value.totalSales > 0) {
+    return `📊 لم تسجل أي مبيعات اليوم. راجع منتجاتك وعروضك لجذب العملاء!`;
+  }
+
+  // Priority 3: Very low sales today (1-2 sales)
+  if (todaySalesCount > 0 && todaySalesCount <= 2 && stats.value.totalSales > 10) {
+    return `💡 لديك ${todaySalesCount} عملية بيع اليوم. يمكنك تحسين الأداء بإضافة عروض خاصة!`;
+  }
+
+  // Priority 4: Good sales today
+  if (todaySalesCount >= 5) {
+    return `🎉 أداء ممتاز! ${todaySalesCount} عملية بيع اليوم. استمر في العمل الجيد!`;
+  }
+
+  // Priority 5: Low product count
+  if (stats.value.totalProducts < 10) {
+    return `📦 لديك ${stats.value.totalProducts} منتج فقط. أضف المزيد من المنتجات لزيادة المبيعات!`;
+  }
+
+  // Priority 6: Low customer count
+  if (stats.value.totalCustomers < 5) {
+    return `👥 لديك ${stats.value.totalCustomers} عميل. أضف المزيد من العملاء لبناء قاعدة عملاء قوية!`;
+  }
+
+  // Priority 7: No sales at all
+  if (stats.value.totalSales === 0) {
+    return `🚀 ابدأ رحلتك! أضف منتجاتك الأولى وأنشئ عملية بيع جديدة.`;
+  }
+
+  // Priority 8: Good revenue today
+  if (todayRevenue > 0 && todaySalesCount >= 3) {
+    return `💰 إيرادات اليوم: ${formatCurrencyAmount(todayRevenue)}. راقب منتجاتك الأكثر مبيعاً وحدث المخزون!`;
+  }
+
+  // Default: General tip
+  return `🔍 راقب منتجاتك الأكثر مبيعاً هذا الأسبوع وحدث مخزونك مبكراً!`;
 });
 
 // Format currency with dynamic conversion

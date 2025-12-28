@@ -104,7 +104,6 @@ export const saleSchema = z.object({
     .default(0),
   interestAmount: z.number().nonnegative().optional(),
 });
-
 // Payment schemas
 export const paymentSchema = z.object({
   saleId: z.number().int().positive().optional(),
@@ -140,3 +139,4 @@ export const settingsSchema = z.object({
   key: z.string().min(1, 'Settings key is required'),
   value: z.any(),
 });
+

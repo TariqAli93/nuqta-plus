@@ -80,7 +80,7 @@
     </v-navigation-drawer>
 
     <v-app-bar app elevation="0" dark class="border-b" color="background">
-      <v-container class="px-10 flex align-center">
+      <v-container class="flex align-center">
         <v-app-bar-nav-icon
           aria-label="إظهار/إخفاء القائمة الجانبية"
           @click="drawer = !drawer"
@@ -89,24 +89,8 @@
 
         <v-spacer></v-spacer>
 
-        <!-- Search Button -->
-        <!-- <v-sheet
-          class="mr-2 cursor-pointer v-field v-field--density-comfortable v-field--variant-plain h-[48px] w-[48px] flex items-center justify-between px-3"
-          color="surface"
-          elevation="0"
-          rounded="xl"
-          aria-label="بحث سريع (Ctrl+K)"
-          @click="openQuickSearch"
-        >
-          <span class="flex items-center justify-center">
-            <v-icon>mdi-magnify</v-icon>
-            <span class="text-body-2 mr-3 font-medium">بحث سريع</span>
-          </span>
-          <v-hotkey keys="ctrl+k" variant="flat" platform="pc" />
-        </v-sheet> -->
-
         <v-text-field
-          class="cursor-pointer"
+          class="cursor-pointer ml-3"
           variant="outlined"
           hide-details
           density="comfortable"
@@ -185,14 +169,14 @@
     </v-app-bar>
 
     <v-main>
-      <v-container class="px-10">
+      <v-container>
         <router-view />
       </v-container>
     </v-main>
 
     <!-- Footer -->
     <v-footer color="background" app>
-      <v-container class="px-10">
+      <v-container>
         <v-row align="center" no-gutters>
           <v-col cols="12" md="12" class="flex justify-between items-center">
             <div class="text-body-2"><strong>نقطة بلس</strong> - نظام إدارة المبيعات</div>
