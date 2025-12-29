@@ -65,9 +65,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPrinters: () => ipcRenderer.invoke('getPrinters'),
   printReceipt: (receiptData) => ipcRenderer.invoke('print-receipt', receiptData),
   previewReceipt: (receiptData) => ipcRenderer.invoke('preview-receipt', receiptData),
-  
+
   cutPaper: () => ipcRenderer.invoke('cut-paper'),
   kickDrawer: () => ipcRenderer.invoke('kick-drawer'),
+
+  restoreBackup: (filename) => ipcRenderer.invoke('backup:restore', filename),
+  exportBackup: (filename) => ipcRenderer.invoke('backup:export', filename),
 
   // ---- fallback invoke ----
   invoke: (channel, data) => ipcRenderer.invoke(channel, data),

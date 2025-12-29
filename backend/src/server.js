@@ -23,6 +23,7 @@ import categoryRoutes from './routes/categoryRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import currencyRoutes from './routes/currencyRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
+import backupRoutes from './routes/backupRoutes.js';
 import alertRoutes from './routes/alertRoutes.js';
 
 // Debug features - only in development
@@ -88,6 +89,7 @@ const start = async () => {
     await fastify.register(userRoutes, { prefix: '/api/users' });
     await fastify.register(currencyRoutes, { prefix: '/api/currencies' });
     await fastify.register(settingsRoutes, { prefix: '/api/settings' });
+    await fastify.register(backupRoutes, { prefix: '/api/settings/backups' });
     await fastify.register(alertRoutes, { prefix: '/api/alerts' });
     // Only register debug routes in development
     if (!isProduction) {

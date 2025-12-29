@@ -49,23 +49,43 @@ const deleteBackup = async (filename) => {
   }
 };
 
-const restoreBackup = async (id) => {
+const restoreBackup = async (filename) => {
+  if (
+    !confirm(
+      'هل أنت متأكد من استعادة هذه النسخة؟ سيتم فقدان أي بيانات تم إدخالها بعد تاريخ النسخة.'
+    )
+  )
+    return;
   startLoading();
   try {
-    await window.electronAPI.stopBackend();
-    await api.get(`/settings/backups/${id}/restore`);
-    notification.success('تم استعادة النسخة الاحتياطية بنجاح');
-    await window.electronAPI.startBackend();
-
-    // إعادة تحميل التطبيق بعد الاستعادة
-    setTimeout(() => {
-      window.location.reload();
-      router.push('/');
-    }, 2000);
-  } catch {
-    notification.error('فشل في استعادة النسخة الاحتياطية');
+    const response = await window.electronAPI.restoreBackup(filename);
+    if (response.ok) {
+      notification.success('تم استعادة النسخة الاحتياطية بنجاح');
+      // إعادة تحميل التطبيق بعد الاستعادة
+      setTimeout(() => {
+        window.location.reload();
+        router.push('/');
+      }, 2000);
+    } else {
+      throw new Error(response.error);
+    }
+  } catch (error) {
+    notification.error('فشل في استعادة النسخة الاحتياطية: ' + error.message);
   } finally {
     stopLoading();
+  }
+};
+
+const exportBackup = async (filename) => {
+  try {
+    const response = await window.electronAPI.exportBackup(filename);
+    if (response.ok) {
+      notification.success('تم تصدير النسخة الاحتياطية بنجاح');
+    } else if (response.reason !== 'canceled') {
+      throw new Error(response.error);
+    }
+  } catch (error) {
+    notification.error('فشل في تصدير النسخة الاحتياطية: ' + error.message);
   }
 };
 
@@ -124,6 +144,10 @@ onMounted(async () => {
 
           <v-btn icon small color="error" variant="text" @click="restoreBackup(item.filename)">
             <v-icon>mdi-restore</v-icon>
+          </v-btn>
+
+          <v-btn icon small color="primary" variant="text" @click="exportBackup(item.filename)">
+            <v-icon>mdi-export</v-icon>
           </v-btn>
         </template>
       </v-data-table>

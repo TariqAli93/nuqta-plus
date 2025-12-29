@@ -1,7 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import path, { dirname, join } from 'node:path';
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 global.__dirname = __dirname;
@@ -42,8 +41,6 @@ if (!gotTheLock) {
   });
 }
 
-
-
 // --- نافذة البرنامج الرئيسية ---
 function createWindow() {
   if (mainWindow) return;
@@ -75,7 +72,9 @@ function createWindow() {
 
   // Add error handlers for debugging
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-    logger.error(`Main window failed to load: ${errorCode} - ${errorDescription} - ${validatedURL}`);
+    logger.error(
+      `Main window failed to load: ${errorCode} - ${errorDescription} - ${validatedURL}`
+    );
     // Path resolution is handled in the main load logic above
   });
 
@@ -128,7 +127,9 @@ function createWindow() {
       }
 
       // All strategies failed
-      logger.error(`All path resolution strategies failed. Last error: ${lastError?.message || 'unknown'}`);
+      logger.error(
+        `All path resolution strategies failed. Last error: ${lastError?.message || 'unknown'}`
+      );
       throw new Error('Failed to locate index.html file');
     };
 
@@ -184,7 +185,7 @@ function createWindow() {
     try {
       // Try to get printers from main window first
       let targetWindow = mainWindow;
-      
+
       // If main window is not available, try to get any available window
       if (!targetWindow || targetWindow.isDestroyed()) {
         const allWindows = BrowserWindow.getAllWindows();
@@ -269,7 +270,13 @@ function createWindow() {
       const invoiceTheme = companyInfo.invoiceTheme || 'classic';
       const paperConfig = PAPER_SIZE_CONFIGS[invoiceType] || PAPER_SIZE_CONFIGS['roll-80'];
 
-      logger.debug('Printing receipt', { printerName, invoiceType, invoiceTheme, paperConfig, receiptDataLength: receiptData?.length });
+      logger.debug('Printing receipt', {
+        printerName,
+        invoiceType,
+        invoiceTheme,
+        paperConfig,
+        receiptDataLength: receiptData?.length,
+      });
 
       // Generate HTML content from receipt data
       const htmlContent = generateReceiptHtml(receiptData, invoiceType, invoiceTheme);
@@ -361,7 +368,12 @@ function createWindow() {
       const invoiceTheme = companyInfo.invoiceTheme || 'classic';
       const paperConfig = PAPER_SIZE_CONFIGS[invoiceType] || PAPER_SIZE_CONFIGS['roll-80'];
 
-      logger.debug('Previewing receipt', { invoiceType, invoiceTheme, paperConfig, receiptDataLength: receiptData?.length });
+      logger.debug('Previewing receipt', {
+        invoiceType,
+        invoiceTheme,
+        paperConfig,
+        receiptDataLength: receiptData?.length,
+      });
 
       // Generate HTML content from receipt data
       const htmlContent = generateReceiptHtml(receiptData, invoiceType, invoiceTheme);
@@ -401,12 +413,6 @@ function createWindow() {
       };
     }
   });
-
-
-
-
-
-
 
   ipcMain.handle('cut-paper', async () => {
     try {
@@ -452,9 +458,14 @@ function createActivationWindow() {
   });
 
   // Add error handlers for debugging
-  activationWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-    logger.error(`Activation window failed to load: ${errorCode} - ${errorDescription} - ${validatedURL}`);
-  });
+  activationWindow.webContents.on(
+    'did-fail-load',
+    (event, errorCode, errorDescription, validatedURL) => {
+      logger.error(
+        `Activation window failed to load: ${errorCode} - ${errorDescription} - ${validatedURL}`
+      );
+    }
+  );
 
   activationWindow.webContents.on('did-finish-load', () => {
     logger.info('Activation window finished loading');
@@ -503,7 +514,9 @@ function createActivationWindow() {
       }
 
       // All strategies failed
-      logger.error(`All activation path resolution strategies failed. Last error: ${lastError?.message || 'unknown'}`);
+      logger.error(
+        `All activation path resolution strategies failed. Last error: ${lastError?.message || 'unknown'}`
+      );
       throw new Error('Failed to locate activation.html file');
     };
 
@@ -553,9 +566,14 @@ function createSplashWindow() {
   });
 
   // Add error handlers for debugging
-  splashWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-    logger.error(`Splash window failed to load: ${errorCode} - ${errorDescription} - ${validatedURL}`);
-  });
+  splashWindow.webContents.on(
+    'did-fail-load',
+    (event, errorCode, errorDescription, validatedURL) => {
+      logger.error(
+        `Splash window failed to load: ${errorCode} - ${errorDescription} - ${validatedURL}`
+      );
+    }
+  );
 
   splashWindow.webContents.on('did-finish-load', () => {
     logger.info('Splash window finished loading');
@@ -604,7 +622,9 @@ function createSplashWindow() {
       }
 
       // All strategies failed
-      logger.error(`All splash path resolution strategies failed. Last error: ${lastError?.message || 'unknown'}`);
+      logger.error(
+        `All splash path resolution strategies failed. Last error: ${lastError?.message || 'unknown'}`
+      );
       throw new Error('Failed to locate splash.html file');
     };
 
@@ -636,7 +656,7 @@ function tryToShowMainWindowAfterSplash() {
   const showMainWindow = () => {
     // Clear timeout reference
     splashTimeout = null;
-    
+
     if (splashWindow) {
       try {
         splashWindow.destroy();
@@ -812,6 +832,124 @@ ipcMain.handle('backend:restart', async () => {
   return { ok: true };
 });
 
+// --- استعادة النسخة الاحتياطية ---
+ipcMain.handle('backup:restore', async (_e, filename) => {
+  try {
+    const os = await import('os');
+    const path = await import('path');
+
+    // Logic to match backend/src/utils/database.js
+    const getUserDataDir = () => {
+      const platform = process.platform;
+      const homeDir = os.homedir();
+
+      if (platform === 'win32') {
+        return path.join(homeDir, 'AppData', 'Roaming', '@nuqtaplus');
+      } else if (platform === 'darwin') {
+        return path.join(homeDir, 'Library', 'Application Support', '@nuqtaplus');
+      } else {
+        return path.join(homeDir, '.config', '@nuqtaplus');
+      }
+    };
+
+    const userDataDir = getUserDataDir();
+    const dbPath = path.join(userDataDir, 'database', 'nuqtaplus.db');
+    const backupDir = path.join(userDataDir, 'database', 'backups');
+    const backupPath = path.join(backupDir, filename);
+
+    logger.info(`Restoring backup from: ${backupPath} to ${dbPath}`);
+
+    // 1. Check if backup exists
+    try {
+      await fs.access(backupPath);
+    } catch {
+      throw new Error('ملف النسخة الاحتياطية غير موجود');
+    }
+
+    // 2. Stop Backend
+    logger.info('Stopping backend for restore...');
+    await backendManager.CleanupBackendProcess();
+
+    // Wait a bit to ensure file lock is released
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // 3. Replace DB file
+    logger.info('Copying backup file...');
+    await fs.copyFile(backupPath, dbPath);
+
+    // 4. Restart Backend
+    logger.info('Restarting backend...');
+    await backendManager.StartBackend();
+    backendReady = true;
+
+    return { ok: true };
+  } catch (error) {
+    logger.error('Failed to restore backup:', error);
+    // Try to restart backend if it failed partially
+    try {
+      if (!backendManager.isRunning()) {
+        await backendManager.StartBackend();
+      }
+    } catch (e) {
+      logger.error('Failed to recover backend after failed restore:', e);
+    }
+
+    return { ok: false, error: error.message };
+  }
+});
+
+// --- تصدير النسخة الاحتياطية ---
+ipcMain.handle('backup:export', async (_e, filename) => {
+  try {
+    const os = await import('os');
+    const path = await import('path');
+
+    // Logic to match backend/src/utils/database.js
+    const getUserDataDir = () => {
+      const platform = process.platform;
+      const homeDir = os.homedir();
+
+      if (platform === 'win32') {
+        return path.join(homeDir, 'AppData', 'Roaming', '@nuqtaplus');
+      } else if (platform === 'darwin') {
+        return path.join(homeDir, 'Library', 'Application Support', '@nuqtaplus');
+      } else {
+        return path.join(homeDir, '.config', '@nuqtaplus');
+      }
+    };
+
+    const userDataDir = getUserDataDir();
+    const backupDir = path.join(userDataDir, 'database', 'backups');
+    const sourcePath = path.join(backupDir, filename);
+
+    // Verify source exists
+    try {
+      await fs.access(sourcePath);
+    } catch {
+      throw new Error('ملف النسخة الاحتياطية غير موجود');
+    }
+
+    // Show Save Dialog
+    const { canceled, filePath: destPath } = await dialog.showSaveDialog(mainWindow, {
+      title: 'حفظ النسخة الاحتياطية',
+      defaultPath: filename,
+      filters: [{ name: 'Database Backup', extensions: ['db'] }],
+    });
+
+    if (canceled || !destPath) {
+      return { ok: false, reason: 'canceled' };
+    }
+
+    // Copy file
+    await fs.copyFile(sourcePath, destPath);
+
+    return { ok: true };
+  } catch (error) {
+    logger.error('Failed to export backup:', error);
+    return { ok: false, error: error.message };
+  }
+});
+
 // --- فتح رابط خارجي ---
 ipcMain.handle('shell:openExternal', async (_e, url) => {
   await shell.openExternal(url);
@@ -894,6 +1032,3 @@ ipcMain.handle('firstRun:createLock', () => {
     return { success: false, error: error.message };
   }
 });
-
-
-
