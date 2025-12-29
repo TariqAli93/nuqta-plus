@@ -1,24 +1,36 @@
 <template>
   <v-app>
-    <v-navigation-drawer v-model="drawer" app permanent width="250" rail rail-width="120">
-      <!-- add logo here -->
+    <v-navigation-drawer
+      v-model="drawer"
+      app
+      :permanent="!isMobile"
+      :temporary="isMobile"
+      width="250"
+      rail
+      rail-width="120"
+      :touchless="false"
+      @update:model-value="onDrawerUpdate"
+    >
+      <!-- Logo -->
       <router-link
         to="/"
         class="flex justify-center align-center pa-1 absolute top-0 left-0 w-full border-b z-50"
         style="background-color: rgba(var(--v-theme-background), 1)"
+        aria-label="الرئيسية"
       >
         <img
           id="navigationDrawerLogo"
           src="@/assets/logo.png"
           :src-dark="'@/assets/logo.png'"
           alt="Nuqta Plus Logo"
+          loading="lazy"
         />
       </router-link>
 
       <v-list :lines="false" density="comfortable" nav style="margin-top: 65px">
-        <!-- العناصر الرئيسية -->
+        <!-- Main Menu Items -->
         <template v-for="item in filteredMenu" :key="item.title">
-          <!-- إذا ماكو مجموعة -->
+          <!-- Non-group items -->
           <v-list-item
             v-if="!item.group"
             :to="item.to"
@@ -28,6 +40,7 @@
             active-class="active-nav-item"
             variant="plain"
             :ripple="false"
+            :aria-label="item.title"
           >
             <div class="flex items-center justify-center flex-col mb-2">
               <div class="v-list-item-icon">
@@ -37,7 +50,7 @@
             </div>
           </v-list-item>
 
-          <!-- إذا بي مجموعة -->
+          <!-- Group items -->
           <v-list-group
             v-else
             v-model:open="navigationDrawerSubItemsOpen"
@@ -46,9 +59,9 @@
             fluid
             class="custom-group"
           >
-            <!-- عنوان المجموعة -->
+            <!-- Group activator -->
             <template #activator="{ props }">
-              <v-list-item v-bind="props" variant="plain">
+              <v-list-item v-bind="props" variant="plain" :aria-label="item.title">
                 <div class="flex items-center justify-center flex-col mb-2">
                   <div class="v-list-item-icon">
                     <v-icon>{{ item.icon }}</v-icon>
@@ -58,7 +71,7 @@
               </v-list-item>
             </template>
 
-            <!-- العناصر الداخلية -->
+            <!-- Sub-items -->
             <v-list-item
               v-for="sub in item.group.items"
               :key="sub.title"
@@ -66,6 +79,7 @@
               active-class="active-nav-item"
               variant="plain"
               :value="sub.to"
+              :aria-label="sub.title"
             >
               <div class="flex items-center justify-center flex-col gap-2 mb-2 in-group-title">
                 <div class="v-list-item-icon">
@@ -82,21 +96,25 @@
     <v-app-bar app elevation="0" dark class="border-b" color="background">
       <v-container class="flex align-center">
         <v-app-bar-nav-icon
-          aria-label="إظهار/إخفاء القائمة الجانبية"
-          @click="drawer = !drawer"
+          :aria-label="drawer ? 'إخفاء القائمة الجانبية' : 'إظهار القائمة الجانبية'"
+          @click="toggleDrawer"
         ></v-app-bar-nav-icon>
-        <v-toolbar-title>{{ currentPageTitle }}</v-toolbar-title>
+        <v-toolbar-title class="text-truncate">{{ currentPageTitle }}</v-toolbar-title>
 
         <v-spacer></v-spacer>
 
         <v-text-field
+          v-if="!isMobile"
           class="cursor-pointer ml-3"
           variant="outlined"
           hide-details
           density="comfortable"
           aria-label="بحث سريع (Ctrl+K)"
           placeholder="بحث سريع"
+          readonly
           @click="openQuickSearch"
+          @keydown.enter="openQuickSearch"
+          @keydown.space.prevent="openQuickSearch"
         >
           <template #prepend-inner>
             <v-icon>mdi-magnify</v-icon>
@@ -108,6 +126,16 @@
             </v-locale-provider>
           </template>
         </v-text-field>
+
+        <v-btn
+          v-else
+          icon
+          variant="text"
+          aria-label="بحث سريع"
+          @click="openQuickSearch"
+        >
+          <v-icon>mdi-magnify</v-icon>
+        </v-btn>
 
         <!-- Alerts Badge -->
         <v-badge
@@ -169,8 +197,12 @@
     </v-app-bar>
 
     <v-main>
-      <v-container>
-        <router-view />
+      <v-container fluid>
+        <router-view v-slot="{ Component, route: routeData }">
+          <transition :name="transitionName" mode="out-in">
+            <component :is="Component" :key="routeData.path" />
+          </transition>
+        </router-view>
       </v-container>
     </v-main>
 
@@ -178,9 +210,10 @@
     <v-footer color="background" app>
       <v-container>
         <v-row align="center" no-gutters>
-          <v-col cols="12" md="12" class="flex justify-between items-center">
-            <div class="text-body-2"><strong>نقطة بلس</strong> - نظام إدارة المبيعات</div>
-
+          <v-col cols="12" md="12" class="flex justify-between items-center flex-wrap gap-2">
+            <div class="text-body-2">
+              <strong>نقطة بلس</strong> - نظام إدارة المبيعات
+            </div>
             <div class="text-body-2">كودل للحلول التقنية</div>
           </v-col>
         </v-row>
@@ -193,24 +226,40 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useTheme } from 'vuetify';
+import { useTheme, useDisplay } from 'vuetify';
 import { useAuthStore } from '@/stores/auth';
 import { useAlertStore } from '@/stores/alert';
-import * as uiAccess from '@/auth/uiAccess.js';
 import QuickSearch from '@/components/QuickSearch.vue';
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts';
+import { useNavigationMenu } from '@/composables/useNavigationMenu';
 
 const router = useRouter();
 const route = useRoute();
 const theme = useTheme();
+const { mobile: isMobile } = useDisplay();
 const authStore = useAuthStore();
 const alertStore = useAlertStore();
+const { filteredMenu, getPageTitle } = useNavigationMenu();
 
-const drawer = ref(true);
+const transitionName = ref('fade');
+
+// Drawer state with persistence
+const DRAWER_STORAGE_KEY = 'nuqta-drawer-state';
+const getInitialDrawerState = () => {
+  try {
+    const saved = localStorage.getItem(DRAWER_STORAGE_KEY);
+    return saved !== null ? JSON.parse(saved) : true;
+  } catch {
+    return true;
+  }
+};
+
+const drawer = ref(getInitialDrawerState());
 const isDark = computed(() => theme.global.current.value.dark);
 
+// Navigation drawer sub-items open state
 const navigationDrawerSubItemsOpen = ref(['/users']);
 
 // Quick Search - use event to open search dialog
@@ -218,113 +267,57 @@ const openQuickSearch = () => {
   window.dispatchEvent(new CustomEvent('open-quick-search'));
 };
 
-// حفظ واستعادة تفضيل الثيم من localStorage
-const savedTheme = localStorage.getItem('theme') || 'light';
-theme.change(savedTheme);
+// Toggle drawer and persist state
+const toggleDrawer = () => {
+  drawer.value = !drawer.value;
+  saveDrawerState();
+};
 
-// تطبيق color-scheme على HTML
+// Handle drawer update (from v-model)
+const onDrawerUpdate = (value) => {
+  drawer.value = value;
+  saveDrawerState();
+};
+
+// Save drawer state to localStorage
+const saveDrawerState = () => {
+  try {
+    localStorage.setItem(DRAWER_STORAGE_KEY, JSON.stringify(drawer.value));
+  } catch (error) {
+    console.warn('Failed to save drawer state:', error);
+  }
+};
+
+// Theme management
+const THEME_STORAGE_KEY = 'nuqta-theme';
+const savedTheme = (() => {
+  try {
+    return localStorage.getItem(THEME_STORAGE_KEY) || 'light';
+  } catch {
+    return 'light';
+  }
+})();
+
+// Apply color-scheme to HTML
 const applyColorScheme = (themeName) => {
   document.documentElement.style.colorScheme = themeName === 'dark' ? 'dark' : 'light';
 };
 
-// تطبيق الثيم المحفوظ عند التحميل
+// Initialize theme
+theme.change(savedTheme);
 applyColorScheme(savedTheme);
 
-const menuItems = [
-  { title: 'الرئيسية', icon: 'mdi-view-dashboard', to: '/', permission: null },
-
-  { title: 'المبيعات', icon: 'mdi-cash-register', to: '/sales', permission: 'view:sales' },
-  { title: 'العملاء', icon: 'mdi-account-group', to: '/customers', permission: 'view:customers' },
-  { title: 'المنتجات', icon: 'mdi-package-variant', to: '/products', permission: 'view:products' },
-  { title: 'التصنيفات', icon: 'mdi-shape', to: '/categories', permission: 'view:categories' },
-  { title: 'التقارير', icon: 'mdi-chart-box', to: '/reports', permission: 'view:reports' },
-  { title: 'التنبيهات', icon: 'mdi-bell', to: '/notifications', permission: 'view:sales' },
-
-  {
-    title: 'الادارة',
-    icon: 'mdi-tools',
-    to: '/admin',
-    permission: null,
-    group: {
-      items: [
-        { title: 'المستخدمون', icon: 'mdi-account', to: '/users', permission: 'view:users' },
-        { title: 'الأدوار', icon: 'mdi-shield-account', to: '/roles', permission: 'view:roles' },
-        {
-          title: 'الصلاحيات',
-          icon: 'mdi-shield-key',
-          to: '/permissions',
-          permission: 'view:permissions',
-        },
-        { title: 'الاعدادات', icon: 'mdi-cog', to: '/settings', permission: 'view:settings' },
-      ],
-    },
-  },
-
-  { title: 'حول البرنامج', icon: 'mdi-information', to: '/about', permission: null },
-];
-
-// 🔹 فلترة القائمة حسب الدور (role-based)
-const filteredMenu = computed(() => {
-  const userRole = authStore.user?.role;
-  if (!userRole) return [];
-
-  return menuItems
-    .map((item) => {
-      // 1) إذا ماكو مجموعة — فلترة عادية
-      if (!item.group) {
-        if (!item.permission) return item;
-        // Map old permissions to role checks
-        const permission = item.permission;
-        if (permission === 'view:users' && !uiAccess.canViewUsers(userRole)) return null;
-        if (permission === 'view:settings' && !uiAccess.canManageSettings(userRole)) return null;
-        if (permission === 'view:roles' || permission === 'view:permissions') {
-          // Legacy routes - hide them
-          return null;
-        }
-        // All other view permissions are allowed for authenticated users
-        return item;
-      }
-
-      // 2) معالجة المجموعات (sub items)
-      const allowedSubs = item.group.items.filter((sub) => {
-        if (!sub.permission) return true;
-        const perm = sub.permission;
-        if (perm === 'view:users' && !uiAccess.canViewUsers(userRole)) return false;
-        if (perm === 'view:settings' && !uiAccess.canManageSettings(userRole)) return false;
-        if (perm === 'view:roles' || perm === 'view:permissions') return false; // Legacy
-        return true;
-      });
-
-      // إذا ماكو عناصر مسموحة → نشيل المجموعة كاملة
-      if (allowedSubs.length === 0) return null;
-
-      // نرجع المجموعة مع عناصرها المفلترة
-      return {
-        ...item,
-        group: { items: allowedSubs },
-      };
-    })
-    .filter(Boolean); // إزالة null
-});
-
-const currentPageTitle = computed(() => {
-  const item = menuItems.find((item) => item.to === route.path);
-  // sub items
-  if (!item) {
-    for (const menuItem of menuItems) {
-      if (menuItem.group) {
-        const subItem = menuItem.group.items.find((sub) => sub.to === route.path);
-        if (subItem) return subItem.title;
-      }
-    }
-  }
-  return item?.title || 'نقطة بلس';
-});
+// Current page title
+const currentPageTitle = computed(() => getPageTitle(route.path));
 
 const toggleTheme = () => {
   const newTheme = isDark.value ? 'light' : 'dark';
   theme.change(newTheme);
-  localStorage.setItem('theme', newTheme);
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+  } catch (error) {
+    console.warn('Failed to save theme preference:', error);
+  }
   applyColorScheme(newTheme);
 };
 
@@ -334,18 +327,105 @@ const handleLogout = () => {
   router.push({ name: 'Login' });
 };
 
+// Define route hierarchy levels for transitions
+const getRouteLevel = (path) => {
+  if (!path) return 1;
+
+  // Auth routes
+  if (path.startsWith('/auth')) return 0;
+
+  // Main layout base routes
+  const mainRoutes = [
+    '/',
+    '/customers',
+    '/products',
+    '/categories',
+    '/sales',
+    '/reports',
+    '/notifications',
+    '/users',
+    '/profile',
+    '/settings',
+    '/about',
+    '/forbidden',
+  ];
+
+  if (mainRoutes.includes(path) || path === '') return 1;
+
+  // Child routes (new, edit, details)
+  if (
+    path.includes('/new') ||
+    path.includes('/edit') ||
+    path.match(/\/\d+$/) ||
+    path.match(/[^/]+\/[^/]+/)
+  ) {
+    return 2;
+  }
+
+  return 1;
+};
+
+// Watch route changes for transitions
+watch(
+  () => route.path,
+  (newPath, oldPath) => {
+    if (!oldPath) {
+      transitionName.value = 'fade';
+      return;
+    }
+
+    const newLevel = getRouteLevel(newPath);
+    const oldLevel = getRouteLevel(oldPath);
+
+    if (newLevel > oldLevel) {
+      transitionName.value = 'slide-up'; // Going deeper (parent → child)
+    } else if (newLevel < oldLevel) {
+      transitionName.value = 'slide-down'; // Going back (child → parent)
+    } else {
+      transitionName.value = 'slide-up'; // Same level
+    }
+
+    // Close drawer on mobile when navigating
+    if (isMobile.value && drawer.value) {
+      drawer.value = false;
+    }
+  },
+  { immediate: true }
+);
+
+// Watch for mobile changes and adjust drawer
+watch(
+  () => isMobile.value,
+  (mobile) => {
+    if (mobile) {
+      // Close drawer on mobile by default
+      drawer.value = false;
+    } else {
+      // Restore saved state on desktop
+      drawer.value = getInitialDrawerState();
+    }
+  },
+  { immediate: true }
+);
+
 // Keyboard shortcuts
 useKeyboardShortcuts();
 
-// Start polling for alerts when component mounts
+// Lifecycle hooks
 onMounted(() => {
+  // Start polling for alerts when authenticated
   if (authStore.isAuthenticated) {
     alertStore.startPolling();
   }
+
+  // Update navigation drawer sub-items open state based on current route
+  if (route.path.startsWith('/users') || route.path.startsWith('/settings')) {
+    navigationDrawerSubItemsOpen.value = [route.path];
+  }
 });
 
-// Stop polling when component unmounts
 onUnmounted(() => {
+  // Stop polling when component unmounts
   alertStore.stopPolling();
 });
 </script>
@@ -367,5 +447,43 @@ onUnmounted(() => {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* Ultra-fast transitions for snappy desktop feel */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.12s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active,
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-up-enter-from {
+  transform: translateY(12px);
+  opacity: 0;
+}
+
+.slide-up-leave-to {
+  transform: translateY(-6px);
+  opacity: 0;
+}
+
+.slide-down-enter-from {
+  transform: translateY(-12px);
+  opacity: 0;
+}
+
+.slide-down-leave-to {
+  transform: translateY(6px);
+  opacity: 0;
 }
 </style>
